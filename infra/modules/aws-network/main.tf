@@ -10,12 +10,17 @@ terraform {
 
 locals {
   service_subnets = {
-    app_1    = { cidr = "10.10.0.0/24", az_index = 0, table = "private", component = "app" }
-    app_2    = { cidr = "10.10.1.0/24", az_index = 1, table = "private", component = "app" }
+    app_1    = { cidr = "10.10.0.0/24", az_index = 0, table = "app", component = "app" }
+    app_2    = { cidr = "10.10.1.0/24", az_index = 1, table = "app", component = "app" }
     public_1 = { cidr = "10.10.2.0/27", az_index = 0, table = "public", component = "network" }
     public_2 = { cidr = "10.10.2.32/27", az_index = 1, table = "public", component = "network" }
     db_1     = { cidr = "10.10.2.64/27", az_index = 0, table = "private", component = "database" }
     db_2     = { cidr = "10.10.2.96/27", az_index = 1, table = "private", component = "database" }
+  }
+  service_route_table_ids = {
+    app     = aws_route_table.service_app.id
+    public  = aws_route_table.service_public.id
+    private = aws_route_table.service_private.id
   }
   tags = { project = "petclinic", environment = var.environment }
 }
@@ -52,11 +57,35 @@ resource "aws_internet_gateway" "service" {
   tags   = merge(local.tags, { component = "network" })
 }
 
+resource "aws_eip" "app_nat" {
+  domain = "vpc"
+  tags   = merge(local.tags, { component = "network" })
+}
+
+resource "aws_nat_gateway" "public_1" {
+  allocation_id     = aws_eip.app_nat.id
+  subnet_id         = aws_subnet.service["public_1"].id
+  connectivity_type = "public"
+  availability_mode = "zonal"
+  tags              = merge(local.tags, { component = "network" })
+
+  depends_on = [aws_internet_gateway.service]
+}
+
 resource "aws_route_table" "service_public" {
   vpc_id = aws_vpc.service.id
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.service.id
+  }
+  tags = merge(local.tags, { component = "network" })
+}
+
+resource "aws_route_table" "service_app" {
+  vpc_id = aws_vpc.service.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.public_1.id
   }
   tags = merge(local.tags, { component = "network" })
 }
@@ -77,7 +106,7 @@ resource "aws_route_table" "management" {
 resource "aws_route_table_association" "service" {
   for_each       = local.service_subnets
   subnet_id      = aws_subnet.service[each.key].id
-  route_table_id = each.value.table == "public" ? aws_route_table.service_public.id : aws_route_table.service_private.id
+  route_table_id = local.service_route_table_ids[each.value.table]
 }
 
 resource "aws_route_table_association" "management" {
