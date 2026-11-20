@@ -13,7 +13,7 @@
 | 자원 | project | environment | component |
 |---|---|---|---|
 | AWS 관리용 EC2 (`kubectl`) | `petclinic` | `prod` | `management` |
-| AWS EKS (React·Spring 실행) | `petclinic` | `prod` | `app` |
+| AWS EKS (Angular·Spring 실행) | `petclinic` | `dev` | `app` |
 | AWS RDS MySQL | `petclinic` | `prod` | `database` |
 | Azure 복구용 앱 VM | `petclinic` | `dr` | `app` |
 
