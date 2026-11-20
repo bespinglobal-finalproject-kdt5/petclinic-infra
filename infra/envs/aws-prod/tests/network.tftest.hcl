@@ -15,6 +15,7 @@ run "network_topology" {
   assert {
     condition = (
       aws_vpc.service.cidr_block == "10.10.0.0/22" && aws_vpc.management.cidr_block == "10.20.0.0/24" &&
+      aws_vpc.service.enable_dns_support && aws_vpc.service.enable_dns_hostnames &&
       aws_subnet.management.cidr_block == "10.20.0.0/27" && aws_subnet.management.availability_zone == var.availability_zones[0] &&
       aws_subnet.management.vpc_id == aws_vpc.management.id && !aws_subnet.management.map_public_ip_on_launch
     )

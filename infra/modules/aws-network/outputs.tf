@@ -9,6 +9,8 @@ output "management_vpc_id" {
 output "app_subnet_ids" {
   description = "App subnet IDs in availability_zones order."
   value       = [aws_subnet.service["app_1"].id, aws_subnet.service["app_2"].id]
+  # Consumers (including CloudFront VPC origins) need the attached IGW and subnet routing ready.
+  depends_on = [aws_route_table_association.service]
 }
 
 output "db_subnet_ids" {
