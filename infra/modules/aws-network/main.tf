@@ -26,8 +26,10 @@ locals {
 }
 
 resource "aws_vpc" "service" {
-  cidr_block = "10.10.0.0/22"
-  tags       = merge(local.tags, { component = "network" })
+  cidr_block           = "10.10.0.0/22"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags                 = merge(local.tags, { component = "network" })
 }
 
 resource "aws_vpc" "management" {

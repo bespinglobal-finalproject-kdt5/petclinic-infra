@@ -13,8 +13,8 @@ variable "aws_region" {
   type        = string
   nullable    = false
   validation {
-    condition     = can(regex("^[a-z]{2}(-[a-z]+)+-[0-9]+$", var.aws_region))
-    error_message = "Supply an AWS region name."
+    condition     = var.aws_region == "ap-northeast-2"
+    error_message = "The production origin must be in Seoul (ap-northeast-2)."
   }
 }
 

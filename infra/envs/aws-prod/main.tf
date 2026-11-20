@@ -12,6 +12,12 @@ provider "aws" {
   allowed_account_ids = [var.aws_account_id]
 }
 
+provider "aws" {
+  alias               = "us_east_1"
+  region              = "us-east-1"
+  allowed_account_ids = [var.aws_account_id]
+}
+
 module "network" {
   source             = "../../modules/aws-network"
   availability_zones = var.availability_zones
