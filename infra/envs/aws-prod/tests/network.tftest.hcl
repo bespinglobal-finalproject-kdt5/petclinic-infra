@@ -35,26 +35,41 @@ run "network_topology" {
     condition = alltrue([for k, s in aws_subnet.service : (
       s.vpc_id == aws_vpc.service.id && !s.map_public_ip_on_launch &&
       aws_route_table_association.service[k].subnet_id == s.id &&
-      aws_route_table_association.service[k].route_table_id == (startswith(k, "public_") ? aws_route_table.service_public.id : aws_route_table.service_private.id)
+      aws_route_table_association.service[k].route_table_id == {
+        app    = aws_route_table.service_app.id
+        public = aws_route_table.service_public.id
+        db     = aws_route_table.service_private.id
+      }[split("_", k)[0]]
     )])
-    error_message = "Only public subnets may use the public table; every service subnet needs the correct association."
+    error_message = "Public, app, and DB subnets must each use their own tier's route table."
+  }
+  assert {
+    condition = (
+      aws_eip.app_nat.domain == "vpc" && aws_nat_gateway.public_1.allocation_id == aws_eip.app_nat.id &&
+      aws_nat_gateway.public_1.subnet_id == aws_subnet.service["public_1"].id &&
+      aws_nat_gateway.public_1.connectivity_type == "public" && aws_nat_gateway.public_1.availability_mode == "zonal"
+    )
+    error_message = "App egress requires a public zonal NAT in public_1 with its VPC EIP."
   }
   assert {
     condition = (
       aws_internet_gateway.service.vpc_id == aws_vpc.service.id && aws_route_table.service_public.vpc_id == aws_vpc.service.id &&
       one(aws_route_table.service_public.route).cidr_block == "0.0.0.0/0" &&
       one(aws_route_table.service_public.route).gateway_id == aws_internet_gateway.service.id &&
+      aws_route_table.service_app.vpc_id == aws_vpc.service.id && one(aws_route_table.service_app.route).cidr_block == "0.0.0.0/0" &&
+      one(aws_route_table.service_app.route).nat_gateway_id == aws_nat_gateway.public_1.id &&
       aws_route_table.service_private.vpc_id == aws_vpc.service.id && length(aws_route_table.service_private.route) == 0 &&
       aws_route_table.management.vpc_id == aws_vpc.management.id && length(aws_route_table.management.route) == 0 &&
       aws_route_table_association.management.route_table_id == aws_route_table.management.id &&
       aws_route_table_association.management.subnet_id == aws_subnet.management.id
     )
-    error_message = "Only the public table should have a non-local route, to the service IGW."
+    error_message = "Public and app defaults must target the IGW and NAT respectively; DB and management tables must remain local-only."
   }
   assert {
     condition = alltrue([for tags in concat(
       [for s in aws_subnet.service : s.tags],
       [aws_vpc.service.tags, aws_vpc.management.tags, aws_internet_gateway.service.tags, aws_subnet.management.tags,
+        aws_eip.app_nat.tags, aws_nat_gateway.public_1.tags, aws_route_table.service_app.tags,
       aws_route_table.service_public.tags, aws_route_table.service_private.tags, aws_route_table.management.tags]
     ) : tags.project == "petclinic" && tags.environment == "prod" && contains(["app", "database", "network", "management"], tags.component)])
     error_message = "All taggable resources need the common tags."
