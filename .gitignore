@@ -1,0 +1,7 @@
+# Terraform working directories, local state and backups
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Keep provider dependency lock files in version control.
+!.terraform.lock.hcl
