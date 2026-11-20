@@ -7,6 +7,22 @@ data "aws_route53_zone" "public" {
   private_zone = false
 }
 
+# Adopt the previously delegated zone, never create a second set of name servers.
+import {
+  to = aws_route53_zone.delegated
+  id = data.aws_route53_zone.public.zone_id
+}
+
+resource "aws_route53_zone" "delegated" {
+  name    = local.domain
+  comment = ""
+  tags    = local.edge_tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "aws_acm_certificate" "viewer" {
   provider          = aws.us_east_1
   domain_name       = local.domain

@@ -16,7 +16,7 @@ variable "environment" {
   type        = string
   nullable    = false
   validation {
-    condition     = contains(["prod", "dr"], var.environment)
-    error_message = "Environment must be prod or dr."
+    condition     = contains(["prod", "azure_dr"], var.environment)
+    error_message = "Environment must be prod or azure_dr."
   }
 }
