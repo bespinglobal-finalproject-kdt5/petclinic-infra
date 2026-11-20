@@ -1,32 +1,32 @@
-# Terraform state 관리 규칙
+# Terraform 실행과 state 관리
 
-State는 Terraform이 코드와 실제 자원을 연결하는 기록이다. 환경별로 한 벌씩 관리하며, 재사용 부품인 `modules/`에는 별도 state를 만들지 않는다.
+GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검증 및 AWS mock plan 테스트를 실행한다. 실계정 대상 plan이나 apply는 실행하지 않는다. CI는 backend를 연결하지 않으며 AWS 자격 증명이 필요 없다. 병합만으로 배포되지 않는다. 실제 `plan`과 `apply`는 배포 권한을 부여받은 담당자가 최신 `main`으로 수동 실행한다.
 
-Terraform 코드는 GitHub에서 리뷰하고, 실행은 GitHub Actions가 맡는다. 아래 경로는 실행 서버가 아니라 환경별 작업 폴더다. State는 GitHub 저장소가 아니라 각 클라우드에 보관한다.
+| 작업 폴더 | 공유 state |
+|---|---|
+| `envs/aws-prod/` | S3: `petclinic/aws-prod/terraform.tfstate` (backend 선언 추가됨) |
+| `envs/azure-dr/` | 별도 비공개 Azure Blob (향후 구성). AWS 자격 증명이나 state에 의존하지 않는다. |
 
-| 환경별 작업 폴더 | 실행 주체 | 원격 state 저장 위치 |
-|---|---|---|
-| `infra/envs/aws-prod/` | GitHub Actions | AWS 운영 환경 전용 비공개 S3 버킷 |
-| `infra/envs/azure-dr/` | GitHub Actions | Azure DR 환경 전용 비공개 Azure Blob 컨테이너 |
+개인·브랜치·모듈별 운영 state는 만들지 않는다. State는 DB 백업이 아니며 비밀 값이 들어갈 수 있다. state, 백업, plan은 Git·PR에 올리지 않는다. `.terraform.lock.hcl`은 provider 버전 기록이므로 커밋한다.
 
-Azure 복구 작업은 AWS의 state나 자격 증명에 의존하지 않게 한다.
+## AWS 관리자: 배포 전 한 번 준비
 
-- **접근:** 저장소를 암호화하고 읽기·쓰기 권한을 필요한 담당자와 배포 주체에만 부여한다. State와 백업은 비밀 값을 포함할 수 있으므로 Git이나 PR에 올리지 않는다. `.terraform.lock.hcl`은 state가 아니라 provider 버전 잠금 파일이므로 커밋한다.
-- **동시 작업:** 환경마다 backend 잠금을 사용하고 한 번에 하나의 `apply`만 실행한다. 잠금 오류가 나면 먼저 다른 작업이 진행 중인지 확인한다.
-- **복구:** 원격 저장소의 버전 관리를 켠다. State를 직접 편집·삭제하지 않으며 복원 전에는 진행 중인 작업을 멈추고 복원할 버전을 팀과 확인한다.
+- 비공개 S3 버킷을 준비하고 퍼블릭 액세스 차단, 기본 암호화, 버전 관리를 확인한다. 이 backend 설정은 버킷을 생성하지 않는다. 버킷 리전은 서비스 리전과 달라도 된다.
+- 담당자에게 실제 버킷 이름, 리전, 사용할 AWS 계정과 역할을 전달한다. 액세스 키를 Git이나 채팅에 공유하지 않는다.
+- 담당 역할에 해당 prefix의 `s3:ListBucket`, state 객체의 `GetObject`·`PutObject`, 같은 경로의 `.tflock` 객체에 `GetObject`·`PutObject`·`DeleteObject`를 허용한다. 고객 관리 KMS 키를 쓴다면 해당 키 권한도 확인한다. 리소스 배포 권한은 backend 권한과 별개다.
 
-이 문서는 구축 기준이다. 실제 저장소와 backend 잠금은 첫 환경 배포 전에 구성하고 확인한다.
+## 배포 담당자: 연결 및 수동 실행
 
-## GitHub Actions 사용 순서
+기존 운영 state가 이미 있다면 처음부터 빈 경로로 시작하지 않는다. 기존 키와 백업을 확인하고 이전은 별도로 합의한다. 아래는 **새 환경** 기준이다.
 
-아래는 워크플로를 도입한 뒤의 절차다. 이 문서 자체는 검사나 배포를 실행하지 않는다.
+```bash
+git switch main
+git pull --ff-only origin main
+cd infra/envs/aws-prod
+cp backend.hcl.example backend.hcl  # 최초 한 번. 실제 버킷 이름과 리전 입력
+aws sts get-caller-identity         # 승인된 프로필/역할로 로그인한 후 계정 확인
+terraform init -backend-config=backend.hcl -input=false
+terraform plan -out=reviewed.tfplan
+```
 
-1. **팀원 — PR 검사:** 작업 브랜치에서 Terraform 코드를 수정하고 `main` 대상 PR을 연다. PR의 **Checks** 탭에서 `terraform fmt -check -recursive`와 환경별 `terraform init -backend=false`, `terraform validate` 결과를 확인한다. 실패하면 해당 단계의 로그를 보고 같은 브랜치에 수정 사항을 push한다. PR 검사에는 운영 자격 증명을 주지 않는다.
-2. **담당자 — 계획 검토:** 병합 후 **Actions → 해당 실행**에서 대상 환경과 커밋을 확인한다. 워크플로는 해당 환경의 원격 state로 새 `plan`을 만든다. 생성·변경·삭제 내역을 검토한다. **병합만으로 클라우드 자원이 바뀌지는 않는다.**
-3. **승인자 — 실제 반영:** 계획이 의도와 같을 때만 **Review deployments → 대상 환경 → Approve and deploy**를 선택한다. `apply`는 그 실행에서 검토한 저장 계획만 사용한다. 예상 밖 삭제나 교체가 보이면 승인하지 않는다. 계획이 오래됐거나 state가 바뀌면 새 계획을 검토한다.
-
-### 관리자가 처음 준비할 것
-
-- 저장소 루트 `.github/workflows/`에 PR 검사 워크플로부터 추가한다. 첫 Terraform 코드로 검사가 성공한 뒤 해당 검사 이름을 `main`의 필수 검사로 지정한다.
-- 배포 연결 전 **Settings → Environments**에서 `aws-prod`, `azure-dr`를 각각 만들고, 필수 승인자와 배포 허용 브랜치(`main`)를 설정한다. 각 `apply` 작업이 해당 Environment를 참조해야 승인 대기가 적용된다.
-- 클라우드 권한은 GitHub OIDC로 연결하고, 계획 조회와 실제 변경 권한을 분리한다. 환경별로 backend 잠금과 실행 동시성 제한을 설정한다. 저장 계획에는 민감한 값이 있을 수 있으므로 공개 레포의 로그·댓글·공개 다운로드에 노출하지 않는다.
+대상과 추가·변경·삭제 내역을 확인한 뒤 **해당 계획만** `terraform apply reviewed.tfplan`으로 적용한다. backend 초기화만으로는 VPC가 생기지 않지만 실제 네트워크 계획을 적용하면 자원이 생성된다. 계획에는 확인한 `aws_account_id`, `aws_region`, `availability_zones`를 입력해야 한다. 로컬 `terraform.tfvars`에 넣을 경우 Git에 올리지 않는다. 같은 환경에 한 번에 하나의 apply만 실행한다. 잠금이 있으면 진행 중인 작업부터 확인하며, state의 직접 편집·삭제 및 임의 잠금 해제는 금지한다. 복구 시 작업을 멈추고 복원할 객체 버전을 팀과 확인한다.

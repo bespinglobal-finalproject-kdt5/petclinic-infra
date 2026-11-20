@@ -5,3 +5,9 @@
 
 # Keep provider dependency lock files in version control.
 !.terraform.lock.hcl
+
+# Local backend settings, input values and saved plan files
+backend.hcl
+*.tfvars
+*.tfvars.json
+*.tfplan

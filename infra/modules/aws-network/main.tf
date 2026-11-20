@@ -1,0 +1,86 @@
+terraform {
+  required_version = ">= 1.10, < 2.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.0, < 7.0"
+    }
+  }
+}
+
+locals {
+  service_subnets = {
+    app_1    = { cidr = "10.10.0.0/24", az_index = 0, table = "private", component = "app" }
+    app_2    = { cidr = "10.10.1.0/24", az_index = 1, table = "private", component = "app" }
+    public_1 = { cidr = "10.10.2.0/27", az_index = 0, table = "public", component = "network" }
+    public_2 = { cidr = "10.10.2.32/27", az_index = 1, table = "public", component = "network" }
+    db_1     = { cidr = "10.10.2.64/27", az_index = 0, table = "private", component = "database" }
+    db_2     = { cidr = "10.10.2.96/27", az_index = 1, table = "private", component = "database" }
+  }
+  tags = { project = "petclinic", environment = var.environment }
+}
+
+resource "aws_vpc" "service" {
+  cidr_block = "10.10.0.0/22"
+  tags       = merge(local.tags, { component = "network" })
+}
+
+resource "aws_vpc" "management" {
+  cidr_block = "10.20.0.0/24"
+  tags       = merge(local.tags, { component = "management" })
+}
+
+resource "aws_subnet" "service" {
+  for_each                = local.service_subnets
+  vpc_id                  = aws_vpc.service.id
+  cidr_block              = each.value.cidr
+  availability_zone       = var.availability_zones[each.value.az_index]
+  map_public_ip_on_launch = false
+  tags                    = merge(local.tags, { component = each.value.component })
+}
+
+resource "aws_subnet" "management" {
+  vpc_id                  = aws_vpc.management.id
+  cidr_block              = "10.20.0.0/27"
+  availability_zone       = var.availability_zones[0]
+  map_public_ip_on_launch = false
+  tags                    = merge(local.tags, { component = "management" })
+}
+
+resource "aws_internet_gateway" "service" {
+  vpc_id = aws_vpc.service.id
+  tags   = merge(local.tags, { component = "network" })
+}
+
+resource "aws_route_table" "service_public" {
+  vpc_id = aws_vpc.service.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.service.id
+  }
+  tags = merge(local.tags, { component = "network" })
+}
+
+# An explicit empty route set manages away non-local routes. AWS supplies local.
+resource "aws_route_table" "service_private" {
+  vpc_id = aws_vpc.service.id
+  route  = []
+  tags   = merge(local.tags, { component = "network" })
+}
+
+resource "aws_route_table" "management" {
+  vpc_id = aws_vpc.management.id
+  route  = []
+  tags   = merge(local.tags, { component = "management" })
+}
+
+resource "aws_route_table_association" "service" {
+  for_each       = local.service_subnets
+  subnet_id      = aws_subnet.service[each.key].id
+  route_table_id = each.value.table == "public" ? aws_route_table.service_public.id : aws_route_table.service_private.id
+}
+
+resource "aws_route_table_association" "management" {
+  subnet_id      = aws_subnet.management.id
+  route_table_id = aws_route_table.management.id
+}

@@ -1,0 +1,26 @@
+name: Terraform CI
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    name: Terraform format and validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.12.2'
+      - run: terraform fmt -check -recursive infra
+      - name: Validate configured environments without remote state
+        shell: bash
+        run: |
+          for dir in infra/envs/*; do
+            compgen -G "$dir/*.tf" > /dev/null || continue
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+          done
+      - name: Run AWS network mock plan tests (no AWS credentials)
+        run: terraform -chdir=infra/envs/aws-prod test -no-color

@@ -1,5 +1,7 @@
 # PetClinic 인프라 구조 초안
 
+처음 참여한다면 [팀원 clone·코드 작성·PR 안내](CONTRIBUTING.md)를 먼저 읽어주세요. 모듈 담당자는 [공통 네트워크](infra/NETWORK.md), 배포 담당자는 [공유 state 설정](infra/STATE.md)을 확인하세요.
+
 ## 어디에서 무엇을 관리하나?
 
 | 경로 | 역할 |
