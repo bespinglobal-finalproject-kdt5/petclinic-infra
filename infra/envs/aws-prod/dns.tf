@@ -16,7 +16,7 @@ import {
 resource "aws_route53_zone" "delegated" {
   name    = local.domain
   comment = ""
-  tags    = local.edge_tags
+  tags    = merge(local.edge_tags, { Name = "petclinic-prod-public-zone" })
 
   lifecycle {
     prevent_destroy = true
@@ -27,7 +27,7 @@ resource "aws_acm_certificate" "viewer" {
   provider          = aws.us_east_1
   domain_name       = local.domain
   validation_method = "DNS"
-  tags              = local.edge_tags
+  tags              = merge(local.edge_tags, { Name = "petclinic-prod-viewer-certificate" })
 
   lifecycle { create_before_destroy = true }
 }

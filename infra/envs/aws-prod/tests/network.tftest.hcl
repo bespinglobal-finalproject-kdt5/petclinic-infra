@@ -72,8 +72,8 @@ run "network_topology" {
       [aws_vpc.service.tags, aws_vpc.management.tags, aws_internet_gateway.service.tags, aws_subnet.management.tags,
         aws_eip.app_nat.tags, aws_nat_gateway.public_1.tags, aws_route_table.service_app.tags,
       aws_route_table.service_public.tags, aws_route_table.service_private.tags, aws_route_table.management.tags]
-    ) : tags.project == "petclinic" && tags.environment == "prod" && contains(["app", "database", "network", "management"], tags.component)])
-    error_message = "All taggable resources need the common tags."
+    ) : tags.project == "petclinic" && tags.environment == "prod" && startswith(tags.Name, "petclinic-prod-") && contains(["app", "database", "network", "management"], tags.component)])
+    error_message = "All taggable resources need the common tags and a production Name."
   }
   assert {
     condition = (

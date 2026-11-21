@@ -71,8 +71,8 @@ run "public_edge" {
       aws_route53_zone.delegated.tags, aws_acm_certificate.viewer.tags, aws_security_group.origin.tags,
       aws_vpc_security_group_ingress_rule.cloudfront_http.tags, aws_lb.origin.tags, aws_lb_listener.http.tags,
       aws_lb_listener_rule.health.tags, aws_cloudfront_vpc_origin.alb.tags, aws_cloudfront_distribution.edge.tags
-    ] : tags.project == "petclinic" && tags.environment == "prod" && tags.component == "network"])
-    error_message = "All taggable edge resources must carry the shared production network tags."
+    ] : tags.project == "petclinic" && tags.environment == "prod" && tags.component == "network" && startswith(tags.Name, "petclinic-prod-")])
+    error_message = "All taggable edge resources must carry the shared production network tags and a Name."
   }
 
   assert {

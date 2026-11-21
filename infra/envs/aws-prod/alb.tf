@@ -11,7 +11,7 @@ resource "aws_security_group" "origin" {
   name_prefix = "petclinic-origin-"
   description = "Internal ALB for CloudFront VPC origin"
   vpc_id      = module.network.service_vpc_id
-  tags        = local.edge_tags
+  tags        = merge(local.edge_tags, { Name = "petclinic-prod-origin-alb-sg" })
 }
 
 resource "aws_vpc_security_group_ingress_rule" "cloudfront_http" {
@@ -20,7 +20,7 @@ resource "aws_vpc_security_group_ingress_rule" "cloudfront_http" {
   from_port         = 80
   to_port           = 80
   prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
-  tags              = local.edge_tags
+  tags              = merge(local.edge_tags, { Name = "petclinic-prod-cloudfront-http-ingress" })
 }
 
 resource "aws_lb" "origin" {
@@ -29,14 +29,14 @@ resource "aws_lb" "origin" {
   ip_address_type    = "ipv4"
   subnets            = module.network.app_subnet_ids
   security_groups    = [aws_security_group.origin.id]
-  tags               = local.edge_tags
+  tags               = merge(local.edge_tags, { Name = "petclinic-prod-origin-alb" })
 }
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.origin.arn
   port              = 80
   protocol          = "HTTP"
-  tags              = local.edge_tags
+  tags              = merge(local.edge_tags, { Name = "petclinic-prod-origin-http-listener" })
 
   default_action {
     type = "fixed-response"
@@ -51,7 +51,7 @@ resource "aws_lb_listener" "http" {
 resource "aws_lb_listener_rule" "health" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 10
-  tags         = local.edge_tags
+  tags         = merge(local.edge_tags, { Name = "petclinic-prod-origin-health-rule" })
 
   condition {
     path_pattern { values = ["/health"] }
