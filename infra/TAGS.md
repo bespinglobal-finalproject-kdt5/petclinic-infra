@@ -18,3 +18,5 @@
 | Azure 복구용 앱 VM | `petclinic` | `azure_dr` | `app` |
 
 EKS 서브넷 탐색처럼 서비스 동작에 필요한 시스템 태그는 공통 태그와 별도로 유지합니다.
+
+AWS 운영 Terraform은 태그를 지원하는 관리 대상 자원에 대소문자를 구분하는 `Name` 태그도 붙입니다. `petclinic-prod-` 뒤에 역할과 종류를 쓰고, 서브넷 이름에는 AZ를 덧붙입니다(예: `petclinic-prod-service-vpc`, `petclinic-prod-app-subnet-2a`). 이 표시 태그는 ALB 물리 이름이나 DNS 레코드를 바꾸지 않습니다.

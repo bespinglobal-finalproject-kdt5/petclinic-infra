@@ -14,7 +14,7 @@ resource "aws_cloudfront_vpc_origin" "alb" {
       quantity = 1
     }
   }
-  tags = local.edge_tags
+  tags = merge(local.edge_tags, { Name = "petclinic-prod-alb-vpc-origin" })
 
   # The endpoint ARN alone does not imply a working listener or admission rule.
   depends_on = [aws_lb_listener_rule.health, aws_vpc_security_group_ingress_rule.cloudfront_http]
@@ -24,7 +24,7 @@ resource "aws_cloudfront_distribution" "edge" {
   enabled         = true
   is_ipv6_enabled = true
   aliases         = [local.domain]
-  tags            = local.edge_tags
+  tags            = merge(local.edge_tags, { Name = "petclinic-prod-edge-distribution" })
 
   origin {
     domain_name = aws_lb.origin.dns_name
