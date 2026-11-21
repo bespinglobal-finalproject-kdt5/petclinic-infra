@@ -1,10 +1,10 @@
 # AWS 운영 환경: mission-critical.site
 
-기존 Route 53 영역에서 apex의 A·AAAA 별칭을 CloudFront에 연결한다. us-east-1 ACM 인증서의 검증 CNAME을 보존한다. UI는 GET/HEAD, `/petclinic/api/*`는 HTTPS와 CRUD 메서드를 허용하며 둘 다 캐시를 끈다. 뷰어 함수는 `demo_viewer_ipv4`에 명시한 개별 공인 IPv4만 허용한다(기본 빈 목록은 모두 403). 이 데모에 실제 고객 데이터를 넣지 않는다.
+기존 Route 53 영역에서 apex의 A·AAAA 별칭을 CloudFront에 연결한다. us-east-1 ACM 인증서의 검증 CNAME을 보존한다. UI는 GET/HEAD, `/petclinic/api/*`는 HTTPS와 CRUD 메서드를 허용하며 둘 다 캐시를 끈다. 웹과 API는 IP 제한이나 로그인 없이 공개한다. 누구나 등록·수정·삭제할 수 있는 가상 데이터 전용 데모다. 이 데모에 실제 고객 데이터를 넣지 않는다.
 
 **암호화 경계:** TLS는 CloudFront에서 종료한다. CloudFront VPC origin에서 서울 서비스 VPC의 내부 ALB까지는 사설 IPv4 경로의 **평문 HTTP:80**이다. ALB는 두 앱 서브넷에 있고, 보안 그룹은 AWS 관리형 CloudFront origin-facing 접두사 목록에서 오는 TCP/80만 허용한다. 이 목록은 특정 배포 전용이 아니며 종단 간 TLS나 요청 인증을 대신하지 않는다. 인증 정보나 민감한 앱 데이터를 전달하기 전에는 이 경계를 재검토한다. 서비스 VPC에는 DNS support/hostnames 및 연결된 IGW가 필요하지만 ALB를 퍼블릭 서브넷에 둘 필요는 없다.
 
-`/health`는 기존 ALB의 고정 200이므로 앱 배포 성공 기준이 아니다. API는 별도 대상 그룹(NodePort 30966), UI는 기본 경로 대상 그룹(30080)을 쓴다. 노드 그룹의 ASG가 EC2 대상을 등록한다. 인프라 적용만으로 Pod가 기동하지 않는다. ECR 이미지 업로드 후 [Kubernetes 배포](../../../deploy/k8s/README.md)를 수행하고, 두 대상 그룹이 healthy인지와 허용한 IP에서 실제 API 조회·등록이 되는지를 확인한다. Pod가 준비되기 전에는 도메인에서 503을 반환할 수 있다.
+`/health`는 기존 ALB의 고정 200이므로 앱 배포 성공 기준이 아니다. API는 별도 대상 그룹(NodePort 30966), UI는 기본 경로 대상 그룹(30080)을 쓴다. 노드 그룹의 ASG가 EC2 대상을 등록한다. 인프라 적용만으로 Pod가 기동하지 않는다. ECR 이미지 업로드 후 [Kubernetes 배포](../../../deploy/k8s/README.md)를 수행하고, 두 대상 그룹이 healthy인지와 일반 인터넷 연결에서 인증 없이 가상 데이터의 API 조회·등록이 되는지를 확인한다. Pod가 준비되기 전에는 도메인에서 503을 반환할 수 있다.
 
 ## 실제 plan 전 확인
 

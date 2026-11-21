@@ -73,31 +73,6 @@ resource "aws_lb_listener_rule" "app" {
   tags = merge(local.application_tags, { Name = "petclinic-prod-${each.key}-rule" })
 }
 
-# Fail closed until operator IPs are supplied. Do not allow an unauthenticated demo API worldwide.
-variable "demo_viewer_ipv4" {
-  type        = set(string)
-  default     = []
-  description = "Exact public IPv4 addresses allowed to use this demo; no CIDRs. Empty denies all."
-  validation {
-    condition     = alltrue([for ip in var.demo_viewer_ipv4 : can(cidrnetmask("${ip}/32"))])
-    error_message = "Supply plain IPv4 addresses, not CIDRs."
-  }
-}
-resource "aws_cloudfront_function" "viewer_gate" {
-  name    = "petclinic-prod-restrict-demo"
-  runtime = "cloudfront-js-2.0"
-  publish = true
-  code    = <<-JS
-    function handler(event) {
-      var allowed = ${jsonencode(sort(tolist(var.demo_viewer_ipv4)))};
-      if (allowed.indexOf(event.viewer.ip) === -1) {
-        return {statusCode: 403, statusDescription: 'Forbidden', headers: {'cache-control': {value: 'no-store'}}};
-      }
-      return event.request;
-    }
-  JS
-}
-
 data "aws_cloudfront_origin_request_policy" "api" {
   name = "Managed-AllViewerExceptHostHeader"
 }

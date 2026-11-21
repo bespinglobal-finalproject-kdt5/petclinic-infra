@@ -1,6 +1,6 @@
 # Post-apply: Angular + Spring REST on private EKS
 
-Run from a trusted Linux operator workstation, **not** from Terraform, a worker or the SSM instance. Commands below start at the `petclinic-tag-policy` root. They assume the parent has applied the production infrastructure, closed public writes with its IP gate, and released the reviewed images. Do not expose these unauthenticated workloads before the gate is verified.
+Run from a trusted Linux operator workstation, **not** from Terraform, a worker or the SSM instance. The demo UI and API deliberately allow anonymous reads and writes from the Internet. Use synthetic records only. Cluster management, ALB and DB still use private networking.
 
 ## Handoff
 
@@ -56,7 +56,7 @@ kubectl -n petclinic get deployment,svc,pods -o wide
 
 Expect `2/2` available for `web` and `api`. Both Services use `externalTrafficPolicy: Cluster`: any registered node can forward to a ready pod. Target health paths: web 30080 → 8080 `/`; API 30966 → 9966 `/petclinic/actuator/health/readiness` (includes DB). Liveness does not depend on DB availability.
 
-From an **allowed** operator IP, check the actual viewer domain and read from the empty or populated DB without modifying records:
+From an ordinary Internet connection without credentials, check the public domain and read the demo DB without modifying records:
 
 ```bash
 BASE=$(terraform -chdir=infra/envs/aws-prod output -raw public_url)
@@ -64,4 +64,4 @@ curl -fsS "${BASE%/}/" -o /dev/null
 curl -fsS "${BASE%/}/petclinic/api/v2/owners?page=0&size=1" | jq -e '(.content | type == "array") and .page == 0 and .size == 1'
 ```
 
-The legacy `/petclinic/api/owners` can legitimately return 404 when empty. If the viewer test fails, isolate the API with `kubectl -n petclinic port-forward --address 127.0.0.1 svc/api 19966:9966`; repeat the paginated GET against `http://127.0.0.1:19966`. Check both target groups and the parent gate separately. To roll back app code, redeploy the last known-good digest pair compatible with the installed schema. Do not roll back the DB by deleting it. Close the SSM session and remove the temporary kubeconfig when finished.
+The legacy `/petclinic/api/owners` can legitimately return 404 when empty. To isolate the API from CloudFront and ALB, use `kubectl -n petclinic port-forward --address 127.0.0.1 svc/api 19966:9966` and repeat the paginated GET locally. Redeploy compatible known-good image digests to roll back app code; do not delete the DB. Close the SSM session and remove the temporary kubeconfig when finished.
