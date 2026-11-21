@@ -2,9 +2,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 source ./common.sh
-: "${WEB_IMAGE:?Full ECR web image by digest}" "${API_IMAGE:?Full ECR api image by digest}"
-for image in "$WEB_IMAGE" "$API_IMAGE"; do
-  [[ $image =~ ^[0-9]{12}\.dkr\.ecr\.ap-northeast-2\.amazonaws\.com/[a-z0-9][a-z0-9._/-]*@sha256:[a-f0-9]{64}$ ]] || { echo 'Expected full Seoul ECR image by digest' >&2; exit 1; }
+: "${WEB_IMAGE:?GHCR web image by digest}" "${API_IMAGE:?GHCR api image by digest}"
+prefix='ghcr.io/bespinglobal-finalproject-kdt5/petclinic-'
+for kind in web api; do
+  var="${kind^^}_IMAGE"; ref=${!var}; digest=${ref##*@}
+  [[ $ref == "$prefix$kind@$digest" && $digest =~ ^sha256:[a-f0-9]{64}$ ]] || { echo "Expected organization GHCR petclinic-$kind by digest" >&2; exit 1; }
 done
 export WEB_IMAGE API_IMAGE
 envsubst '$WEB_IMAGE $API_IMAGE $DB_HOST' < apps.yaml.in | k apply -f -

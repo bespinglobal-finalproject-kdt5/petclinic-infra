@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
-# Post-approval only. Publish existing local linux/amd64 images to the newly created repositories.
+# Publish the tested local images; docker must already be authenticated to ghcr.io.
+# Use a private DOCKER_CONFIG or OS credential helper; never pass tokens as arguments.
 set -euo pipefail
 umask 077
-: "${WEB_LOCAL:?set WEB_LOCAL to a tested local Angular image}" "${API_LOCAL:?set API_LOCAL to a tested local REST image}"
-region=ap-northeast-2
-account=$(aws sts get-caller-identity --query Account --output text)
-: "${EXPECTED_AWS_ACCOUNT:?confirm the production account ID}"; [[ $account == "$EXPECTED_AWS_ACCOUNT" ]] || exit 2
-registry="$account.dkr.ecr.$region.amazonaws.com"
-docker_cfg=$(mktemp -d); trap 'rm -rf -- "$docker_cfg"' EXIT
-# Read immutable IDs before any push. ECR tags are content-based, not latest.
-refs=("$WEB_LOCAL" "$API_LOCAL"); keys=(web api); ids=(); tags=()
-for i in 0 1; do
-  ref=${refs[i]}; arch=$(docker image inspect "$ref" --format '{{.Os}}/{{.Architecture}}'); [[ $arch == linux/amd64 ]] || exit 2
-  id=$(docker image inspect "$ref" --format '{{.Id}}'); ids+=("$id"); tags+=("img-${id#sha256:}")
-  name=petclinic-prod/${keys[i]}; url=$(aws ecr describe-repositories --region "$region" --repository-names "$name" --query 'repositories[0].repositoryUri' --output text); [[ $url == "$registry/$name" ]] || exit 2
+: "${WEB_LOCAL:?tested local Angular image}" "${API_LOCAL:?tested local REST image}"
+org=bespinglobal-finalproject-kdt5
+refs=("$WEB_LOCAL" "$API_LOCAL"); apps=(web api); ids=(); output=()
+log=$(mktemp); trap 'rm -f "$log"' EXIT
+for ref in "${refs[@]}"; do
+  [[ $(docker image inspect "$ref" --format '{{.Os}}/{{.Architecture}}') == linux/amd64 ]] || { echo 'Expected linux/amd64 image' >&2; exit 2; }
+  ids+=("$(docker image inspect "$ref" --format '{{.Id}}')")
 done
-aws ecr get-login-password --region "$region" | docker --config "$docker_cfg" login --username AWS --password-stdin "$registry" >&2
 for i in 0 1; do
-  name=petclinic-prod/${keys[i]}; tag=${tags[i]}; dst="$registry/$name:$tag"
-  if ! digest=$(aws ecr describe-images --region "$region" --repository-name "$name" --image-ids "imageTag=$tag" --query 'imageDetails[0].imageDigest' --output text 2>"$docker_cfg/error"); then
-    grep -q ImageNotFoundException "$docker_cfg/error" || { cat "$docker_cfg/error" >&2; exit 1; }
-    docker image tag "${ids[i]}" "$dst"; docker --config "$docker_cfg" push "$dst" >&2
-    digest=$(aws ecr describe-images --region "$region" --repository-name "$name" --image-ids "imageTag=$tag" --query 'imageDetails[0].imageDigest' --output text)
-  fi
-  [[ $digest =~ ^sha256:[a-f0-9]{64}$ ]] || exit 1
-  printf '%s=%s/%s@%s\n' "${keys[i]^^}_IMAGE" "$registry" "$name" "$digest"
+  image="ghcr.io/$org/petclinic-${apps[i]}"; tag="img-${ids[i]#sha256:}"
+  docker tag "${ids[i]}" "$image:$tag"
+  docker push "$image:$tag" >"$log" || { echo "Push failed for $image (GHCR write:packages and organization access required)" >&2; exit 1; }
+  digest=$(sed -nE 's/^.*digest: (sha256:[0-9a-f]{64}) size: [0-9]+.*$/\1/p' "$log" | tail -1)
+  [[ $digest =~ ^sha256:[a-f0-9]{64}$ ]] || { echo 'Cannot determine pushed manifest digest' >&2; exit 1; }
+  docker manifest inspect "$image@$digest" >/dev/null
+  output+=("${apps[i]^^}_IMAGE=$image@$digest")
 done
+printf '%s\n' "${output[@]}"
