@@ -1,5 +1,8 @@
 mock_provider "aws" {
   source = "./tests/mocks"
+  mock_resource "aws_vpc_peering_connection" {
+    override_during = plan
+  }
 }
 
 run "network_topology" {
@@ -16,6 +19,7 @@ run "network_topology" {
     condition = (
       aws_vpc.service.cidr_block == "10.10.0.0/22" && aws_vpc.management.cidr_block == "10.20.0.0/24" &&
       aws_vpc.service.enable_dns_support && aws_vpc.service.enable_dns_hostnames &&
+      aws_vpc.management.enable_dns_support && aws_vpc.management.enable_dns_hostnames &&
       aws_subnet.management.cidr_block == "10.20.0.0/27" && aws_subnet.management.availability_zone == var.availability_zones[0] &&
       aws_subnet.management.vpc_id == aws_vpc.management.id && !aws_subnet.management.map_public_ip_on_launch
     )
@@ -57,21 +61,26 @@ run "network_topology" {
       aws_internet_gateway.service.vpc_id == aws_vpc.service.id && aws_route_table.service_public.vpc_id == aws_vpc.service.id &&
       one(aws_route_table.service_public.route).cidr_block == "0.0.0.0/0" &&
       one(aws_route_table.service_public.route).gateway_id == aws_internet_gateway.service.id &&
-      aws_route_table.service_app.vpc_id == aws_vpc.service.id && one(aws_route_table.service_app.route).cidr_block == "0.0.0.0/0" &&
-      one(aws_route_table.service_app.route).nat_gateway_id == aws_nat_gateway.public_1.id &&
+      aws_vpc_peering_connection.management_app.vpc_id == aws_vpc.management.id &&
+      aws_vpc_peering_connection.management_app.peer_vpc_id == aws_vpc.service.id && aws_vpc_peering_connection.management_app.auto_accept &&
+      aws_route_table.service_app.vpc_id == aws_vpc.service.id && length(aws_route_table.service_app.route) == 2 &&
+      one([for r in aws_route_table.service_app.route : r.nat_gateway_id if r.cidr_block == "0.0.0.0/0"]) == aws_nat_gateway.public_1.id &&
+      one([for r in aws_route_table.service_app.route : r.vpc_peering_connection_id if r.cidr_block == aws_subnet.management.cidr_block]) == aws_vpc_peering_connection.management_app.id &&
       aws_route_table.service_private.vpc_id == aws_vpc.service.id && length(aws_route_table.service_private.route) == 0 &&
-      aws_route_table.management.vpc_id == aws_vpc.management.id && length(aws_route_table.management.route) == 0 &&
+      aws_route_table.management.vpc_id == aws_vpc.management.id &&
+      toset([for r in aws_route_table.management.route : r.cidr_block]) == toset([aws_subnet.service["app_1"].cidr_block, aws_subnet.service["app_2"].cidr_block]) &&
+      alltrue([for r in aws_route_table.management.route : r.vpc_peering_connection_id == aws_vpc_peering_connection.management_app.id]) &&
       aws_route_table_association.management.route_table_id == aws_route_table.management.id &&
       aws_route_table_association.management.subnet_id == aws_subnet.management.id
     )
-    error_message = "Public and app defaults must target the IGW and NAT respectively; DB and management tables must remain local-only."
+    error_message = "Only app and management subnets peer; public/app defaults target IGW/NAT respectively, DB is local-only and management has no default."
   }
   assert {
     condition = alltrue([for tags in concat(
       [for s in aws_subnet.service : s.tags],
       [aws_vpc.service.tags, aws_vpc.management.tags, aws_internet_gateway.service.tags, aws_subnet.management.tags,
         aws_eip.app_nat.tags, aws_nat_gateway.public_1.tags, aws_route_table.service_app.tags,
-      aws_route_table.service_public.tags, aws_route_table.service_private.tags, aws_route_table.management.tags]
+      aws_route_table.service_public.tags, aws_route_table.service_private.tags, aws_route_table.management.tags, aws_vpc_peering_connection.management_app.tags]
     ) : tags.project == "petclinic" && tags.environment == "prod" && startswith(tags.Name, "petclinic-prod-") && contains(["app", "database", "network", "management"], tags.component)])
     error_message = "All taggable resources need the common tags and a production Name."
   }

@@ -40,6 +40,24 @@ resource "aws_cloudfront_distribution" "edge" {
     cached_methods         = ["GET", "HEAD"]
     cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id
     viewer_protocol_policy = "redirect-to-https"
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.viewer_gate.arn
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern             = "/petclinic/api/*"
+    target_origin_id         = "internal-alb"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
+    viewer_protocol_policy   = "https-only"
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.viewer_gate.arn
+    }
   }
 
   custom_error_response {

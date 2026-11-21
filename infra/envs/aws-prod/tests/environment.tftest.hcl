@@ -138,4 +138,17 @@ run "public_edge" {
     )
     error_message = "Both public apex aliases must point to the distribution, not the ALB."
   }
+  assert {
+    condition = (
+      length(aws_cloudfront_distribution.edge.default_cache_behavior[0].function_association) == 1 &&
+      length(aws_cloudfront_distribution.edge.ordered_cache_behavior[0].function_association) == 1 &&
+      aws_cloudfront_distribution.edge.ordered_cache_behavior[0].path_pattern == "/petclinic/api/*" &&
+      contains(aws_cloudfront_distribution.edge.ordered_cache_behavior[0].allowed_methods, "POST") &&
+      !contains(aws_cloudfront_distribution.edge.default_cache_behavior[0].allowed_methods, "POST") &&
+      aws_db_instance.petclinic.multi_az && !aws_db_instance.petclinic.publicly_accessible &&
+      aws_db_instance.petclinic.storage_encrypted && aws_db_instance.petclinic.manage_master_user_password &&
+      aws_db_instance.petclinic.deletion_protection && aws_db_instance.petclinic.backup_retention_period >= 7
+    )
+    error_message = "Both CloudFront paths must be gated, writes API-only, and RDS private and protected."
+  }
 }

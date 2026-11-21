@@ -24,5 +24,6 @@ output "public_subnet_ids" {
 }
 
 output "management_subnet_id" {
-  value = aws_subnet.management.id
+  value      = aws_subnet.management.id
+  depends_on = [aws_route_table_association.management]
 }

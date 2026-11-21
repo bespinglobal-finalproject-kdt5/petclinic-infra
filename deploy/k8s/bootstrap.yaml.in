@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata: {name: petclinic-bootstrap, namespace: petclinic}
+spec:
+  ttlSecondsAfterFinished: 300
+  activeDeadlineSeconds: 300
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: bootstrap
+          image: docker.io/library/postgres@sha256:1d5b02d3a9941fbd52437db4107f8c52d6297dac553ca1e5c299ebb3756b4857
+          command: [/bin/sh, /bootstrap/bootstrap-entry.sh]
+          env:
+            - {name: PGHOST, value: '${DB_HOST}'}
+            - {name: PGDATABASE, value: petclinic}
+            - {name: PGUSER, value: petclinic_admin}
+            - {name: PGSSLMODE, value: verify-full}
+            - {name: PGSSLROOTCERT, value: /rds/ca.pem}
+            - {name: PGCONNECT_TIMEOUT, value: '12'}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          resources: {requests: {cpu: 25m, memory: 32Mi}, limits: {cpu: 250m, memory: 64Mi}}
+          readinessProbe: {exec: {command: [test, -p, /tmp/master-in]}, periodSeconds: 2}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: ca, mountPath: /rds, readOnly: true}
+            - {name: code, mountPath: /bootstrap, readOnly: true}
+            - {name: app, mountPath: /run/app, readOnly: true}
+      volumes:
+        - {name: tmp, emptyDir: {medium: Memory}}
+        - {name: ca, configMap: {name: rds-ca}}
+        - {name: code, configMap: {name: petclinic-bootstrap-v1}}
+        - {name: app, secret: {secretName: petclinic-db-app, defaultMode: 0440}}
