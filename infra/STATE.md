@@ -17,7 +17,7 @@ GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검�
 
 ## 기존 체크아웃을 오사카에 다시 연결
 
-현재 state는 도쿄에서 오사카로 **이미 이전**했다. 원본의 lineage, serial과 리소스/outputs를 대조했다. 과거 객체 버전은 도쿄에 보존하고 이전 state의 쓰기·삭제 및 새 잠금 생성을 차단했다. 과거 plan을 실행하거나 다시 `-migrate-state`, `-force-copy`, `state push`하지 않는다. 서울 워크로드·Azure DR의 리전은 바뀌지 않는다.
+현재 state는 오사카로 이전했고 구 도쿄 버킷 `petclinic-prod-tfstate`는 삭제했다. 삭제 전 도쿄 state 28개 버전을 오사카의 `archive/tokyo/petclinic/aws-prod/versions/`에 개별 객체로 복사하고, 각 보관 버전을 다시 읽어 원본과 바이트 단위로 대조했다. 원본 버전 ID·수정 시각·serial·SHA-256과 보관 객체 위치는 같은 버킷의 `archive/tokyo/petclinic/aws-prod/manifest.json`에 기록했다. 운영 키·lineage는 그대로이며, 과거 잠금 파일은 복구용 state가 아니다. 서울 워크로드·Azure DR의 리전은 바뀌지 않았다.
 
 이 저장소의 `backend.tf`가 버킷과 리전을 지정한다. 기존에 `-backend-config=backend.hcl`을 쓰던 작업자/CI는 도쿄 override를 제거하거나 `backend.hcl.example`의 오사카 값으로 바꾼다. 기본값을 사용하는 경우 아래처럼 연결만 재설정한다. `state list`에 기존 자원이 보이지 않으면 진행하지 않는다.
 
@@ -33,4 +33,4 @@ terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 �
 
 대상과 추가·변경·삭제 내역을 확인한 뒤 **해당 계획만** `terraform apply reviewed.tfplan`으로 적용한다. backend 초기화만으로는 VPC가 생기지 않지만 실제 네트워크 계획을 적용하면 자원이 생성된다. 계획에는 확인한 `aws_account_id`, `aws_region`, `availability_zones`를 입력해야 한다. 로컬 `terraform.tfvars`에 넣을 경우 Git에 올리지 않는다. 같은 환경에 한 번에 하나의 apply만 실행한다. 잠금이 있으면 진행 중인 작업부터 확인하며, state의 직접 편집·삭제 및 임의 잠금 해제는 금지한다. 복구 시 작업을 멈추고 복원할 객체 버전을 팀과 확인한다.
 
-복구가 필요하면 모든 writer를 멈추고 오사카의 최신 버전을 먼저 보존한다. 도쿄의 과거 버전을 현재 state로 간주하거나 임의로 버킷 정책을 해제하지 않는다.
+복구가 필요하면 모든 writer를 멈추고 오사카의 최신 버전을 먼저 보존한다. manifest로 보관본의 체크섬과 버전을 확인하고 팀의 승인된 복구 절차를 따른다. `archive/`를 백엔드로 연결하거나 이전 도쿄 버킷 이름을 다시 사용하지 않는다. 보관본을 운영 state에 임의로 덮어쓰지 않는다.

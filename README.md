@@ -6,7 +6,7 @@
 
 - **서울:** 서비스 VPC `10.10.0.0/22`와 관리 VPC `10.20.0.0/24`는 `aws-network` 모듈 한 번의 호출로 구성한다. 앱 서브넷 두 곳은 `2a`의 NAT Gateway 하나를 공유한다. DB·관리 서브넷에는 인터넷 기본 경로가 없다.
 - **도메인 진입점:** Terraform이 프라이빗 앱 서브넷 두 곳에 내부 ALB를 관리한다. VPC 오리진은 이 ALB를 대상으로 하며 `/health`는 고정 200이다. [PR #10](https://github.com/bespinglobal-finalproject-kdt5/petclinic-infra/pull/10) 이후 state 복구 시점에는 CloudFront 배포와 도메인 A·AAAA 별칭은 코드에만 있었으며 태그 작업에서는 생성하지 않는다. EKS나 앱 준비 상태를 검증하는 엔드포인트가 아니다.
-- **오사카:** 운영 [Terraform state](infra/STATE.md)는 비공개 S3 버킷(`ap-northeast-3`)에 저장한다. 도쿄에는 이전 버전 이력만 보존하며, 서울 워크로드와 Azure DR state는 별개다.
+- **오사카:** 운영 [Terraform state](infra/STATE.md)는 비공개 S3 버킷(`ap-northeast-3`)에 저장한다. 구 도쿄 버킷은 삭제했으며 이전 state 버전 이력도 오사카 버킷의 별도 경로에 보관한다. 서울 워크로드와 Azure DR state는 별개다.
 
 ## 왜 서비스 VPC는 `/22`인가?
 
