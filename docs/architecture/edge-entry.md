@@ -1,6 +1,6 @@
 # Petclinic edge entry
 
-[Open the editable diagram](edge-entry.drawio) in diagrams.net. **Status: proposed, not live-verified.** The existing `mission-critical.site` zone, Seoul network and Tokyo state backend are inputs to this design. The repository defines the network layout; it does not establish that the proposed edge resources are running.
+[Open the editable diagram](edge-entry.drawio) in diagrams.net. **Status: proposed, not live-verified.** The existing `mission-critical.site` zone, Seoul network and Osaka state backend are inputs to this design. The repository defines the network layout; it does not establish that the proposed edge resources are running.
 
 ## Follow one request
 
@@ -25,7 +25,7 @@ The [Terraform network module](../../infra/modules/aws-network/main.tf) defines 
 | Service | `db_2` | 2c | `10.10.2.96/27` | Local routing only |
 | Management (`10.20.0.0/24`) | `management` | 2a | `10.20.0.0/27` | Local routing only; not an ingress hop |
 
-**Outbound only:** both app subnets send their default route to the NAT gateway in `public_1`; its public subnet routes to the service VPC internet gateway. Neither gateway forwards browser requests to the ALB. **Separate state backend:** Amazon S3 in Tokyo (`ap-northeast-1`) stores [Terraform state](../../infra/STATE.md); it is not a distribution origin.
+**Outbound only:** both app subnets send their default route to the NAT gateway in `public_1`; its public subnet routes to the service VPC internet gateway. Neither gateway forwards browser requests to the ALB. **Separate state backend:** Amazon S3 in Osaka (`ap-northeast-3`) stores the active [Terraform state](../../infra/STATE.md); it is not a distribution origin.
 
 ## Evidence needed before marking the edge verified
 

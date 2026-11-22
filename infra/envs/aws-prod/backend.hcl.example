@@ -1,4 +1,4 @@
-# Copy to backend.hcl and replace both values with administrator-confirmed settings.
-# This region is the bucket region, not necessarily the workload region.
-bucket = "REPLACE_WITH_STATE_BUCKET"
-region = "REPLACE_WITH_BUCKET_REGION"
+# Optional for older checkouts; these settings match the canonical backend.tf.
+# This is the backend region (Osaka), not the workload region (Seoul).
+bucket = "petclinic-prod-tfstate-osaka"
+region = "ap-northeast-3"

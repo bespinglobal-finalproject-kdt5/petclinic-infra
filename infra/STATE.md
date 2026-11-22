@@ -4,7 +4,7 @@ GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검�
 
 | 작업 폴더 | 공유 state |
 |---|---|
-| `envs/aws-prod/` | S3: `petclinic/aws-prod/terraform.tfstate` (backend 선언 추가됨) |
+| `envs/aws-prod/` | 오사카 `ap-northeast-3`: `s3://petclinic-prod-tfstate-osaka/petclinic/aws-prod/terraform.tfstate` (S3 버전 관리·네이티브 잠금) |
 | `envs/azure-dr/` | 별도 비공개 Azure Blob (향후 구성). AWS 자격 증명이나 state에 의존하지 않는다. |
 
 개인·브랜치·모듈별 운영 state는 만들지 않는다. State는 DB 백업이 아니며 비밀 값이 들어갈 수 있다. state, 백업, plan은 Git·PR에 올리지 않는다. `.terraform.lock.hcl`은 provider 버전 기록이므로 커밋한다.
@@ -15,18 +15,22 @@ GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검�
 - 담당자에게 실제 버킷 이름, 리전, 사용할 AWS 계정과 역할을 전달한다. 액세스 키를 Git이나 채팅에 공유하지 않는다.
 - 담당 역할에 해당 prefix의 `s3:ListBucket`, state 객체의 `GetObject`·`PutObject`, 같은 경로의 `.tflock` 객체에 `GetObject`·`PutObject`·`DeleteObject`를 허용한다. 고객 관리 KMS 키를 쓴다면 해당 키 권한도 확인한다. 리소스 배포 권한은 backend 권한과 별개다.
 
-## 배포 담당자: 연결 및 수동 실행
+## 기존 체크아웃을 오사카에 다시 연결
 
-기존 운영 state가 이미 있다면 처음부터 빈 경로로 시작하지 않는다. 기존 키와 백업을 확인하고 이전은 별도로 합의한다. 아래는 **새 환경** 기준이다.
+현재 state는 도쿄에서 오사카로 **이미 이전**했다. 원본의 lineage, serial과 리소스/outputs를 대조했다. 과거 객체 버전은 도쿄에 보존하고 이전 state의 쓰기·삭제 및 새 잠금 생성을 차단했다. 과거 plan을 실행하거나 다시 `-migrate-state`, `-force-copy`, `state push`하지 않는다. 서울 워크로드·Azure DR의 리전은 바뀌지 않는다.
+
+이 저장소의 `backend.tf`가 버킷과 리전을 지정한다. 기존에 `-backend-config=backend.hcl`을 쓰던 작업자/CI는 도쿄 override를 제거하거나 `backend.hcl.example`의 오사카 값으로 바꾼다. 기본값을 사용하는 경우 아래처럼 연결만 재설정한다. `state list`에 기존 자원이 보이지 않으면 진행하지 않는다.
 
 ```bash
 git switch main
 git pull --ff-only origin main
 cd infra/envs/aws-prod
-cp backend.hcl.example backend.hcl  # 최초 한 번. 실제 버킷 이름과 리전 입력
-aws sts get-caller-identity         # 승인된 프로필/역할로 로그인한 후 계정 확인
-terraform init -backend-config=backend.hcl -input=false
-terraform plan -out=reviewed.tfplan
+aws sts get-caller-identity
+terraform init -reconfigure -input=false
+terraform state list
+terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 때만
 ```
 
 대상과 추가·변경·삭제 내역을 확인한 뒤 **해당 계획만** `terraform apply reviewed.tfplan`으로 적용한다. backend 초기화만으로는 VPC가 생기지 않지만 실제 네트워크 계획을 적용하면 자원이 생성된다. 계획에는 확인한 `aws_account_id`, `aws_region`, `availability_zones`를 입력해야 한다. 로컬 `terraform.tfvars`에 넣을 경우 Git에 올리지 않는다. 같은 환경에 한 번에 하나의 apply만 실행한다. 잠금이 있으면 진행 중인 작업부터 확인하며, state의 직접 편집·삭제 및 임의 잠금 해제는 금지한다. 복구 시 작업을 멈추고 복원할 객체 버전을 팀과 확인한다.
+
+복구가 필요하면 모든 writer를 멈추고 오사카의 최신 버전을 먼저 보존한다. 도쿄의 과거 버전을 현재 state로 간주하거나 임의로 버킷 정책을 해제하지 않는다.
