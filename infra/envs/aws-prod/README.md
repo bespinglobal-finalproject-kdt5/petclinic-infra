@@ -10,7 +10,7 @@ Terraform 실행 위치는 이 디렉터리다. [main.tf](main.tf)에서 네 모
 | [osaka-monitoring/](osaka-monitoring/) | 오사카 VPC·서브넷, 서울 VPC 1 피어링과 향후 EC2용 SSM IAM 역할·정책·인스턴스 프로필 |
 | [tests/](tests/) | 환경·모듈별 mock plan 테스트. [mocks/](tests/mocks/)에 AWS 모의 응답을 둔다. |
 
-서울 VPC 1의 두 앱 서브넷과 오사카 관제 서브넷이 피어링을 사용한다. 요청·수락과 오사카 쪽 반환 경로는 [피어링 구성](osaka-monitoring/peering.tf)에 있다. `osaka_observe` 출력은 VPC ID와 서브넷 ID를 제공한다. 루트의 [variables.tf](variables.tf)와 [outputs.tf](outputs.tf)는 운영자가 쓰는 입력·출력이고, [providers.tf](providers.tf)는 모듈에 전달할 AWS 계정·리전을 설정한다. [backend.tf](backend.tf)는 서울과 오사카를 함께 기록하는 운영 환경의 S3 state를 설정한다. 기존 Route 53 영역을 연결하는 주소는 [imports.tf](imports.tf), 모듈화 전후 state 주소는 [moved.tf](moved.tf)에서 확인한다.
+서울 VPC 1의 두 앱 서브넷과 오사카 관제 서브넷이 피어링을 사용한다. 요청·수락과 오사카 쪽 반환 경로는 [피어링 구성](osaka-monitoring/peering.tf)에 있다. `osaka_observe` 출력은 VPC ID와 서브넷 ID를 제공한다. 루트의 [variables.tf](variables.tf)와 [outputs.tf](outputs.tf)는 운영자가 쓰는 입력·출력이고, [providers.tf](providers.tf)는 모듈에 전달할 AWS 계정·리전을 설정한다. [backend.tf](backend.tf)는 서울과 오사카를 함께 기록하는 운영 환경의 S3 state를 설정한다. 기존 Route 53 영역의 import 대상은 [imports.tf](imports.tf)에 있다.
 
 [빌드 서버·피어링 복원 전 토폴로지](../../../docs/architecture/awsdac/overview.png) · [피어링 복원 전 서울 서비스망](../../../docs/architecture/awsdac/seoul-network.png)
 

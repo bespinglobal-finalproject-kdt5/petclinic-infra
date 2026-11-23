@@ -20,7 +20,7 @@
 | `management_public` | `10.20.0.32/27` | 서울 2a | `false` | `management` | `petclinic-prod-management-public-subnet-2a` | 서울 빌드 |
 | `osaka` | `10.40.0.0/27` | 오사카 3b | `true` | `management` | `osaka-observe` | 오사카 관제 |
 
-서울 서비스 서브넷 6개의 Terraform 주소 형식은 `module.seoul_vpc1.aws_subnet.service["app_1"]`이다. 서울 관리 VPC의 서브넷 주소는 `module.seoul_vpc2.aws_subnet.management`과 `module.seoul_vpc2.aws_subnet.management_public`, 오사카는 `module.osaka_observe.aws_subnet.osaka`다. 운영 루트는 서울 서비스 VPC와 관리 VPC를 별도 모듈로 호출한다. [서울 서브넷](seoul-vpc1-service/main.tf) · [기존 state 주소 이전](moved.tf) · [오사카 서브넷](osaka-monitoring/main.tf)
+서울 서비스 서브넷 6개의 Terraform 주소 형식은 `module.seoul_vpc1.aws_subnet.service["app_1"]`이다. 서울 관리 VPC의 서브넷 주소는 `module.seoul_vpc2.aws_subnet.management`와 `module.seoul_vpc2.aws_subnet.management_public`, 오사카는 `module.osaka_observe.aws_subnet.osaka`다. 운영 루트는 서울 서비스 VPC와 관리 VPC를 별도 모듈로 호출한다. [서울 서브넷](seoul-vpc1-service/main.tf) · [서울 관리 서브넷](seoul-vpc2-management/main.tf) · [오사카 서브넷](osaka-monitoring/main.tf)
 
 ## 태그와 이름 생성식
 

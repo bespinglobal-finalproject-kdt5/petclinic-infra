@@ -34,3 +34,5 @@ terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 �
 대상과 추가·변경·삭제 내역을 확인한 뒤 **해당 계획만** `terraform apply reviewed.tfplan`으로 적용한다. backend 초기화만으로는 VPC가 생기지 않지만 실제 네트워크 계획을 적용하면 자원이 생성된다. 계획에는 확인한 `aws_account_id`, `aws_region`, `availability_zones`를 입력해야 한다. 로컬 `terraform.tfvars`에 넣을 경우 Git에 올리지 않는다. 같은 환경에 한 번에 하나의 apply만 실행한다. 잠금이 있으면 진행 중인 작업부터 확인하며, state의 직접 편집·삭제 및 임의 잠금 해제는 금지한다. 복구 시 작업을 멈추고 복원할 객체 버전을 팀과 확인한다.
 
 복구가 필요하면 모든 writer를 멈추고 오사카의 최신 버전을 먼저 보존한다. manifest로 보관본의 체크섬과 버전을 확인하고 팀의 승인된 복구 절차를 따른다. `archive/`를 백엔드로 연결하거나 이전 도쿄 버킷 이름을 다시 사용하지 않는다. 보관본을 운영 state에 임의로 덮어쓰지 않는다.
+
+서울 VPC·엣지 모듈 분리 이전의 state를 복원할 때는 커밋 `b6637b4`의 주소 대응표로 기존 AWS 리소스 ID와 현재 모듈 주소를 대조한다.
