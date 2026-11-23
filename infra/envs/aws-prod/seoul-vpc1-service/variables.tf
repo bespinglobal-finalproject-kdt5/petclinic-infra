@@ -20,3 +20,11 @@ variable "environment" {
     error_message = "Environment must be prod or azure_dr."
   }
 }
+
+variable "osaka_peer" {
+  description = "Accepted Osaka peering connection and monitoring subnet."
+  type = object({
+    id          = string
+    subnet_cidr = string
+  })
+}

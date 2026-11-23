@@ -29,12 +29,13 @@ run "seoul_management_outputs" {
   command = plan
   assert {
     condition = (
-      output.service_vpc_id == module.network.service_vpc_id && output.management_vpc_id == module.network.management_vpc_id &&
-      output.management_subnet_id == module.network.management_subnet_id &&
-      output.app_subnet_ids == module.network.app_subnet_ids && output.db_subnet_ids == module.network.db_subnet_ids &&
-      output.public_subnet_ids == module.network.public_subnet_ids
+      output.service_vpc_id == module.seoul_vpc1.service_vpc_id && output.management_vpc_id == module.seoul_vpc2.management_vpc_id &&
+      output.management_subnet_id == module.seoul_vpc2.management_subnet_id &&
+      output.app_subnet_ids == module.seoul_vpc1.app_subnet_ids && output.db_subnet_ids == module.seoul_vpc1.db_subnet_ids &&
+      output.public_subnet_ids == module.seoul_vpc1.public_subnet_ids &&
+      output.management_public_subnet_id == module.seoul_vpc2.management_public_subnet_id
     )
-    error_message = "The production root must expose all six module outputs without reordering."
+    error_message = "The production root must expose the service and management network outputs without reordering."
   }
 }
 
@@ -80,7 +81,7 @@ run "public_edge" {
   }
 }
 
-run "osaka_is_observability_only" {
+run "separate_management_and_osaka" {
   command = plan
   assert {
     condition = (

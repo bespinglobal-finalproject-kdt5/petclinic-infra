@@ -5,17 +5,17 @@
 | 위치 | 네트워크 | 서브넷 (두 칸이면 AZ A/B 순서) |
 |---|---|---|
 | AWS 서비스 | `10.10.0.0/22` | 앱·내부 ALB `10.10.0.0/24`, `10.10.1.0/24`; 퍼블릭 `10.10.2.0/27`, `10.10.2.32/27`; DB `10.10.2.64/27`, `10.10.2.96/27` |
-| AWS 관리 VPC 2 (서울) | `10.20.0.0/24` | 관리 서브넷 `10.20.0.0/27` (2a), 로컬 전용 라우팅, EC2 없음 |
+| AWS 관리 VPC 2 (서울) | `10.20.0.0/24` | 2a 프라이빗 `10.20.0.0/27`은 로컬 전용. 2a 퍼블릭 `10.20.0.32/27`에는 빌드 EC2가 있으며 기본 경로는 관리 IGW |
 | AWS 관제 (오사카) | `10.40.0.0/16` | 향후 관제용으로 보존한 `10.40.0.0/27`, 서울 관리 VPC와 독립 |
 | Azure DR (주소 예약만) | `10.30.0.0/24` | VM `10.30.0.0/27`, MySQL 후보 `10.30.0.32/27` |
 
-서울 퍼블릭 서브넷은 서비스 IGW, 두 앱 서브넷은 기존 `2a` NAT를 기본 경로로 사용한다. 서울 DB 서브넷과 오사카 서브넷에는 각 VPC의 로컬 경로만 있다.
+서울 퍼블릭 서브넷은 서비스 IGW, 두 앱 서브넷은 기존 `2a` NAT를 기본 경로로 사용한다. 서울 DB 서브넷은 로컬 경로만 사용한다. 서울 앱 테이블의 `10.40.0.0/27`과 오사카 관제 테이블의 `10.10.0.0/24`, `10.10.1.0/24`는 같은 피어링을 사용한다.
 
 NAT를 한 AZ에만 두면 AZ마다 배치하는 것보다 NAT 시간 요금과 퍼블릭 IPv4 주소 비용을 줄일 수 있다. 다만 NAT 데이터 처리 요금은 발생하며, 두 번째 AZ의 앱 트래픽에는 AZ 간 전송 요금도 발생할 수 있다. NAT 또는 첫 번째 AZ에 장애가 나면 두 앱 서브넷 모두 인터넷 송신 경로를 잃는다. AZ 장애 시에도 송신이 필요하면 AZ마다 NAT를 두고 앱 서브넷이 같은 AZ의 NAT를 사용하도록 라우팅 테이블을 분리한다.
 
 오사카에는 VPC·서브넷과 향후 EC2에서 사용할 SSM IAM 구성을 보존한다. [오사카 보존 자원과 서울 관리망](envs/aws-prod/OSAKA-VPC2.md).
 
-팀원은 동일한 `aws-prod` 루트에서 [서울 네트워크 모듈](envs/aws-prod/network/)의 VPC·서브넷 출력을 자기 모듈의 입력으로 연결한다. 개인별 VPC를 다시 만들거나 실제 AWS ID를 Git에 기록하지 않는다. 루트 출력은 `service_vpc_id`, `management_vpc_id`, `public_subnet_ids`, `app_subnet_ids`, `db_subnet_ids`, `management_subnet_id`다.
+팀원은 동일한 `aws-prod` 루트에서 [서울 VPC 1](envs/aws-prod/seoul-vpc1-service/)과 [서울 VPC 2](envs/aws-prod/seoul-vpc2-management/)의 VPC·서브넷 출력을 자기 모듈의 입력으로 연결한다. 개인별 VPC를 다시 만들거나 실제 AWS ID를 Git에 기록하지 않는다. 루트 출력은 `service_vpc_id`, `management_vpc_id`, `public_subnet_ids`, `app_subnet_ids`, `db_subnet_ids`, `management_subnet_id`, `management_public_subnet_id`다.
 
 ## CIDR 선정 근거
 

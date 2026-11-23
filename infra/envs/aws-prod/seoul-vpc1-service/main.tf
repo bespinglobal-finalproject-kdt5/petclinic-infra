@@ -34,12 +34,6 @@ resource "aws_vpc" "service" {
   tags                 = merge(local.tags, { component = "network", Name = "${local.name_prefix}-service-vpc" })
 }
 
-resource "aws_vpc" "management" {
-  count      = var.retain_management ? 1 : 0
-  cidr_block = "10.20.0.0/24"
-  tags       = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-vpc" })
-}
-
 resource "aws_subnet" "service" {
   for_each                = local.service_subnets
   vpc_id                  = aws_vpc.service.id
@@ -50,15 +44,6 @@ resource "aws_subnet" "service" {
     component = each.value.component
     Name      = "${local.name_prefix}-${split("_", each.key)[0]}-subnet-${local.az_labels[each.value.az_index]}"
   })
-}
-
-resource "aws_subnet" "management" {
-  count                   = var.retain_management ? 1 : 0
-  vpc_id                  = aws_vpc.management[0].id
-  cidr_block              = "10.20.0.0/27"
-  availability_zone       = var.availability_zones[0]
-  map_public_ip_on_launch = false
-  tags                    = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-subnet-${local.az_labels[0]}" })
 }
 
 resource "aws_internet_gateway" "service" {
@@ -96,31 +81,21 @@ resource "aws_route_table" "service_app" {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.public_1.id
   }
+  route {
+    cidr_block                = var.osaka_peer.subnet_cidr
+    vpc_peering_connection_id = var.osaka_peer.id
+  }
   tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-app-rtb" })
 }
 
-# An explicit empty route set manages away non-local routes. AWS supplies local.
 resource "aws_route_table" "service_private" {
   vpc_id = aws_vpc.service.id
   route  = []
   tags   = merge(local.tags, { component = "network", Name = "${local.name_prefix}-db-rtb" })
 }
 
-resource "aws_route_table" "management" {
-  count  = var.retain_management ? 1 : 0
-  vpc_id = aws_vpc.management[0].id
-  route  = []
-  tags   = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-rtb" })
-}
-
 resource "aws_route_table_association" "service" {
   for_each       = local.service_subnets
   subnet_id      = aws_subnet.service[each.key].id
   route_table_id = local.service_route_table_ids[each.value.table]
-}
-
-resource "aws_route_table_association" "management" {
-  count          = var.retain_management ? 1 : 0
-  subnet_id      = aws_subnet.management[0].id
-  route_table_id = aws_route_table.management[0].id
 }
