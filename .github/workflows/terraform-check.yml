@@ -22,5 +22,5 @@ jobs:
             terraform -chdir="$dir" init -backend=false -input=false
             terraform -chdir="$dir" validate
           done
-      - name: Run AWS network mock plan tests (no AWS credentials)
+      - name: Run AWS production mock plan tests (no AWS credentials)
         run: terraform -chdir=infra/envs/aws-prod test -no-color

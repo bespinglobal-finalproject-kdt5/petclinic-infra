@@ -15,7 +15,7 @@ NAT를 한 AZ에만 두면 AZ마다 배치하는 것보다 NAT 시간 요금과 
 
 관제 VM은 Ubuntu 24.04이며 기본 운영 접속은 오사카 SSM이다. 피어링·포트별 범위와 전환 검증은 [VPC 2 운영 절차](envs/aws-prod/OSAKA-VPC2.md)에 있다.
 
-팀원은 동일한 `aws-prod` 루트에서 공통 모듈의 VPC·서브넷 출력을 자기 모듈의 입력으로 연결한다. 개인별 VPC를 다시 만들거나 실제 AWS ID를 Git에 기록하지 않는다. 루트 출력은 `service_vpc_id`, `management_vpc_id`, `public_subnet_ids`, `app_subnet_ids`, `db_subnet_ids`, `management_subnet_id`다.
+팀원은 동일한 `aws-prod` 루트에서 [서울 네트워크 모듈](envs/aws-prod/network/)의 VPC·서브넷 출력을 자기 모듈의 입력으로 연결한다. 개인별 VPC를 다시 만들거나 실제 AWS ID를 Git에 기록하지 않는다. 루트 출력은 `service_vpc_id`, `management_vpc_id`, `public_subnet_ids`, `app_subnet_ids`, `db_subnet_ids`, `management_subnet_id`다.
 
 ## CIDR 선정 근거
 

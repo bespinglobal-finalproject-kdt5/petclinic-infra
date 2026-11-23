@@ -1,20 +1,5 @@
-locals {
-  domain = "mission-critical.site"
-}
-
-data "aws_route53_zone" "public" {
-  name         = local.domain
-  private_zone = false
-}
-
-# Adopt the previously delegated zone, never create a second set of name servers.
-import {
-  to = aws_route53_zone.delegated
-  id = data.aws_route53_zone.public.zone_id
-}
-
 resource "aws_route53_zone" "delegated" {
-  name    = local.domain
+  name    = var.domain
   comment = ""
   tags    = merge(local.edge_tags, { Name = "petclinic-prod-public-zone" })
 
@@ -24,8 +9,8 @@ resource "aws_route53_zone" "delegated" {
 }
 
 resource "aws_acm_certificate" "viewer" {
-  provider          = aws.us_east_1
-  domain_name       = local.domain
+  region            = var.certificate_region
+  domain_name       = var.domain
   validation_method = "DNS"
   tags              = merge(local.edge_tags, { Name = "petclinic-prod-viewer-certificate" })
 
@@ -38,7 +23,7 @@ locals {
 }
 
 resource "aws_route53_record" "validation" {
-  zone_id = data.aws_route53_zone.public.zone_id
+  zone_id = var.public_zone_id
   name    = local.validation.resource_record_name
   type    = local.validation.resource_record_type
   records = [local.validation.resource_record_value]
@@ -46,15 +31,15 @@ resource "aws_route53_record" "validation" {
 }
 
 resource "aws_acm_certificate_validation" "viewer" {
-  provider                = aws.us_east_1
+  region                  = var.certificate_region
   certificate_arn         = aws_acm_certificate.viewer.arn
   validation_record_fqdns = [aws_route53_record.validation.fqdn]
 }
 
 resource "aws_route53_record" "viewer" {
   for_each = toset(["A", "AAAA"])
-  zone_id  = data.aws_route53_zone.public.zone_id
-  name     = local.domain
+  zone_id  = var.public_zone_id
+  name     = var.domain
   type     = each.value
 
   alias {

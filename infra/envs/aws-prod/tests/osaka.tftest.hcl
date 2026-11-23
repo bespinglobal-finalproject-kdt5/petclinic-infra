@@ -4,12 +4,23 @@ mock_provider "aws" {
 
 run "observe_layout" {
   command = plan
-  module { source = "../../modules/osaka-observe" }
+  module { source = "./osaka-monitoring" }
+  override_resource {
+    target          = aws_vpc_peering_connection.seoul_osaka
+    override_during = plan
+    values          = { id = "pcx-0123456789abcdef0" }
+  }
+  override_resource {
+    target          = aws_vpc_peering_connection_accepter.osaka
+    override_during = plan
+    values          = { id = "pcx-0123456789abcdef0" }
+  }
   variables {
     my_ip           = "192.0.2.17"
     key_name        = "mock-key"
     seoul_app_cidrs = ["10.10.0.0/24", "10.10.1.0/24"]
-    peering_id      = "pcx-0123456789abcdef0"
+    seoul_region    = "ap-northeast-2"
+    seoul_vpc_id    = "vpc-00000000000000001"
   }
   assert {
     condition = (
@@ -21,9 +32,21 @@ run "observe_layout" {
       aws_instance.osaka.root_block_device[0].volume_size == 30 && aws_instance.osaka.metadata_options[0].http_tokens == "required" &&
       aws_route_table_association.osaka.subnet_id == aws_subnet.osaka.id &&
       one([for r in aws_route_table.osaka.route : r.gateway_id if r.cidr_block == "0.0.0.0/0"]) == aws_internet_gateway.osaka.id &&
-      toset([for r in aws_route_table.osaka.route : r.cidr_block if r.vpc_peering_connection_id == var.peering_id]) == var.seoul_app_cidrs
+      toset([for r in aws_route_table.osaka.route : r.cidr_block if r.vpc_peering_connection_id == output.peering_id]) == var.seoul_app_cidrs
     )
     error_message = "The Osaka observation VM must use the specified public subnet, IGW, size, encrypted root and IMDSv2."
+  }
+  assert {
+    condition = (
+      aws_vpc_peering_connection.seoul_osaka.region == "ap-northeast-2" &&
+      aws_vpc_peering_connection.seoul_osaka.vpc_id == var.seoul_vpc_id &&
+      aws_vpc_peering_connection.seoul_osaka.peer_vpc_id == aws_vpc.osaka.id &&
+      aws_vpc_peering_connection.seoul_osaka.peer_region == "ap-northeast-3" &&
+      !aws_vpc_peering_connection.seoul_osaka.auto_accept && aws_vpc_peering_connection_accepter.osaka.auto_accept &&
+      aws_vpc_peering_connection_accepter.osaka.vpc_peering_connection_id == aws_vpc_peering_connection.seoul_osaka.id &&
+      output.peering_id == aws_vpc_peering_connection_accepter.osaka.id
+    )
+    error_message = "Seoul must request the peer and Osaka must accept it before either side uses the route."
   }
   assert {
     condition = (

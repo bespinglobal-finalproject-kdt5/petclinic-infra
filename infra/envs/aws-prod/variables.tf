@@ -30,3 +30,19 @@ variable "availability_zones" {
     error_message = "Supply exactly two distinct AZ names consisting of aws_region and one lowercase letter."
   }
 }
+
+variable "osaka_admin_ipv4" {
+  description = "Trusted administrator IPv4 address, without CIDR. Supply privately; never commit the value."
+  type        = string
+  nullable    = false
+  validation {
+    condition     = can(cidrnetmask("${var.osaka_admin_ipv4}/32")) && var.osaka_admin_ipv4 != "0.0.0.0"
+    error_message = "Supply one IPv4 host, not a network, IPv6 address, or wildcard."
+  }
+}
+
+variable "osaka_key_name" {
+  type        = string
+  description = "Existing EC2 key pair in Osaka. Keep its private key outside Terraform."
+  default     = "osaka-key"
+}

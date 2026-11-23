@@ -13,7 +13,7 @@ resource "aws_lb_target_group" "app" {
   target_type          = "instance"
   port                 = each.value.port
   protocol             = "HTTP"
-  vpc_id               = module.network.service_vpc_id
+  vpc_id               = var.vpc_id
   deregistration_delay = 30
   health_check {
     path                = each.value.health
@@ -27,14 +27,14 @@ resource "aws_lb_target_group" "app" {
 
 resource "aws_autoscaling_attachment" "app" {
   for_each               = local.workloads
-  autoscaling_group_name = aws_eks_node_group.app.resources[0].autoscaling_groups[0].name
+  autoscaling_group_name = var.node_autoscaling_group_name
   lb_target_group_arn    = aws_lb_target_group.app[each.key].arn
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_node" {
   for_each                     = local.workloads
   security_group_id            = aws_security_group.origin.id
-  referenced_security_group_id = aws_eks_cluster.petclinic.vpc_config[0].cluster_security_group_id
+  referenced_security_group_id = var.cluster_security_group_id
   ip_protocol                  = "tcp"
   from_port                    = each.value.port
   to_port                      = each.value.port
@@ -43,7 +43,7 @@ resource "aws_vpc_security_group_egress_rule" "alb_to_node" {
 
 resource "aws_vpc_security_group_ingress_rule" "node_from_alb" {
   for_each                     = local.workloads
-  security_group_id            = aws_eks_cluster.petclinic.vpc_config[0].cluster_security_group_id
+  security_group_id            = var.cluster_security_group_id
   referenced_security_group_id = aws_security_group.origin.id
   ip_protocol                  = "tcp"
   from_port                    = each.value.port
