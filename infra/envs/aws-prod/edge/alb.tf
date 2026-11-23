@@ -10,7 +10,7 @@ data "aws_ec2_managed_prefix_list" "cloudfront" {
 resource "aws_security_group" "origin" {
   name_prefix = "petclinic-origin-"
   description = "Internal ALB for CloudFront VPC origin"
-  vpc_id      = module.network.service_vpc_id
+  vpc_id      = var.vpc_id
   tags        = merge(local.edge_tags, { Name = "petclinic-prod-origin-alb-sg" })
 }
 
@@ -27,7 +27,7 @@ resource "aws_lb" "origin" {
   internal           = true
   load_balancer_type = "application"
   ip_address_type    = "ipv4"
-  subnets            = module.network.app_subnet_ids
+  subnets            = var.app_subnet_ids
   security_groups    = [aws_security_group.origin.id]
   tags               = merge(local.edge_tags, { Name = "petclinic-prod-origin-alb" })
 }

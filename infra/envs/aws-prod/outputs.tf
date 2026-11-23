@@ -25,18 +25,39 @@ output "management_subnet_id" {
 }
 
 output "public_url" {
-  value = "https://${aws_route53_record.viewer["A"].fqdn}"
+  value = module.edge.public_url
 }
 
 output "cloudfront_distribution_id" {
-  value = aws_cloudfront_distribution.edge.id
+  value = module.edge.cloudfront_distribution_id
 }
 
 output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.edge.domain_name
+  value = module.edge.cloudfront_domain_name
 }
 
 output "internal_alb_dns_name" {
   description = "Private origin, not a public endpoint."
-  value       = aws_lb.origin.dns_name
+  value       = module.edge.internal_alb_dns_name
+}
+
+output "db_host" {
+  description = "RDS DNS hostname (without port), required for TLS hostname validation."
+  value       = module.database.db_host
+}
+
+output "db_master_secret_arn" {
+  description = "ARN only. Read AWSCURRENT outside Terraform during the controlled bootstrap."
+  value       = module.database.db_master_secret_arn
+}
+
+output "osaka_observe" {
+  description = "Independent Osaka observability network and host. EC2 public IP may change after stop/start."
+  value = {
+    vpc_id      = module.osaka_observe.vpc_id
+    subnet_id   = module.osaka_observe.subnet_id
+    instance_id = module.osaka_observe.instance_id
+    public_ip   = module.osaka_observe.public_ip
+    private_ip  = module.osaka_observe.private_ip
+  }
 }

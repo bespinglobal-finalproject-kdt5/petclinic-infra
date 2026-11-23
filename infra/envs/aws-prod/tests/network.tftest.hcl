@@ -5,7 +5,7 @@ mock_provider "aws" {
 run "network_topology" {
   command = plan
   module {
-    source = "../../modules/aws-network"
+    source = "./network"
   }
   variables {
     availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
@@ -89,7 +89,7 @@ run "network_topology" {
 
 run "peered_seoul_app_routes" {
   command = plan
-  module { source = "../../modules/aws-network" }
+  module { source = "./network" }
   variables {
     availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
     environment        = "prod"

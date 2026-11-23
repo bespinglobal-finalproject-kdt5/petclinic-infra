@@ -23,7 +23,7 @@ resource "aws_cloudfront_vpc_origin" "alb" {
 resource "aws_cloudfront_distribution" "edge" {
   enabled         = true
   is_ipv6_enabled = true
-  aliases         = [local.domain]
+  aliases         = [var.domain]
   tags            = merge(local.edge_tags, { Name = "petclinic-prod-edge-distribution" })
 
   origin {

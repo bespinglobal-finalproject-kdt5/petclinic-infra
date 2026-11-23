@@ -14,3 +14,7 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical
 }
+
+data "aws_key_pair" "operator" {
+  key_name = var.key_name
+}
