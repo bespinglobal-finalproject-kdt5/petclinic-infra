@@ -1,3 +1,14 @@
+locals {
+  ssm_agent_bootstrap = <<-SH
+    #!/bin/bash
+    set -eu
+    if ! snap list amazon-ssm-agent >/dev/null 2>&1; then
+      snap install amazon-ssm-agent --classic
+    fi
+    snap start --enable amazon-ssm-agent
+  SH
+}
+
 # 관제 서버 한 대. Prom·Loki·Tempo·Grafana·Alertmanager를 여기에 올린다.
 resource "aws_instance" "osaka" {
   ami                         = data.aws_ami.ubuntu.id
@@ -9,15 +20,8 @@ resource "aws_instance" "osaka" {
   iam_instance_profile        = aws_iam_instance_profile.ssm.name
   depends_on                  = [aws_iam_role_policy.ssm, aws_route_table_association.osaka]
 
-  # Canonical Ubuntu Server includes the SSM agent as a snap; ensure it is enabled.
-  user_data = <<-SH
-    #!/bin/bash
-    set -eu
-    if ! snap list amazon-ssm-agent >/dev/null 2>&1; then
-      snap install amazon-ssm-agent --classic
-    fi
-    snap start --enable amazon-ssm-agent
-  SH
+  # EC2 stores the original CRLF bytes. Preserve them across checkouts to avoid a stop/start.
+  user_data = replace(local.ssm_agent_bootstrap, "/\\r?\\n/", "\r\n")
   metadata_options { http_tokens = "required" }
 
   root_block_device {

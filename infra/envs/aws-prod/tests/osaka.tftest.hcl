@@ -38,6 +38,13 @@ run "observe_layout" {
   }
   assert {
     condition = (
+      endswith(aws_instance.osaka.user_data, "\r\n") &&
+      !strcontains(replace(aws_instance.osaka.user_data, "\r\n", ""), "\n")
+    )
+    error_message = "Preserve the deployed bootstrap line endings so a module move does not restart the monitoring VM."
+  }
+  assert {
+    condition = (
       aws_vpc_peering_connection.seoul_osaka.region == "ap-northeast-2" &&
       aws_vpc_peering_connection.seoul_osaka.vpc_id == var.seoul_vpc_id &&
       aws_vpc_peering_connection.seoul_osaka.peer_vpc_id == aws_vpc.osaka.id &&
