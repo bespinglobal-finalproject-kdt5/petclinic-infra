@@ -28,7 +28,7 @@
 |---|---|---|
 | 앱 빌드·테스트 | 앱 저장소의 [GitHub Actions](https://github.com/bespinglobal-finalproject-kdt5/petclinic-eks-app/blob/main/.github/workflows/ubuntu-24.04.yml)가 `ubuntu-24.04` 러너에서 Angular와 Spring을 빌드하고 H2로 연동 검사 | 사설 EKS나 운영 DB 접속 불필요. 현재 이 워크플로는 AWS 인증, 이미지 push, 배포를 하지 않는다. |
 | 인프라 검사 | 이 저장소의 [Terraform CI](.github/workflows/terraform-check.yml)가 PR에서 fmt·validate·mock 테스트 실행 | 운영 state에 연결하지 않고 `apply`하지 않는다. |
-| 이미지 게시·운영 배포 | 앱용 ECR 저장소를 생성하지 않으며 이미지 게시 자동화도 없다. GHCR은 추후 연결한다. | 재배포 시 승인한 레지스트리 경로와 검증한 WEB·API digest를 [배포 절차](deploy/k8s/README.md)에 전달한다. PR 빌드와 운영 배포 권한은 분리한다. |
+| 이미지 게시·운영 배포 | 앱용 ECR 저장소와 이미지 게시 자동화는 없다. GHCR 연동은 후속 작업이다. | 앱 배포 절차는 재배포 시 별도로 정한다. PR 빌드와 운영 배포 권한은 분리한다. |
 
 **전용 러너가 필요한 경우:** 빌드가 사내 패키지 저장소 등 사설 자원에 반드시 접근해야 하거나 고정 송신 IP가 필요하면 VPC 연동 CodeBuild 또는 작업 종료 시 폐기하는 self-hosted runner를 검토한다. 그때도 관리 호스트·오사카 관제 VM과 실행 환경 및 IAM 역할을 분리한다. 현재 서울 VPC 2는 로컬 경로뿐이므로, 여기에 러너 EC2만 추가해도 GitHub·npm·Maven으로 나갈 수 없다. 사설 자원 접근이 필요하지 않다면 관리망에 인터넷 경로를 열기보다 기존 호스팅 러너를 쓰는 편이 단순하다.
 
@@ -47,9 +47,6 @@
 | `infra/modules/` | 재사용할 Terraform 자원 정의. 현재 공통 네트워크 모듈이 있다. |
 | `infra/envs/aws-prod/` | 서울 서비스·관리망 및 오사카 관제망의 운영 루트. 전체 plan에는 롤백된 EKS·RDS·도메인 재생성이 포함될 수 있으므로 검토 없이 apply하지 않는다. |
 | `infra/envs/azure-dr/` | Azure 복구 네트워크·VM·MySQL·Key Vault 구성 예정 위치. |
-| `deploy/k8s/` | Angular WEB·Spring API의 EKS 배포 명세와 DB 초기화 절차. |
-| `deploy/compose/` | Azure 복구 VM의 컨테이너 설정 예정 위치. |
-| `deploy/monitoring/` | Prometheus·Grafana·수집 에이전트 설정 예정 위치. |
 
 ## 태그와 운영 기준
 
