@@ -23,4 +23,4 @@ aws ssm start-session --region ap-northeast-3 --target "$ID"
 
 ## 적용 범위
 
-서울 관리망 복원 대상은 `module.network`의 `aws_vpc.management`, `aws_subnet.management`, `aws_route_table.management`, `aws_route_table_association.management`뿐이다. 저장 plan에서 생성 4개, 기존 자원 변경·삭제 0개이고 두 관리 출력만 서울의 새 ID로 변경되는지 확인한다. `osaka_observe`, 서비스 VPC, 리전 간 피어링 변경이 섞이면 적용하지 않는다. 전체 `terraform apply`는 롤백된 EKS·RDS·도메인 등을 재생성할 수 있으므로 네트워크 복원용으로 사용하지 않는다.
+서울 관리망 복원 대상은 `module.network`의 `aws_vpc.management`, `aws_subnet.management`, `aws_route_table.management`, `aws_route_table_association.management`뿐이다. 저장 plan에서 생성 4개, 기존 자원 변경·삭제 0개이고 두 관리 출력만 서울의 새 ID로 변경되는지 확인한다. `osaka_observe`, 서비스 VPC, 리전 간 피어링 변경이 섞이면 적용하지 않는다. 전체 `terraform apply`는 CloudFront 배포와 도메인 레코드도 생성할 수 있으므로 네트워크 복원용으로 사용하지 않는다.

@@ -1,12 +1,10 @@
 # AWS 운영 환경: mission-critical.site
 
-Terraform 실행 위치는 이 디렉터리다. [main.tf](main.tf)에서 다섯 모듈의 입력과 연결을 한 번에 볼 수 있다.
+Terraform 실행 위치는 이 디렉터리다. [main.tf](main.tf)에서 세 모듈의 입력과 연결을 한 번에 볼 수 있다.
 
 | 디렉터리 | 관리하는 구성 |
 |---|---|
 | [network/](network/) | 서울 서비스·관리 VPC, 서브넷, NAT와 라우팅 테이블 |
-| [eks/](eks/) | 서울 비공개 EKS 클러스터, 관리형 노드 그룹, VPC CNI |
-| [database/](database/) | RDS PostgreSQL, DB 서브넷 그룹, EKS에서 DB로 접근하는 보안 그룹 규칙 |
 | [edge/](edge/) | Route 53·ACM, CloudFront, 내부 ALB와 웹·API 대상 그룹 |
 | [osaka-monitoring/](osaka-monitoring/) | 오사카 관제 VPC·EC2·SSM과 서울 서비스 VPC와의 피어링 |
 | [tests/](tests/) | 환경·모듈별 mock plan 테스트. [mocks/](tests/mocks/)에 AWS 모의 응답을 둔다. |
@@ -23,9 +21,16 @@ Terraform 실행 위치는 이 디렉터리다. [main.tf](main.tf)에서 다섯 
 
 `/health`는 기존 ALB의 고정 200이므로 앱 배포 성공 기준이 아니다. API는 별도 대상 그룹(NodePort 30966), UI는 기본 경로 대상 그룹(30080)을 사용하도록 정의돼 있다. 인프라 적용만으로 Pod가 기동하지 않는다. 앱 배포 명세와 절차는 현재 이 저장소에 포함하지 않는다. 재배포 시 두 대상 그룹의 상태와 실제 API 요청을 별도로 검증한다.
 
-## EKS 버전 기준
+## EKS·데이터베이스 담당자에게 전달할 값
 
-EKS 기준은 제어 영역과 관리형 노드 그룹 모두 Kubernetes **1.36**, 노드 이미지는 **AL2023 x86_64**다. 정확한 노드 AMI release와 VPC CNI 빌드는 서울 검증 후 `main.tf`에 고정한다. 현재 두 입력은 `null`이므로 새로 생성할 때 EKS 기본값을 사용한다. kubectl 1.36.x의 패치와 Helm·LBC·Gateway API·ESO 버전은 별도 통합 시험 대상이다. 현재 앱 요청은 Terraform이 정의한 내부 ALB와 NodePort를 거친다.
+이 루트는 서울 네트워크와 앱 진입점을 관리한다. EKS 클러스터·워커와 RDS 인스턴스·DB 서브넷 그룹은 각 담당자가 별도로 구성한다. 네트워크를 적용한 뒤 [루트 출력](outputs.tf)에서 연결 값을 확인할 수 있다.
+
+| 담당 | 사용할 출력 | 담당 코드에서 연결할 작업 |
+|---|---|---|
+| EKS | `service_vpc_id`, `app_subnet_ids`, `app_target_group_arns`, `alb_security_group_id` | 앱 서브넷에 워커를 두고 웹·API 대상 그룹에 등록한다. ALB 보안 그룹에서 노드 보안 그룹으로 TCP 30080(웹)·30966(API) 송신과 해당 수신을 허용한다. |
+| 데이터베이스 | `service_vpc_id`, `db_subnet_ids` | 기존 DB 서브넷으로 RDS 서브넷 그룹을 만들고 EKS 담당자와 DB 접근 보안 그룹 규칙을 연결한다. |
+
+EKS 인수 기준은 제어 영역·관리형 노드 Kubernetes **1.36**, 노드 이미지 **AL2023 x86_64**, kubectl **1.36.x**다. 정확한 AMI 릴리스와 VPC CNI 빌드는 EKS 담당자가 서울 리전에서 검증한 뒤 고정한다. Helm·LBC·Gateway API·ESO 버전은 별도 통합 시험 대상이다.
 
 ## 서울 관리 VPC 2 / 오사카 관제망
 
@@ -38,7 +43,7 @@ EKS 기준은 제어 영역과 관리형 노드 그룹 모두 Kubernetes **1.36*
 - 역할에는 state 접근 외에 두 리전과 글로벌 서비스 조회 권한이 필요하다. 대상 계정에서 `mission-critical.site` 퍼블릭 영역이 유일하며 등록기관의 NS 위임이 일치하는지 확인한다. 기존 apex/검증 레코드나 다른 CloudFront 배포의 별칭과 충돌하면 덮어쓰지 말고 소유자와 이전·import를 협의한다.
 - 실제 배포 전에는 서비스 연결 역할과 VPC origin ENI 생성 권한, 서브넷 여유 IP, ALB·VPC origin 할당량, 서울에서의 관리형 접두사 목록 가용성 및 SG 인바운드 할당량(목록 가중치 55)을 확인한다. mock plan은 DNS 위임이나 AWS API 수락 여부를 검증하지 않는다.
 - 비공개 EKS API를 관리하려면 서울 관리 호스트, SSM 통신 경로, IAM 권한 및 API 왕복 라우팅이 필요하다. 네트워크만 복원한 현재 단계에는 호스트·접속 권한·클러스터가 없다. 오사카 관제 VM을 대신 사용하지 않는다.
-  **주의:** 전체 `terraform apply`는 롤백된 서울 EKS·RDS·CloudFront 등을 새로 만들 수 있다. 서울 관리망 4개만 포함하는 복원 plan을 전체 계획과 구분한다.
-- DMS와 타 클라우드 복제는 포함하지 않는다. 기존 단일 NAT를 재사용하므로 워크로드 두 AZ와 RDS Multi-AZ가 모든 네트워크 구성의 이중화를 의미하지 않는다.
+  **주의:** 전체 `terraform apply`는 CloudFront 배포와 도메인 레코드, 앱 대상 그룹도 만들 수 있다. 서울 관리망 4개만 포함하는 복원 plan을 전체 계획과 구분한다.
+- DMS와 타 클라우드 복제는 포함하지 않는다. 서울 앱 서브넷 두 곳은 기존 단일 NAT를 공유한다.
 
 루트 출력은 `outputs.tf`에 있다. 기존 네트워크 ID에 더해 `public_url`, `cloudfront_distribution_id`, `cloudfront_domain_name`, `internal_alb_dns_name`을 제공한다.

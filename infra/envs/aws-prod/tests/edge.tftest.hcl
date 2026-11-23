@@ -6,13 +6,11 @@ run "public_edge" {
   command = plan
   module { source = "./edge" }
   variables {
-    certificate_region          = "us-east-1"
-    domain                      = "mission-critical.site"
-    public_zone_id              = "ZMOCKPUBLIC"
-    vpc_id                      = "vpc-00000000000000001"
-    app_subnet_ids              = ["subnet-00000000000000001", "subnet-00000000000000002"]
-    cluster_security_group_id   = "sg-00000000000000001"
-    node_autoscaling_group_name = "mock-app-nodes"
+    certificate_region = "us-east-1"
+    domain             = "mission-critical.site"
+    public_zone_id     = "ZMOCKPUBLIC"
+    vpc_id             = "vpc-00000000000000001"
+    app_subnet_ids     = ["subnet-00000000000000001", "subnet-00000000000000002"]
   }
 
   assert {
@@ -100,11 +98,12 @@ run "public_edge" {
     error_message = "The demo UI and API must not have a viewer gate; writes remain API-only."
   }
   assert {
-    condition = alltrue([for workload in ["web", "api"] :
-      aws_autoscaling_attachment.app[workload].autoscaling_group_name == var.node_autoscaling_group_name &&
-      aws_vpc_security_group_egress_rule.alb_to_node[workload].referenced_security_group_id == var.cluster_security_group_id &&
-      aws_vpc_security_group_ingress_rule.node_from_alb[workload].security_group_id == var.cluster_security_group_id
-    ])
-    error_message = "The ALB must use the EKS node group and security group for both workloads."
+    condition = (
+      output.alb_security_group_id == aws_security_group.origin.id &&
+      toset(keys(output.app_target_group_arns)) == toset(["web", "api"]) &&
+      aws_lb_target_group.app["web"].port == 30080 && aws_lb_target_group.app["api"].port == 30966 &&
+      alltrue([for group in aws_lb_target_group.app : group.target_type == "instance" && group.vpc_id == var.vpc_id])
+    )
+    error_message = "Publish the ALB security group and both instance target groups on the agreed NodePorts."
   }
 }

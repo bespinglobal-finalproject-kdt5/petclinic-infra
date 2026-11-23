@@ -44,7 +44,7 @@
 
 | 경로 | 역할 |
 |---|---|
-| [infra/envs/aws-prod/](infra/envs/aws-prod/README.md) | 서울 네트워크·EKS·RDS·서비스 진입점과 오사카 관제망을 하위 디렉터리로 나눈 AWS 운영 루트. 전체 plan에는 롤백된 EKS·RDS·도메인 재생성이 포함될 수 있으므로 검토 없이 apply하지 않는다. |
+| [infra/envs/aws-prod/](infra/envs/aws-prod/README.md) | 서울 네트워크·서비스 진입점과 오사카 관제망을 관리한다. EKS·RDS 담당자에게 VPC·서브넷과 ALB 연결 값을 출력한다. |
 | [infra/envs/azure-dr/](infra/envs/azure-dr/README.md) | Azure 복구 네트워크·VM·MySQL·Key Vault 구성 예정 위치. |
 
 ## 태그와 운영 기준

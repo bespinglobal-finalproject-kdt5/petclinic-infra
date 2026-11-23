@@ -1,59 +1,3 @@
-# EKS resources previously declared directly in aws-prod.
-moved {
-  from = aws_iam_role.eks_control_plane
-  to   = module.eks.aws_iam_role.eks_control_plane
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.eks_control_plane
-  to   = module.eks.aws_iam_role_policy_attachment.eks_control_plane
-}
-
-moved {
-  from = aws_eks_cluster.petclinic
-  to   = module.eks.aws_eks_cluster.petclinic
-}
-
-moved {
-  from = aws_iam_role.eks_node
-  to   = module.eks.aws_iam_role.eks_node
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.eks_node
-  to   = module.eks.aws_iam_role_policy_attachment.eks_node
-}
-
-moved {
-  from = aws_iam_openid_connect_provider.eks
-  to   = module.eks.aws_iam_openid_connect_provider.eks
-}
-
-moved {
-  from = aws_iam_role.eks_cni
-  to   = module.eks.aws_iam_role.eks_cni
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.eks_cni
-  to   = module.eks.aws_iam_role_policy_attachment.eks_cni
-}
-
-moved {
-  from = aws_eks_addon.vpc_cni
-  to   = module.eks.aws_eks_addon.vpc_cni
-}
-
-moved {
-  from = aws_launch_template.app_nodes
-  to   = module.eks.aws_launch_template.app_nodes
-}
-
-moved {
-  from = aws_eks_node_group.app
-  to   = module.eks.aws_eks_node_group.app
-}
-
 # Move the former root edge resources into their environment module.
 moved {
   from = data.aws_ec2_managed_prefix_list.cloudfront
@@ -88,21 +32,6 @@ moved {
 moved {
   from = aws_lb_target_group.app
   to   = module.edge.aws_lb_target_group.app
-}
-
-moved {
-  from = aws_autoscaling_attachment.app
-  to   = module.edge.aws_autoscaling_attachment.app
-}
-
-moved {
-  from = aws_vpc_security_group_egress_rule.alb_to_node
-  to   = module.edge.aws_vpc_security_group_egress_rule.alb_to_node
-}
-
-moved {
-  from = aws_vpc_security_group_ingress_rule.node_from_alb
-  to   = module.edge.aws_vpc_security_group_ingress_rule.node_from_alb
 }
 
 moved {
@@ -153,27 +82,6 @@ moved {
 moved {
   from = aws_route53_record.viewer
   to   = module.edge.aws_route53_record.viewer
-}
-
-# Move the former root database resources into their environment module.
-moved {
-  from = aws_db_subnet_group.petclinic
-  to   = module.database.aws_db_subnet_group.petclinic
-}
-
-moved {
-  from = aws_security_group.postgres
-  to   = module.database.aws_security_group.postgres
-}
-
-moved {
-  from = aws_vpc_security_group_ingress_rule.eks_postgres
-  to   = module.database.aws_vpc_security_group_ingress_rule.eks_postgres
-}
-
-moved {
-  from = aws_db_instance.petclinic
-  to   = module.database.aws_db_instance.petclinic
 }
 
 moved {

@@ -19,11 +19,3 @@ variable "vpc_id" {
 variable "app_subnet_ids" {
   type = list(string)
 }
-
-variable "cluster_security_group_id" {
-  type = string
-}
-
-variable "node_autoscaling_group_name" {
-  type = string
-}
