@@ -12,6 +12,14 @@
 
 오사카 VPC·서브넷·EC2의 `Name`은 `osaka-observe`다. 자동 생성된 루트 EBS·기본 ENI·기본 라우팅 테이블·기본 SG·기본 NACL에도 `Name`을 지정했다. [관제망 접속과 역할 구분](infra/envs/aws-prod/OSAKA-VPC2.md). 운영 [Terraform state](infra/STATE.md)는 오사카 비공개 S3 버킷에 있으며, 이는 빌드 산출물 저장소가 아니다.
 
+## 서울 `kubectl` 관리 EC2와 `osaka-observe`는 다른 서버다
+
+서울 VPC 2 안에서 `kubectl`을 실행해 서울 VPC 1의 비공개 EKS를 관리하려는 설계라면, **VPC 2에 관리 EC2 한 대가 필요하다.** EC2가 EKS를 구동하는 것은 아니다. EKS와 워커는 VPC 1에 두고, 운영자가 VPC 2의 EC2에서 Kubernetes API를 호출한다. 지난 복원에서는 관리 네트워크만 만들었으므로 이 EC2와 아래 경로는 아직 없다.
+
+**목표 접속 경로:** 운영자 PC → 서울 SSM Session Manager → 서울 VPC 2 관리 EC2(`aws`·`kubectl`) → 서울 VPC 간 피어링과 양방향 라우팅 → VPC 1의 EKS private API(TCP 443). SSH 공개 인바운드는 필요 없다. 로컬 경로만 있는 VPC 2에서는 관리 EC2가 SSM에 등록할 통신 경로(예: SSM·SSM Messages 인터페이스 엔드포인트)와 IAM 역할도 준비한다. Kubernetes 작업 권한은 별도로 EKS Access Entry 등을 통해 최소 범위로 부여한다.
+
+`osaka-observe`는 **오사카에 만든 Grafana용 Ubuntu VM의 Name 태그**이며, Grafana VM 옆에 추가한 별도 서버가 아니다. SSM `Online`은 그 VM에 관리 접속할 수 있다는 뜻이지 Grafana가 설치·동작한다는 증거나 서울 EKS 편집 권한이 아니다. 기존 서울 앱망↔오사카 피어링은 서울 VPC 2↔VPC 1의 관리 경로를 대신하지 않는다.
+
 ## 빌드 서버를 따로 둬야 하나?
 
 **현재는 상시 빌드 EC2를 추가하지 않는다.** 관리와 빌드의 권한은 분리하되, 이를 위해 EC2 두 대를 운영할 필요는 없다.
