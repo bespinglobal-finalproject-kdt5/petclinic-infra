@@ -35,6 +35,7 @@ resource "aws_vpc" "service" {
 }
 
 resource "aws_vpc" "management" {
+  count      = var.retain_management ? 1 : 0
   cidr_block = "10.20.0.0/24"
   tags       = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-vpc" })
 }
@@ -52,7 +53,8 @@ resource "aws_subnet" "service" {
 }
 
 resource "aws_subnet" "management" {
-  vpc_id                  = aws_vpc.management.id
+  count                   = var.retain_management ? 1 : 0
+  vpc_id                  = aws_vpc.management[0].id
   cidr_block              = "10.20.0.0/27"
   availability_zone       = var.availability_zones[0]
   map_public_ip_on_launch = false
@@ -94,6 +96,13 @@ resource "aws_route_table" "service_app" {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.public_1.id
   }
+  dynamic "route" {
+    for_each = var.observe_peer[*]
+    content {
+      cidr_block                = route.value.subnet_cidr
+      vpc_peering_connection_id = route.value.id
+    }
+  }
   tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-app-rtb" })
 }
 
@@ -105,7 +114,8 @@ resource "aws_route_table" "service_private" {
 }
 
 resource "aws_route_table" "management" {
-  vpc_id = aws_vpc.management.id
+  count  = var.retain_management ? 1 : 0
+  vpc_id = aws_vpc.management[0].id
   route  = []
   tags   = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-rtb" })
 }
@@ -117,6 +127,7 @@ resource "aws_route_table_association" "service" {
 }
 
 resource "aws_route_table_association" "management" {
-  subnet_id      = aws_subnet.management.id
-  route_table_id = aws_route_table.management.id
+  count          = var.retain_management ? 1 : 0
+  subnet_id      = aws_subnet.management[0].id
+  route_table_id = aws_route_table.management[0].id
 }

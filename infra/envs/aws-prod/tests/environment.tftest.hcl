@@ -7,6 +7,11 @@ mock_provider "aws" {
   source = "./tests/mocks"
 }
 
+mock_provider "aws" {
+  alias  = "osaka"
+  source = "./tests/mocks"
+}
+
 # Terraform mock providers cannot import an existing zone. Live plans verify its ID.
 override_resource {
   target = aws_route53_zone.delegated
@@ -18,10 +23,12 @@ variables {
   aws_account_id     = "123456789012"
   aws_region         = "ap-northeast-2"
   availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
+  osaka_admin_ipv4   = "192.0.2.17"
 }
 
-run "production_outputs" {
+run "pre_cutover_outputs" {
   command = plan
+  variables { retire_seoul_management_vpc = false }
   assert {
     condition = (
       output.service_vpc_id == module.network.service_vpc_id && output.management_vpc_id == module.network.management_vpc_id &&
@@ -138,4 +145,23 @@ run "public_edge" {
     )
     error_message = "Both public apex aliases must point to the distribution, not the ALB."
   }
+}
+
+run "osaka_cutover" {
+  command = plan
+  variables { retire_seoul_management_vpc = true }
+  assert {
+    condition = (
+      module.network.management_vpc_id == null && module.network.management_subnet_id == null &&
+      output.management_vpc_id == module.osaka_observe.vpc_id && output.management_subnet_id == module.osaka_observe.subnet_id &&
+      length(module.network.app_subnet_ids) == 2 && length(module.network.db_subnet_ids) == 2
+    )
+    error_message = "Only explicit retirement may switch VPC 2 outputs; Seoul service subnets must remain."
+  }
+}
+
+run "reject_open_osaka_ingress" {
+  command = plan
+  variables { osaka_admin_ipv4 = "0.0.0.0/0" }
+  expect_failures = [var.osaka_admin_ipv4]
 }

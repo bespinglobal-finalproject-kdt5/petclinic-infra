@@ -6,6 +6,10 @@
 
 `https://mission-critical.site/health`는 ALB 고정 응답 200, 그 외 경로는 기본 404다. `/health`는 엣지에서 리스너까지의 확인용이지 앱 상태 검사가 아니다. EKS나 대상 그룹은 생성하지 않는다.
 
+## 관리/관제 VPC 2: 오사카 전환
+
+서울 서비스 VPC 1은 유지한다. [단계별 사설 SSH 피어링과 VPC 2 전환 절차](OSAKA-VPC2.md)를 확인한다. 운영 전환 설정은 `retire_seoul_management_vpc=true`로, 관리망 출력은 오사카를 사용한다. `false`로 되돌리면 기존 서울 관리망을 새로 만들게 된다.
+
 ## 실제 plan 전 확인
 
 - `aws_account_id`(승인된 12자리 계정), `aws_region = "ap-northeast-2"`, `availability_zones`(그 계정에서 사용 가능한 서로 다른 서울 표준 AZ 두 개)를 입력한다. 도메인과 ACM 리전은 고정값이다.
