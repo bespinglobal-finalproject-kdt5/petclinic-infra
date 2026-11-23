@@ -42,6 +42,16 @@ resource "aws_cloudfront_distribution" "edge" {
     viewer_protocol_policy = "redirect-to-https"
   }
 
+  ordered_cache_behavior {
+    path_pattern             = "/petclinic/api/*"
+    target_origin_id         = "internal-alb"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
+    viewer_protocol_policy   = "https-only"
+  }
+
   custom_error_response {
     error_code            = 404
     error_caching_min_ttl = 0

@@ -35,8 +35,20 @@ resource "aws_vpc" "service" {
 }
 
 resource "aws_vpc" "management" {
-  cidr_block = "10.20.0.0/24"
-  tags       = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-vpc" })
+  cidr_block           = "10.20.0.0/24"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags                 = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-vpc" })
+}
+
+resource "aws_vpc_peering_connection" "management_app" {
+  vpc_id      = aws_vpc.management.id
+  peer_vpc_id = aws_vpc.service.id
+  auto_accept = true # same account and region
+
+  requester { allow_remote_vpc_dns_resolution = true }
+  accepter { allow_remote_vpc_dns_resolution = true }
+  tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-management-app-peer" })
 }
 
 resource "aws_subnet" "service" {
@@ -94,6 +106,10 @@ resource "aws_route_table" "service_app" {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.public_1.id
   }
+  route {
+    cidr_block                = aws_subnet.management.cidr_block
+    vpc_peering_connection_id = aws_vpc_peering_connection.management_app.id
+  }
   tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-app-rtb" })
 }
 
@@ -106,8 +122,14 @@ resource "aws_route_table" "service_private" {
 
 resource "aws_route_table" "management" {
   vpc_id = aws_vpc.management.id
-  route  = []
-  tags   = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-rtb" })
+  dynamic "route" {
+    for_each = { for k, s in local.service_subnets : k => s if s.table == "app" }
+    content {
+      cidr_block                = route.value.cidr
+      vpc_peering_connection_id = aws_vpc_peering_connection.management_app.id
+    }
+  }
+  tags = merge(local.tags, { component = "management", Name = "${local.name_prefix}-management-rtb" })
 }
 
 resource "aws_route_table_association" "service" {
