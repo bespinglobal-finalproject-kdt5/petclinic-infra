@@ -145,14 +145,5 @@ resource "aws_eks_node_group" "app" {
   depends_on = [aws_iam_role_policy_attachment.eks_node, aws_eks_addon.vpc_cni]
 }
 
-# If the Seoul workload is redeployed, authorize API traffic from the single Osaka VM.
-# Across regions use its private /32; an SG reference cannot cross this peering.
-# SSM forwarding authenticates kubectl as the operator, not as the Osaka VM role.
-resource "aws_vpc_security_group_ingress_rule" "management_api" {
-  security_group_id = aws_eks_cluster.petclinic.vpc_config[0].cluster_security_group_id
-  cidr_ipv4         = "${module.osaka_observe.private_ip}/32"
-  ip_protocol       = "tcp"
-  from_port         = 443
-  to_port           = 443
-  tags              = merge(local.eks_tags, { Name = "${local.platform_name}-eks-from-osaka" })
-}
+# No extra EKS management ingress until the Seoul management host and its private path exist.
+# Osaka is for observability and must not be granted control-plane access.

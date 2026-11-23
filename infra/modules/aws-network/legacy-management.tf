@@ -1,7 +1,7 @@
 variable "retain_management" {
   type        = bool
   default     = true
-  description = "Keep the legacy Seoul VPC throughout the Osaka verification stage."
+  description = "Create the isolated Seoul management network. Enabled by the production root independently of monitoring."
 }
 
 # Preserve previous addresses in state. Turning on staged cutover must not replace a Seoul resource.

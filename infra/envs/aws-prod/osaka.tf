@@ -22,11 +22,6 @@ variable "osaka_key_name" {
   description = "Existing EC2 key pair in Osaka. Keep its private key outside Terraform."
   default     = "osaka-key"
 }
-variable "retire_seoul_management_vpc" {
-  type        = bool
-  description = "Osaka is the active management network. Setting false would recreate the retired Seoul management network."
-  default     = true
-}
 module "osaka_observe" {
   source          = "../../modules/osaka-observe"
   providers       = { aws = aws.osaka }
@@ -36,7 +31,7 @@ module "osaka_observe" {
   peering_id      = aws_vpc_peering_connection_accepter.osaka.id
 }
 output "osaka_observe" {
-  description = "Osaka candidate/end-state management network. EC2 public IP may change after stop/start."
+  description = "Independent Osaka observability network and host. EC2 public IP may change after stop/start."
   value = {
     vpc_id      = module.osaka_observe.vpc_id
     subnet_id   = module.osaka_observe.subnet_id
