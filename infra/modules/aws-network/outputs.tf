@@ -3,7 +3,7 @@ output "service_vpc_id" {
 }
 
 output "management_vpc_id" {
-  value = aws_vpc.management.id
+  value = one(aws_vpc.management[*].id)
 }
 
 output "app_subnet_ids" {
@@ -24,6 +24,5 @@ output "public_subnet_ids" {
 }
 
 output "management_subnet_id" {
-  value      = aws_subnet.management.id
-  depends_on = [aws_route_table_association.management]
+  value = one(aws_subnet.management[*].id)
 }

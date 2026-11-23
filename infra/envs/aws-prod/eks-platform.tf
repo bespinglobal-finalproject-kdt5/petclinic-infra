@@ -1,7 +1,6 @@
 locals {
   platform_name = "petclinic-prod"
   eks_tags      = { project = "petclinic", environment = "prod", component = "app" }
-  mgmt_tags     = { project = "petclinic", environment = "prod", component = "management" }
   ec2_trust = jsonencode({
     Version   = "2012-10-17"
     Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }]
@@ -146,135 +145,14 @@ resource "aws_eks_node_group" "app" {
   depends_on = [aws_iam_role_policy_attachment.eks_node, aws_eks_addon.vpc_cni]
 }
 
-resource "aws_security_group" "management" {
-  name_prefix = "${local.platform_name}-management-"
-  description = "SSM managed host; no inbound access"
-  vpc_id      = module.network.management_vpc_id
-  tags        = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-sg" })
-}
-
-resource "aws_security_group" "management_endpoints" {
-  name_prefix = "${local.platform_name}-endpoints-"
-  description = "Private management AWS API endpoints"
-  vpc_id      = module.network.management_vpc_id
-  tags        = merge(local.mgmt_tags, { Name = "${local.platform_name}-endpoints-sg" })
-}
-
-resource "aws_vpc_security_group_ingress_rule" "management_endpoints" {
-  security_group_id            = aws_security_group.management_endpoints.id
-  referenced_security_group_id = aws_security_group.management.id
-  ip_protocol                  = "tcp"
-  from_port                    = 443
-  to_port                      = 443
-  tags                         = merge(local.mgmt_tags, { Name = "${local.platform_name}-endpoint-from-management" })
-}
-
-resource "aws_vpc_security_group_egress_rule" "management_endpoints" {
-  security_group_id            = aws_security_group.management.id
-  referenced_security_group_id = aws_security_group.management_endpoints.id
-  ip_protocol                  = "tcp"
-  from_port                    = 443
-  to_port                      = 443
-  tags                         = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-to-endpoints" })
-}
-
-# PrivateLink serves the AWS EKS management API, NOT the Kubernetes API.
-resource "aws_vpc_endpoint" "management" {
-  for_each            = toset(["ssm", "ssmmessages", "eks", "sts"])
-  vpc_id              = module.network.management_vpc_id
-  vpc_endpoint_type   = "Interface"
-  service_name        = "com.amazonaws.${var.aws_region}.${each.key}"
-  private_dns_enabled = true
-  subnet_ids          = [module.network.management_subnet_id]
-  security_group_ids  = [aws_security_group.management_endpoints.id]
-  tags                = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-${each.key}" })
-}
-
-resource "aws_vpc_security_group_egress_rule" "management_api" {
-  security_group_id            = aws_security_group.management.id
-  referenced_security_group_id = aws_eks_cluster.petclinic.vpc_config[0].cluster_security_group_id
-  ip_protocol                  = "tcp"
-  from_port                    = 443
-  to_port                      = 443
-  tags                         = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-to-eks" })
-}
-
+# If the Seoul workload is redeployed, authorize API traffic from the single Osaka VM.
+# Across regions use its private /32; an SG reference cannot cross this peering.
+# SSM forwarding authenticates kubectl as the operator, not as the Osaka VM role.
 resource "aws_vpc_security_group_ingress_rule" "management_api" {
-  security_group_id            = aws_eks_cluster.petclinic.vpc_config[0].cluster_security_group_id
-  referenced_security_group_id = aws_security_group.management.id
-  ip_protocol                  = "tcp"
-  from_port                    = 443
-  to_port                      = 443
-  tags                         = merge(local.eks_tags, { Name = "${local.platform_name}-eks-from-management" })
-}
-
-resource "aws_iam_role" "management" {
-  name               = "${local.platform_name}-management"
-  assume_role_policy = local.ec2_trust
-  tags               = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-role" })
-}
-
-resource "aws_iam_role_policy" "management" {
-  name = "session-agent-and-cluster-discovery"
-  role = aws_iam_role.management.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      { Effect = "Allow", Action = "eks:DescribeCluster", Resource = aws_eks_cluster.petclinic.arn },
-      { Effect = "Allow", Action = [
-        "ssm:UpdateInstanceInformation", "ssmmessages:CreateControlChannel", "ssmmessages:CreateDataChannel",
-        "ssmmessages:OpenControlChannel", "ssmmessages:OpenDataChannel"
-      ], Resource = "*" }
-    ]
-  })
-}
-
-resource "aws_eks_access_entry" "management" {
-  cluster_name  = aws_eks_cluster.petclinic.name
-  principal_arn = aws_iam_role.management.arn
-  type          = "STANDARD"
-  tags          = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-access" })
-}
-
-resource "aws_eks_access_policy_association" "management" {
-  cluster_name  = aws_eks_access_entry.management.cluster_name
-  principal_arn = aws_eks_access_entry.management.principal_arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
-  access_scope {
-    type       = "namespace"
-    namespaces = ["petclinic"]
-  }
-}
-
-resource "aws_iam_instance_profile" "management" {
-  name = "${local.platform_name}-management"
-  role = aws_iam_role.management.name
-  tags = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-profile" })
-}
-
-data "aws_ssm_parameter" "management_al2023" {
-  name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
-}
-
-resource "aws_instance" "management" {
-  ami                         = data.aws_ssm_parameter.management_al2023.value
-  instance_type               = "t3.micro"
-  subnet_id                   = module.network.management_subnet_id
-  associate_public_ip_address = false
-  vpc_security_group_ids      = [aws_security_group.management.id]
-  iam_instance_profile        = aws_iam_instance_profile.management.name
-  metadata_options {
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 1
-  }
-  root_block_device {
-    encrypted   = true
-    volume_type = "gp3"
-  }
-  volume_tags = merge(local.mgmt_tags, { Name = "${local.platform_name}-management-root" })
-  tags        = merge(local.mgmt_tags, { Name = "${local.platform_name}-management" })
-  depends_on = [
-    aws_iam_role_policy.management, aws_vpc_endpoint.management,
-    aws_vpc_security_group_ingress_rule.management_endpoints, aws_vpc_security_group_egress_rule.management_endpoints
-  ]
+  security_group_id = aws_eks_cluster.petclinic.vpc_config[0].cluster_security_group_id
+  cidr_ipv4         = "${module.osaka_observe.private_ip}/32"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+  tags              = merge(local.eks_tags, { Name = "${local.platform_name}-eks-from-osaka" })
 }

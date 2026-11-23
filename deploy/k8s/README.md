@@ -15,8 +15,8 @@ Run from a trusted Linux operator workstation, **not** from Terraform, a worker 
 In terminal A, start the parent's SSM tunnel (skip if already running):
 
 ```bash
-export AWS_REGION=ap-northeast-2
-# CLUSTER and MANAGER_ID from the production handoff
+export AWS_REGION=ap-northeast-2 MANAGER_REGION=ap-northeast-3
+# CLUSTER is in Seoul; MANAGER_ID is the Osaka SSM instance (terraform output -json osaka_observe).
 export TUNNEL_KUBECONFIG="$(mktemp -d)/kubeconfig"
 bash deploy/eks-tunnel.sh
 ```

@@ -4,7 +4,7 @@
 
 ## 구성과 배포 범위
 
-- **서울:** 서비스 VPC `10.10.0.0/22`와 관리 VPC `10.20.0.0/24`는 `aws-network` 모듈 한 번의 호출로 구성한다. 앱 서브넷 두 곳은 `2a`의 NAT Gateway 하나를 공유한다. DB·관리 서브넷에는 인터넷 기본 경로가 없다.
+- **서비스·관리 네트워크:** 서울 서비스 VPC 1(`10.10.0.0/22`)은 유지하고 관리 VPC 2는 오사카(`10.40.0.0/16`, 서브넷 `10.40.0.0/27`)로 전환했다. 서울 앱 서브넷 두 곳은 기존 NAT 기본 경로를 유지하며 오사카 서브넷으로만 피어링한다. 기존 서울 관리 VPC(`10.20.0.0/24`)는 폐기했다. [SSM 접속과 관제망 전환 기록](infra/envs/aws-prod/OSAKA-VPC2.md).
 - **도메인 진입점:** Terraform이 프라이빗 앱 서브넷 두 곳에 내부 ALB를 관리한다. VPC 오리진은 이 ALB를 대상으로 하며 `/health`는 고정 200이다. [PR #10](https://github.com/bespinglobal-finalproject-kdt5/petclinic-infra/pull/10) 이후 state 복구 시점에는 CloudFront 배포와 도메인 A·AAAA 별칭은 코드에만 있었으며 태그 작업에서는 생성하지 않는다. EKS나 앱 준비 상태를 검증하는 엔드포인트가 아니다.
 - **오사카:** 운영 [Terraform state](infra/STATE.md)는 비공개 S3 버킷(`ap-northeast-3`)에 저장한다. 구 도쿄 버킷은 삭제했으며 이전 state 버전 이력도 오사카 버킷의 별도 경로에 보관한다. 서울 워크로드와 Azure DR state는 별개다.
 
@@ -17,7 +17,7 @@
 | 경로 | 역할 |
 |---|---|
 | `infra/modules/` | 재사용할 Terraform 자원 정의. 현재 공통 네트워크 모듈이 있다. |
-| `infra/envs/aws-prod/` | 서울 네트워크·내부 ALB, CloudFront·인증서·DNS를 조합하는 운영 실행 위치. EKS·RDS·관리 EC2는 후속 범위다. |
+| `infra/envs/aws-prod/` | 서울 서비스망·워크로드와 오사카 관리망의 운영 루트. 전체 plan에는 롤백된 EKS·RDS·도메인 재생성이 포함될 수 있으므로 검토 없이 apply하지 않는다. |
 | `infra/envs/azure-dr/` | Azure 복구 네트워크·VM·MySQL·Key Vault 구성 예정 위치. |
 | `deploy/k8s/` | Angular WEB·Spring API의 EKS 배포 명세 예정 위치. |
 | `deploy/compose/` | Azure 복구 VM의 컨테이너 설정 예정 위치. |

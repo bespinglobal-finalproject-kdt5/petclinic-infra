@@ -16,5 +16,5 @@ aws eks update-kubeconfig --name "$CLUSTER" --alias petclinic --kubeconfig "$TUN
 key=$(kubectl --kubeconfig="$TUNNEL_KUBECONFIG" config view --minify -o jsonpath='{.clusters[0].name}')
 kubectl --kubeconfig="$TUNNEL_KUBECONFIG" config set-cluster "$key" --server="https://127.0.0.1:$port" --tls-server-name="$host" >/dev/null
 printf 'In another terminal use: export KUBECONFIG=%q\n' "$TUNNEL_KUBECONFIG"
-aws ssm start-session --target "$MANAGER_ID" --document-name AWS-StartPortForwardingSessionToRemoteHost \
+aws ssm start-session --region "${MANAGER_REGION:-ap-northeast-3}" --target "$MANAGER_ID" --document-name AWS-StartPortForwardingSessionToRemoteHost \
   --parameters "$(jq -cn --arg host "$host" --arg port "$port" '{host:[$host],portNumber:["443"],localPortNumber:[$port]}')"

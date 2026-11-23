@@ -1,34 +1,7 @@
-# Private management path (aws-prod)
+# 관리 접속 경로
 
-The management route table peers only to the two app subnet CIDRs. The app table returns traffic to the management subnet via that peer and keeps its NAT default. Neither the public nor DB tier has a peer route. Management has no internet default or inbound EC2 rule. Both VPCs use Amazon-provided DNS.
+관리 호스트는 서울 레거시 `10.20.0.0/24`가 아니라 [오사카 관제 VM](../../envs/aws-prod/OSAKA-VPC2.md)이다. 이 모듈은 서울 서비스망과 앱 라우트 테이블을 관리한다. 운영 루트의 `management_vpc_id`와 `management_subnet_id`는 오사카를 가리킨다. `retire_seoul_management_vpc`는 기본값 `true`로 유지한다.
 
-The root provisions `ssm`, `ssmmessages`, `eks` and regional `sts` interface endpoints in management. These are AWS service APIs; `kubectl` instead uses the **cluster-specific hostname**, which resolves to private addresses in the app subnets. The management SG allows TCP 443 to the endpoint SG and, across the peer, to the EKS cluster SG. There is no SSH key or SSH rule.
-
-## Bootstrap after an approved apply
-
-1. Use the same IAM principal that created the cluster (including re-assuming the apply role if necessary). EKS grants this principal bootstrap admin via an API access entry. Separately authorize the operator to describe the cluster and start an SSM session on this instance with the remote-host forwarding document; grant data-channel and session lifecycle permissions for their own session. Don't grant the management instance role those operator privileges.
-2. On the operator workstation, use AWS CLI v2, the Session Manager plugin, and a compatible `kubectl`. Set `INSTANCE_ID` to the ID of `aws_instance.management`; confirm the AL2023 SSM agent is Online. Open a tunnel and leave it running:
-
-   ```sh
-   export AWS_REGION=ap-northeast-2
-   api=$(aws eks describe-cluster --name petclinic-prod --query cluster.endpoint --output text)
-   aws ssm start-session --target "$INSTANCE_ID" \
-     --document-name AWS-StartPortForwardingSessionToRemoteHost \
-     --parameters "host=${api#https://},portNumber=443,localPortNumber=8443"
-   ```
-
-3. In another terminal with the same AWS identity, use a temporary kubeconfig. Keep the EKS CA and set TLS SNI to the real API hostname; **do not disable certificate verification**. This authenticates as the local operator, not as EC2.
-
-   ```sh
-   export AWS_REGION=ap-northeast-2
-   api=$(aws eks describe-cluster --name petclinic-prod --query cluster.endpoint --output text)
-   tmpdir=$(mktemp -d); export KUBECONFIG="$tmpdir/config"
-   aws eks update-kubeconfig --name petclinic-prod --kubeconfig "$KUBECONFIG"
-   cluster=$(kubectl config view --minify -o jsonpath='{.contexts[0].context.cluster}')
-   kubectl config set-cluster "$cluster" --server=https://127.0.0.1:8443 --tls-server-name="${api#https://}"
-   kubectl get nodes -L topology.kubernetes.io/zone
-   kubectl create namespace petclinic --dry-run=client -o yaml | kubectl apply -f -
-   ```
-
-4. Confirm two Ready nodes and healthy `kube-system` pods. Test a separately approved recovery administrator before removing bootstrap access. Close the tunnel and remove the temporary kubeconfig when finished. A single multi-AZ node group does not guarantee exactly one node per AZ.
-5. For routine deployments **on EC2**, stage a checksum-verified Linux x86-64 `kubectl` via an approved offline transfer or pre-baked AL2023 image; the stock instance does not download it on boot. In an authorized SSM shell use regional AWS endpoints, `aws eks update-kubeconfig --region ap-northeast-2 --name petclinic-prod`, and `kubectl -n petclinic …`. Check `kubectl auth can-i create deployments -n petclinic` (yes) and `kubectl auth can-i create namespaces` (no). The instance role has namespace-scoped Edit, not cluster admin. Keep privileged workloads and service accounts out of this namespace.
+- 서울 앱 서브넷 두 곳에서 오사카 관제 서브넷으로만 피어 경로가 있다. 서울의 NAT 기본 경로는 바뀌지 않고 서울 DB·퍼블릭 서브넷은 피어 경로를 사용하지 않는다.
+- 운영자는 `ap-northeast-3`의 Session Manager로 오사카 호스트에 접속한다. 호스트의 IAM 역할은 SSM 에이전트용이며 EKS 관리자 역할이 아니다.
+- 서울 EKS가 다시 배포되는 경우, 운영자 PC에서 [터널 스크립트](../../../deploy/eks-tunnel.sh)를 실행한다. AWS CLI의 EKS 조회/인증은 서울(`AWS_REGION=ap-northeast-2`), SSM 포워딩은 오사카(`MANAGER_REGION=ap-northeast-3`)를 사용한다. EC2 사설 IP `/32`에서만 서울 EKS SG로 TCP/443을 허용하는 규칙이 EKS와 함께 생성된다. 터널은 EKS CA와 실제 API 서버 이름을 검증하며, 접근 권한은 별도로 허용된 운영자 IAM 신원에 따른다. EKS를 롤백한 상태에서는 `kubectl` 접속 대상이 없다.
