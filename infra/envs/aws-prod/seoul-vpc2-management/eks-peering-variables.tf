@@ -1,1 +1,3 @@
-variable "service_peer_id" { type = string }
+variable "service_peer_id" {
+  type = string
+}

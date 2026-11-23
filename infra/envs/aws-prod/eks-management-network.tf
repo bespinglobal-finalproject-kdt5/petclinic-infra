@@ -6,8 +6,12 @@ resource "aws_vpc_peering_connection" "management_service" {
 }
 resource "aws_vpc_peering_connection_options" "management_service" {
   vpc_peering_connection_id = aws_vpc_peering_connection.management_service.id
-  requester { allow_remote_vpc_dns_resolution = true }
-  accepter  { allow_remote_vpc_dns_resolution = true }
+  requester {
+    allow_remote_vpc_dns_resolution = true
+  }
+  accepter {
+    allow_remote_vpc_dns_resolution = true
+  }
 }
 resource "aws_vpc_security_group_egress_rule" "management_https" {
   security_group_id = module.seoul_vpc2.management_security_group_id
@@ -23,5 +27,5 @@ resource "aws_vpc_security_group_egress_rule" "management_http" {
   ip_protocol       = "tcp"
   from_port         = 80
   to_port           = 80
-  description       = "Ubuntu package downloads and internal ALB tests"
+  description       = "Ubuntu package downloads and public ALB tests"
 }

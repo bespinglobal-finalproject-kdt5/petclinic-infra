@@ -1,1 +1,3 @@
-variable "management_peer_id" { type = string }
+variable "management_peer_id" {
+  type = string
+}
