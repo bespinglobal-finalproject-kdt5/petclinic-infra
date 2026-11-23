@@ -1,45 +1,5 @@
 # Move the former root edge resources into their environment module.
 moved {
-  from = data.aws_ec2_managed_prefix_list.cloudfront
-  to   = module.edge.data.aws_ec2_managed_prefix_list.cloudfront
-}
-
-moved {
-  from = aws_security_group.origin
-  to   = module.edge.aws_security_group.origin
-}
-
-moved {
-  from = aws_vpc_security_group_ingress_rule.cloudfront_http
-  to   = module.edge.aws_vpc_security_group_ingress_rule.cloudfront_http
-}
-
-moved {
-  from = aws_lb.origin
-  to   = module.edge.aws_lb.origin
-}
-
-moved {
-  from = aws_lb_listener.http
-  to   = module.edge.aws_lb_listener.http
-}
-
-moved {
-  from = aws_lb_listener_rule.health
-  to   = module.edge.aws_lb_listener_rule.health
-}
-
-moved {
-  from = aws_lb_target_group.app
-  to   = module.edge.aws_lb_target_group.app
-}
-
-moved {
-  from = aws_lb_listener_rule.app
-  to   = module.edge.aws_lb_listener_rule.app
-}
-
-moved {
   from = data.aws_cloudfront_origin_request_policy.api
   to   = module.edge.data.aws_cloudfront_origin_request_policy.api
 }
@@ -47,11 +7,6 @@ moved {
 moved {
   from = data.aws_cloudfront_cache_policy.disabled
   to   = module.edge.data.aws_cloudfront_cache_policy.disabled
-}
-
-moved {
-  from = aws_cloudfront_vpc_origin.alb
-  to   = module.edge.aws_cloudfront_vpc_origin.alb
 }
 
 moved {

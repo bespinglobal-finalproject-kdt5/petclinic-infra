@@ -1,3 +1,5 @@
+# 이전 ALB의 리스너 규칙과 대상 그룹. 새 Ingress의 백엔드는 EKS에서 정의한다.
+/*
 # The EKS configuration registers targets for these two NodePort services.
 locals {
   workloads = {
@@ -38,7 +40,4 @@ resource "aws_lb_listener_rule" "app" {
   }
   tags = merge(local.application_tags, { Name = "petclinic-prod-${each.key}-rule" })
 }
-
-data "aws_cloudfront_origin_request_policy" "api" {
-  name = "Managed-AllViewerExceptHostHeader"
-}
+*/

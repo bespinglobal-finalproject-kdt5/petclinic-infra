@@ -41,16 +41,6 @@ output "internal_alb_dns_name" {
   value       = module.edge.internal_alb_dns_name
 }
 
-output "alb_security_group_id" {
-  description = "ALB security group for the EKS NodePort rules."
-  value       = module.edge.alb_security_group_id
-}
-
-output "app_target_group_arns" {
-  description = "Target group ARNs keyed by web and api for registering EKS workers."
-  value       = module.edge.app_target_group_arns
-}
-
 output "osaka_observe" {
   description = "Retained Osaka VPC and subnet."
   value = {

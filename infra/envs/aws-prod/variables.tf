@@ -30,3 +30,9 @@ variable "availability_zones" {
     error_message = "Supply exactly two distinct AZ names consisting of aws_region and one lowercase letter."
   }
 }
+
+variable "eks_alb_arn" {
+  description = "ARN of the EKS-managed internal ALB. CloudFront stays disabled until this is set."
+  type        = string
+  default     = null
+}

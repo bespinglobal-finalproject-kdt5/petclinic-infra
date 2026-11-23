@@ -16,5 +16,5 @@ module "edge" {
   domain             = local.domain
   public_zone_id     = data.aws_route53_zone.public.zone_id
   vpc_id             = module.network.service_vpc_id
-  app_subnet_ids     = module.network.app_subnet_ids
+  eks_alb_arn        = var.eks_alb_arn
 }

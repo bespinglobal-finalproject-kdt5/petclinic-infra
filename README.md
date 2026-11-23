@@ -42,11 +42,11 @@
 
 | 경로 | 역할 |
 |---|---|
-| [infra/envs/aws-prod/](infra/envs/aws-prod/README.md) | 서울 네트워크·서비스 진입점과 오사카 관제망을 관리한다. EKS·RDS 담당자에게 VPC·서브넷과 ALB 연결 값을 출력한다. |
+| [infra/envs/aws-prod/](infra/envs/aws-prod/README.md) | 서울 네트워크·서비스 진입점과 오사카 관제망을 관리한다. EKS·RDS 담당자에게 VPC·서브넷 ID를 제공하고, EKS 담당자가 전달한 ALB ARN을 CloudFront에 연결한다. |
 | [infra/envs/azure-dr/](infra/envs/azure-dr/README.md) | Azure 복구 네트워크·VM·MySQL·Key Vault 구성 예정 위치. |
 
 ## 태그와 운영 기준
 
 [공통 태그](infra/TAGS.md)는 `project=petclinic`, `environment=prod` 또는 `azure_dr`, `component` 세 가지다. 서비스·관리 VPC, 앱·DB 서브넷 등은 역할별 component를 쓰고, DNS·엣지는 `network`, state 버킷은 `management`를 쓴다. 기존 Route 53 영역은 import하므로 새 NS가 발급되지 않는다. 개별 DNS 레코드·라우팅 테이블 연결·ACM 검증 대기 리소스는 태그를 지원하지 않는다.
 
-향후 EKS를 연결할 때는 기존 ALB를 중복 생성하지 않는다. 모니터링 수집 방식과 Azure DR 전환 승인·검증 순서는 별도 PR에서 확정한다.
+서울 내부 ALB와 보안 그룹·대상 그룹은 EKS Ingress 담당자가 관리한다. 운영 루트는 `eks_alb_arn`을 받으면 CloudFront를 활성화한다. 모니터링 수집 방식과 Azure DR 전환 승인·검증 순서는 별도 PR에서 확정한다.

@@ -16,6 +16,8 @@ variable "vpc_id" {
   type = string
 }
 
-variable "app_subnet_ids" {
-  type = list(string)
+variable "eks_alb_arn" {
+  description = "ARN of the EKS-managed internal ALB. CloudFront stays disabled until this is set."
+  type        = string
+  default     = null
 }

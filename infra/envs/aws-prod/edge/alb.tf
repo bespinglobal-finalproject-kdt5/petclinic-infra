@@ -1,7 +1,5 @@
-locals {
-  edge_tags = { project = "petclinic", environment = "prod", component = "network" }
-}
-
+# 이전 Terraform 관리형 ALB 구성. 현재 ALB와 보안 그룹은 EKS Ingress가 관리한다.
+/*
 data "aws_ec2_managed_prefix_list" "cloudfront" {
   name = "com.amazonaws.global.cloudfront.origin-facing"
 }
@@ -65,3 +63,4 @@ resource "aws_lb_listener_rule" "health" {
     }
   }
 }
+*/

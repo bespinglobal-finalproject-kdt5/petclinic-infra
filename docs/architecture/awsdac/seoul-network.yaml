@@ -1,0 +1,130 @@
+# Source: infra/envs/aws-prod/network/main.tf at main 959cbab.
+Diagram:
+  DefinitionFiles:
+    - Type: URL
+      Url: https://raw.githubusercontent.com/awslabs/diagram-as-code/v0.24/definitions/definition-for-aws-icons-light.yaml
+
+  Resources:
+    Canvas:
+      Type: AWS::Diagram::Canvas
+      Font: /usr/share/fonts/truetype/nanum/NanumGothic.ttf
+      Title: PetClinic 서울 네트워크
+      TitleColor: rgba(24,48,71,255)
+      Direction: vertical
+      Children: [ServiceVpc, RoutingNote]
+    ServiceVpc:
+      Type: AWS::EC2::VPC
+      Title: 서울 서비스 VPC · 10.10.0.0/22
+      Direction: vertical
+      Align: expand
+      Children: [SubnetsByAz, Routing]
+    SubnetsByAz:
+      Type: AWS::Diagram::HorizontalStack
+      Align: expand
+      Children: [ZoneA, ZoneC]
+    ZoneA:
+      Type: AWS::EC2::AvailabilityZone
+      Title: ap-northeast-2a
+      Children: [PublicA, AppA, DbA]
+    ZoneC:
+      Type: AWS::EC2::AvailabilityZone
+      Title: ap-northeast-2c
+      Children: [PublicC, AppC, DbC]
+    PublicA:
+      Type: AWS::EC2::Subnet
+      Preset: PublicSubnet
+      Title: |-
+        퍼블릭 · NAT 배치
+        10.10.2.0/27
+    PublicC:
+      Type: AWS::EC2::Subnet
+      Preset: PublicSubnet
+      Title: |-
+        퍼블릭
+        10.10.2.32/27
+    AppA:
+      Type: AWS::EC2::Subnet
+      Preset: PrivateSubnet
+      Title: |-
+        앱 서브넷
+        10.10.0.0/24
+    AppC:
+      Type: AWS::EC2::Subnet
+      Preset: PrivateSubnet
+      Title: |-
+        앱 서브넷
+        10.10.1.0/24
+    DbA:
+      Type: AWS::EC2::Subnet
+      Preset: PrivateSubnet
+      Title: |-
+        DB 서브넷
+        10.10.2.64/27
+    DbC:
+      Type: AWS::EC2::Subnet
+      Preset: PrivateSubnet
+      Title: |-
+        DB 서브넷
+        10.10.2.96/27
+
+    Routing:
+      Type: AWS::Diagram::HorizontalStack
+      Align: expand
+      Children: [Egress, DbRouting]
+    Egress:
+      Type: AWS::Diagram::Resource
+      Title: 앱 서브넷에서 인터넷으로 나가는 경로
+      BorderColor: rgba(103,126,145,255)
+      Children: [AppRoute, NatA, PublicRoute, Igw]
+    AppRoute:
+      Type: AWS::EC2::RouteTable
+      Title: |-
+        앱 RT · 2a와 2c
+        0.0.0.0/0 → NAT
+    NatA:
+      Type: AWS::EC2::NatGateway
+      Title: |-
+        NAT + EIP
+        퍼블릭 서브넷 2a
+    PublicRoute:
+      Type: AWS::EC2::RouteTable
+      Title: |-
+        퍼블릭 RT · 2a와 2c
+        0.0.0.0/0 → IGW
+    Igw:
+      Type: AWS::EC2::InternetGateway
+      Title: |-
+        서비스 IGW
+        인터넷
+    DbRouting:
+      Type: AWS::Diagram::Resource
+      Title: DB 서브넷의 경로
+      BorderColor: rgba(103,126,145,255)
+      Children: [DbRoute]
+    DbRoute:
+      Type: AWS::EC2::RouteTable
+      Title: |-
+        DB RT · 2a와 2c
+        10.10.0.0/22 → local
+    RoutingNote:
+      Type: AWS::Diagram::Resource
+      Title: |-
+        두 앱 서브넷은 향후 EKS Ingress 내부 ALB에 사용 · EKS·DB는 별도 담당
+        모든 테이블에 VPC local 경로 포함 · 2c 앱도 2a의 NAT 1개를 공유
+
+  Links:
+    - Source: AppRoute
+      SourcePosition: E
+      Target: NatA
+      TargetPosition: W
+      TargetArrowHead: {Type: Open}
+    - Source: NatA
+      SourcePosition: E
+      Target: PublicRoute
+      TargetPosition: W
+      TargetArrowHead: {Type: Open}
+    - Source: PublicRoute
+      SourcePosition: E
+      Target: Igw
+      TargetPosition: W
+      TargetArrowHead: {Type: Open}

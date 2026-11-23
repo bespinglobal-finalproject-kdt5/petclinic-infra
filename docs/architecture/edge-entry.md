@@ -1,5 +1,7 @@
 # Petclinic edge entry
 
+Historical design for the former Terraform-managed ALB. The current handoff to the EKS-managed Ingress is described in the [AWS production environment](../../infra/envs/aws-prod/README.md).
+
 [Open the editable diagram](edge-entry.drawio) in diagrams.net. **Status: proposed, not live-verified.** The existing `mission-critical.site` zone, Seoul network and Osaka state backend are inputs to this design. The repository defines the network layout; it does not establish that the proposed edge resources are running.
 
 ## Follow one request
