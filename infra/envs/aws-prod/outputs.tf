@@ -3,7 +3,8 @@ output "service_vpc_id" {
 }
 
 output "management_vpc_id" {
-  value = var.retire_seoul_management_vpc ? module.osaka_observe.vpc_id : module.network.management_vpc_id
+  description = "Seoul management VPC 2, not the Osaka observability VPC."
+  value       = module.network.management_vpc_id
 }
 
 output "app_subnet_ids" {
@@ -19,7 +20,8 @@ output "public_subnet_ids" {
 }
 
 output "management_subnet_id" {
-  value = var.retire_seoul_management_vpc ? module.osaka_observe.subnet_id : module.network.management_subnet_id
+  description = "Private subnet for future Seoul management access. No host is provisioned here yet."
+  value       = module.network.management_subnet_id
 }
 
 output "public_url" {

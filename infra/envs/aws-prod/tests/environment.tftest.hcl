@@ -26,9 +26,8 @@ variables {
   osaka_admin_ipv4   = "192.0.2.17"
 }
 
-run "pre_cutover_outputs" {
+run "seoul_management_outputs" {
   command = plan
-  variables { retire_seoul_management_vpc = false }
   assert {
     condition = (
       output.service_vpc_id == module.network.service_vpc_id && output.management_vpc_id == module.network.management_vpc_id &&
@@ -162,16 +161,15 @@ run "public_edge" {
   }
 }
 
-run "osaka_cutover" {
+run "osaka_is_observability_only" {
   command = plan
-  variables { retire_seoul_management_vpc = true }
   assert {
     condition = (
-      module.network.management_vpc_id == null && module.network.management_subnet_id == null &&
-      output.management_vpc_id == module.osaka_observe.vpc_id && output.management_subnet_id == module.osaka_observe.subnet_id &&
-      length(module.network.app_subnet_ids) == 2 && length(module.network.db_subnet_ids) == 2
+      output.osaka_observe.vpc_id == module.osaka_observe.vpc_id && output.osaka_observe.subnet_id == module.osaka_observe.subnet_id &&
+      output.management_vpc_id != null && output.management_subnet_id != null &&
+      output.management_vpc_id != output.osaka_observe.vpc_id && output.management_subnet_id != output.osaka_observe.subnet_id
     )
-    error_message = "Only explicit retirement may switch VPC 2 outputs; Seoul service subnets must remain."
+    error_message = "Seoul management and Osaka monitoring must have independent VPC and subnet outputs."
   }
 }
 

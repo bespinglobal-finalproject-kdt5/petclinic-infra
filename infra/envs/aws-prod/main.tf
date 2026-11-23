@@ -22,7 +22,7 @@ module "network" {
   source             = "../../modules/aws-network"
   availability_zones = var.availability_zones
   environment        = "prod"
-  retain_management  = !var.retire_seoul_management_vpc
+  retain_management  = true # Seoul VPC 2 is independent of Osaka observability.
   observe_peer = {
     id          = aws_vpc_peering_connection_accepter.osaka.id
     subnet_cidr = module.osaka_observe.subnet_cidr
