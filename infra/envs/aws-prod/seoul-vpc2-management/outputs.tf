@@ -14,3 +14,7 @@ output "management_public_subnet_id" {
 output "build_instance_id" {
   value = module.build_server.instance_id
 }
+
+output "management_instance_id" {
+  value = module.management_server.instance_id
+}

@@ -5,7 +5,7 @@ Terraform 실행 위치는 이 디렉터리다. [main.tf](main.tf)에서 네 모
 | 디렉터리 | 관리하는 구성 |
 |---|---|
 | [seoul-vpc1-service/](seoul-vpc1-service/main.tf) | 서울 VPC 1의 앱·DB·퍼블릭 서브넷, NAT와 앱 서브넷의 오사카 경로 |
-| [seoul-vpc2-management/](seoul-vpc2-management/main.tf) | 서울 VPC 2의 관리·빌드 서브넷, IGW와 [빌드 EC2](seoul-vpc2-management/build-server/main.tf) |
+| [seoul-vpc2-management/](seoul-vpc2-management/main.tf) | 서울 VPC 2의 관리·빌드 서브넷, IGW, [프라이빗 관리 EC2와 SSM 엔드포인트](seoul-vpc2-management/README.md) 및 [빌드 EC2](seoul-vpc2-management/build-server/main.tf) |
 | [edge/](edge/) | Route 53·ACM, CloudFront와 EKS 관리형 ALB에 대한 선택적 VPC Origin |
 | [osaka-monitoring/](osaka-monitoring/) | 오사카 VPC·서브넷, 서울 VPC 1 피어링과 향후 EC2용 SSM IAM 역할·정책·인스턴스 프로필 |
 | [tests/](tests/) | 환경·모듈별 mock plan 테스트. [mocks/](tests/mocks/)에 AWS 모의 응답을 둔다. |

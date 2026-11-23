@@ -9,6 +9,7 @@ run "management_network" {
 
   assert {
     condition = (
+      aws_vpc.management.enable_dns_support && aws_vpc.management.enable_dns_hostnames &&
       aws_vpc.management.cidr_block == "10.20.0.0/24" && output.management_vpc_id == aws_vpc.management.id &&
       aws_subnet.management.cidr_block == "10.20.0.0/27" && aws_subnet.management_public.cidr_block == "10.20.0.32/27" &&
       alltrue([for subnet in [aws_subnet.management, aws_subnet.management_public] :
