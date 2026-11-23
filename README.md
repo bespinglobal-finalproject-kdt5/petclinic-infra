@@ -7,16 +7,16 @@
 | 위치 | 현재 구성 | 역할 |
 |---|---|---|
 | 서울 서비스 VPC 1 · `10.10.0.0/22` | 서비스망과 NAT를 운영한다. Petclinic EKS·RDS는 롤백 상태 | 앱 워크로드용. Terraform에 배포 코드가 있다는 뜻과 지금 서비스가 실행 중이라는 뜻은 다르다. |
-| 서울 관리 VPC 2 · `10.20.0.0/24` | 서울 2a 프라이빗 `10.20.0.0/27`은 VPC 로컬 경로를 사용한다. 퍼블릭 `10.20.0.32/27`은 전용 IGW로 송신한다. | 퍼블릭 서브넷에 Ubuntu 빌드용 EC2 한 대를 둔다. 비공개 EKS 관리 호스트는 별도 구성 대상이다. |
+| 서울 관리 VPC 2 · `10.20.0.0/24` | 서울 2a 프라이빗 `10.20.0.0/27`은 VPC 로컬 경로를 사용한다. 퍼블릭 `10.20.0.32/27`은 전용 IGW로 송신한다. | 퍼블릭 서브넷에 Ubuntu 빌드용 EC2 한 대를 둔다. 프라이빗 관리 EC2는 운영 plan 검증까지 완료한 배포 대기 구성이다. |
 | 오사카 관제 VPC · `10.40.0.0/16` | 오사카 3b 서브넷 `10.40.0.0/27` 하나와 SSM용 IAM 역할·정책·인스턴스 프로필 | 향후 관제용으로 보존한다. 실행할 EC2와 SSM 세션 대상은 없다. |
 
 오사카 VPC·서브넷의 `Name`은 `osaka-observe`다. 관제 서브넷의 전용 라우팅 테이블은 서울 VPC 1의 두 앱 서브넷으로 가는 트래픽을 리전 간 피어링으로 보낸다. [오사카 보존 자원](infra/envs/aws-prod/OSAKA-VPC2.md). 운영 [Terraform state](infra/STATE.md)는 오사카 비공개 S3 버킷에 있으며, 이는 빌드 산출물 저장소가 아니다.
 
 ## 서울 EKS 관리 경로
 
-서울 VPC 2 안에서 `kubectl`을 실행해 서울 VPC 1의 비공개 EKS를 관리하려는 설계라면, **VPC 2에 관리 EC2 한 대가 필요하다.** EC2가 EKS를 구동하는 것은 아니다. EKS와 워커는 VPC 1에 두고, 운영자가 VPC 2의 EC2에서 Kubernetes API를 호출한다. 지난 복원에서는 관리 네트워크만 만들었으므로 이 EC2와 아래 경로는 아직 없다.
+서울 VPC 2의 프라이빗 서브넷에 Ubuntu 관리 EC2와 SSM 인터페이스 엔드포인트 두 개를 정의했다. 적용 후에는 `management_instance_id`로 Session Manager에 접속한다. [관리 서버 사양과 접속 명령](infra/envs/aws-prod/seoul-vpc2-management/README.md)
 
-**목표 접속 경로:** 운영자 PC → 서울 SSM Session Manager → 서울 VPC 2 관리 EC2(`aws`·`kubectl`) → 서울 VPC 간 피어링과 양방향 라우팅 → VPC 1의 EKS private API(TCP 443). SSH 공개 인바운드는 필요 없다. 로컬 경로만 있는 관리 프라이빗 서브넷에서는 관리 EC2가 SSM에 등록할 통신 경로(예: SSM·SSM Messages 인터페이스 엔드포인트)와 IAM 역할도 준비한다. Kubernetes 작업 권한은 별도로 EKS Access Entry 등을 통해 최소 범위로 부여한다.
+VPC 1의 비공개 EKS API를 운영하려면 VPC 2에서 API까지의 왕복 경로와 DNS, 보안 그룹의 TCP 443 허용, EKS Access Entry 등 클러스터 권한을 별도로 구성해야 한다.
 
 ## 서울 빌드 서버
 

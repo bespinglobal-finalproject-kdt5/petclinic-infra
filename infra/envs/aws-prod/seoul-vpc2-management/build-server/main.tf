@@ -12,16 +12,6 @@ locals {
   tags = { project = "petclinic", environment = "prod", component = "management" }
 }
 
-# Pin the release so a new daily image does not replace the build disk.
-data "aws_ami" "ubuntu" {
-  owners = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-20261120"]
-  }
-}
-
 resource "aws_security_group" "build" {
   name        = "${local.name}-sg"
   description = "Session Manager build host with outbound web access"
@@ -66,7 +56,7 @@ resource "aws_iam_instance_profile" "build" {
 }
 
 resource "aws_instance" "build" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = var.ubuntu_ami_id
   instance_type               = "m7i.large"
   subnet_id                   = var.subnet_id
   associate_public_ip_address = true

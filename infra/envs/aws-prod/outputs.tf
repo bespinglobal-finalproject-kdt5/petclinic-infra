@@ -20,7 +20,7 @@ output "public_subnet_ids" {
 }
 
 output "management_subnet_id" {
-  description = "Private subnet for future Seoul management access. No host is provisioned here yet."
+  description = "Private subnet for the Seoul management host and SSM endpoints."
   value       = module.seoul_vpc2.management_subnet_id
 }
 
@@ -56,4 +56,9 @@ output "management_public_subnet_id" {
 output "build_instance_id" {
   description = "Seoul build EC2 target for Systems Manager Session Manager."
   value       = module.seoul_vpc2.build_instance_id
+}
+
+output "management_instance_id" {
+  description = "Private Seoul management EC2 target for Session Manager."
+  value       = module.seoul_vpc2.management_instance_id
 }

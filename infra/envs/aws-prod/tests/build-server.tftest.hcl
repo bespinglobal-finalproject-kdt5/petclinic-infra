@@ -6,8 +6,9 @@ run "build_host" {
   command = plan
   module { source = "./seoul-vpc2-management/build-server" }
   variables {
-    vpc_id    = "vpc-00000000000000001"
-    subnet_id = "subnet-00000000000000003"
+    ubuntu_ami_id = "ami-00000000000000001"
+    vpc_id        = "vpc-00000000000000001"
+    subnet_id     = "subnet-00000000000000003"
   }
 
   assert {
