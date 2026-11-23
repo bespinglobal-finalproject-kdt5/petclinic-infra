@@ -18,3 +18,8 @@ output "build_instance_id" {
 output "management_instance_id" {
   value = module.management_server.instance_id
 }
+
+output "management_role_name" { value = module.management_server.role_name }
+output "management_role_arn" { value = module.management_server.role_arn }
+output "management_security_group_id" { value = module.management_server.security_group_id }
+output "management_private_ip" { value = module.management_server.private_ip }

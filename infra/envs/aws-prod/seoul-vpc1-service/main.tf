@@ -65,6 +65,10 @@ resource "aws_route_table" "service_app" {
     cidr_block                = var.osaka_peer.subnet_cidr
     vpc_peering_connection_id = var.osaka_peer.id
   }
+  route {
+    cidr_block                = "10.20.0.0/24"
+    vpc_peering_connection_id = var.management_peer_id
+  }
   tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-app-rtb" })
 }
 
