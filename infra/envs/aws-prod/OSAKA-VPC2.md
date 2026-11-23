@@ -8,7 +8,7 @@
 | 서울 관리 VPC 2 | `10.20.0.0/24`, 2a 비공개 `10.20.0.0/27`, 퍼블릭 `10.20.0.32/27` | `management_vpc_id`, `management_subnet_id`, `management_public_subnet_id` |
 | 오사카 관제 VPC | `10.40.0.0/16`, 관제 서브넷 `10.40.0.0/27` | `osaka_observe` (VPC·서브넷 ID) |
 
-서울 VPC 2의 프라이빗 관리 서브넷은 VPC 로컬 경로를 사용한다. 빌드 서브넷의 기본 경로는 서울 관리 IGW를 가리킨다. 빌드 EC2는 이 경로로 SSM과 패키지 저장소에 접속한다. [서울 관리 퍼블릭 라우팅](seoul-vpc2-management/main.tf)
+서울 VPC 2의 프라이빗 관리 서브넷은 VPC 로컬 경로를 사용한다. 빌드 EC2는 퍼블릭 서브넷의 기본 경로인 서울 관리 IGW를 통해 외부 패키지 저장소에 접속한다. 빌드 EC2와 관리 EC2 모두 SSM에 접속할 때는 프라이빗 DNS를 통해 관리 서브넷의 인터페이스 엔드포인트를 사용한다. [서울 관리 퍼블릭 라우팅](seoul-vpc2-management/main.tf) · [SSM 엔드포인트](seoul-vpc2-management/management-server/ssm-endpoints.tf)
 
 ## 오사카 SSM과 라우팅
 

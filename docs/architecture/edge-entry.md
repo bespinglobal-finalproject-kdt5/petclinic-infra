@@ -15,7 +15,7 @@ In the diagram, solid arrows trace the request; dashed arrows show DNS and certi
 
 ## Seoul network inventory
 
-The [Terraform network module](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf) defines the CIDRs and routing. The AZ names below assume environment inputs ordered `ap-northeast-2a`, then `ap-northeast-2c`. This proposal uses the two **private app** subnets even though the [network guide](../../infra/NETWORK.md) also describes a public pair sized for an ALB.
+The Seoul service VPC module defines the [subnet CIDRs](../../infra/envs/aws-prod/seoul-vpc1-service/subnets.tf) and [routing tables](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf). The AZ names below assume environment inputs ordered `ap-northeast-2a`, then `ap-northeast-2c`. This proposal uses the two **private app** subnets even though the [network guide](../../infra/NETWORK.md) also describes a public pair sized for an ALB.
 
 | VPC (CIDR) | Subnet | AZ | CIDR | Role here |
 |---|---|---|---|---|
