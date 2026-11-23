@@ -41,23 +41,20 @@ output "internal_alb_dns_name" {
   value       = module.edge.internal_alb_dns_name
 }
 
-output "db_host" {
-  description = "RDS DNS hostname (without port), required for TLS hostname validation."
-  value       = module.database.db_host
+output "alb_security_group_id" {
+  description = "ALB security group for the EKS NodePort rules."
+  value       = module.edge.alb_security_group_id
 }
 
-output "db_master_secret_arn" {
-  description = "ARN only. Read AWSCURRENT outside Terraform during the controlled bootstrap."
-  value       = module.database.db_master_secret_arn
+output "app_target_group_arns" {
+  description = "Target group ARNs keyed by web and api for registering EKS workers."
+  value       = module.edge.app_target_group_arns
 }
 
 output "osaka_observe" {
-  description = "Independent Osaka observability network and host. EC2 public IP may change after stop/start."
+  description = "Retained Osaka VPC and subnet."
   value = {
-    vpc_id      = module.osaka_observe.vpc_id
-    subnet_id   = module.osaka_observe.subnet_id
-    instance_id = module.osaka_observe.instance_id
-    public_ip   = module.osaka_observe.public_ip
-    private_ip  = module.osaka_observe.private_ip
+    vpc_id    = module.osaka_observe.vpc_id
+    subnet_id = module.osaka_observe.subnet_id
   }
 }

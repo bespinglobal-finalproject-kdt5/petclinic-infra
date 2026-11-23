@@ -23,7 +23,6 @@ variables {
   aws_account_id     = "123456789012"
   aws_region         = "ap-northeast-2"
   availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
-  osaka_admin_ipv4   = "192.0.2.17"
 }
 
 run "seoul_management_outputs" {
@@ -91,10 +90,4 @@ run "osaka_is_observability_only" {
     )
     error_message = "Seoul management and Osaka monitoring must have independent VPC and subnet outputs."
   }
-}
-
-run "reject_open_osaka_ingress" {
-  command = plan
-  variables { osaka_admin_ipv4 = "0.0.0.0/0" }
-  expect_failures = [var.osaka_admin_ipv4]
 }

@@ -1,4 +1,4 @@
-# Existing internal ALB -> two NodePort Services. EC2 targets track the managed node ASG.
+# The EKS configuration registers targets for these two NodePort services.
 locals {
   workloads = {
     web = { port = 30080, health = "/", priority = 100, paths = ["/*"] }
@@ -23,32 +23,6 @@ resource "aws_lb_target_group" "app" {
     unhealthy_threshold = 3
   }
   tags = merge(local.application_tags, { Name = "petclinic-prod-${each.key}-tg" })
-}
-
-resource "aws_autoscaling_attachment" "app" {
-  for_each               = local.workloads
-  autoscaling_group_name = var.node_autoscaling_group_name
-  lb_target_group_arn    = aws_lb_target_group.app[each.key].arn
-}
-
-resource "aws_vpc_security_group_egress_rule" "alb_to_node" {
-  for_each                     = local.workloads
-  security_group_id            = aws_security_group.origin.id
-  referenced_security_group_id = var.cluster_security_group_id
-  ip_protocol                  = "tcp"
-  from_port                    = each.value.port
-  to_port                      = each.value.port
-  tags                         = merge(local.application_tags, { Name = "petclinic-prod-alb-to-${each.key}" })
-}
-
-resource "aws_vpc_security_group_ingress_rule" "node_from_alb" {
-  for_each                     = local.workloads
-  security_group_id            = var.cluster_security_group_id
-  referenced_security_group_id = aws_security_group.origin.id
-  ip_protocol                  = "tcp"
-  from_port                    = each.value.port
-  to_port                      = each.value.port
-  tags                         = merge(local.application_tags, { Name = "petclinic-prod-${each.key}-from-alb" })
 }
 
 resource "aws_lb_listener_rule" "app" {

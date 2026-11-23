@@ -6,19 +6,17 @@
 
 | 위치 | 현재 구성 | 역할 |
 |---|---|---|
-| 서울 서비스 VPC 1 · `10.10.0.0/22` | 기존 서비스망·NAT와 오사카 관제망으로 가는 피어링 유지. Petclinic EKS·RDS는 롤백 상태 | 앱 워크로드용. Terraform에 배포 코드가 있다는 뜻과 지금 서비스가 실행 중이라는 뜻은 다르다. |
+| 서울 서비스 VPC 1 · `10.10.0.0/22` | 서비스망과 NAT를 운영한다. Petclinic EKS·RDS는 롤백 상태 | 앱 워크로드용. Terraform에 배포 코드가 있다는 뜻과 지금 서비스가 실행 중이라는 뜻은 다르다. |
 | 서울 관리 VPC 2 · `10.20.0.0/24` | 서울 2a 비공개 서브넷 `10.20.0.0/27` 하나. 전용 라우팅 테이블은 `local` 경로만 사용. 실행·중지된 EC2 없음 | 향후 SSM·`kubectl` 관리용 네트워크만 복원했다. **관리 서버도 빌드 서버도 현재 없다.** |
-| 오사카 관제 VPC · `10.40.0.0/16` | 오사카 3b 서브넷 `10.40.0.0/27` 하나. `osaka-observe` EC2 실행 중, SSM `Online` | Grafana 등 관제용 호스트다. 서울 EKS 관리 서버나 CI 러너가 아니다. |
+| 오사카 관제 VPC · `10.40.0.0/16` | 오사카 3b 서브넷 `10.40.0.0/27` 하나와 SSM용 IAM 역할·정책·인스턴스 프로필 | 향후 관제용으로 보존한다. 실행할 EC2와 SSM 세션 대상은 없다. |
 
-오사카 VPC·서브넷·EC2의 `Name`은 `osaka-observe`다. 자동 생성된 루트 EBS·기본 ENI·기본 라우팅 테이블·기본 SG·기본 NACL에도 `Name`을 지정했다. [관제망 접속과 역할 구분](infra/envs/aws-prod/OSAKA-VPC2.md). 운영 [Terraform state](infra/STATE.md)는 오사카 비공개 S3 버킷에 있으며, 이는 빌드 산출물 저장소가 아니다.
+오사카 VPC·서브넷의 `Name`은 `osaka-observe`다. 서브넷은 VPC 기본 라우팅 테이블의 로컬 경로를 사용한다. [오사카 보존 자원](infra/envs/aws-prod/OSAKA-VPC2.md). 운영 [Terraform state](infra/STATE.md)는 오사카 비공개 S3 버킷에 있으며, 이는 빌드 산출물 저장소가 아니다.
 
-## 서울 `kubectl` 관리 EC2와 `osaka-observe`는 다른 서버다
+## 서울 EKS 관리 경로
 
 서울 VPC 2 안에서 `kubectl`을 실행해 서울 VPC 1의 비공개 EKS를 관리하려는 설계라면, **VPC 2에 관리 EC2 한 대가 필요하다.** EC2가 EKS를 구동하는 것은 아니다. EKS와 워커는 VPC 1에 두고, 운영자가 VPC 2의 EC2에서 Kubernetes API를 호출한다. 지난 복원에서는 관리 네트워크만 만들었으므로 이 EC2와 아래 경로는 아직 없다.
 
 **목표 접속 경로:** 운영자 PC → 서울 SSM Session Manager → 서울 VPC 2 관리 EC2(`aws`·`kubectl`) → 서울 VPC 간 피어링과 양방향 라우팅 → VPC 1의 EKS private API(TCP 443). SSH 공개 인바운드는 필요 없다. 로컬 경로만 있는 VPC 2에서는 관리 EC2가 SSM에 등록할 통신 경로(예: SSM·SSM Messages 인터페이스 엔드포인트)와 IAM 역할도 준비한다. Kubernetes 작업 권한은 별도로 EKS Access Entry 등을 통해 최소 범위로 부여한다.
-
-`osaka-observe`는 **오사카에 만든 Grafana용 Ubuntu VM의 Name 태그**이며, Grafana VM 옆에 추가한 별도 서버가 아니다. SSM `Online`은 그 VM에 관리 접속할 수 있다는 뜻이지 Grafana가 설치·동작한다는 증거나 서울 EKS 편집 권한이 아니다. 기존 서울 앱망↔오사카 피어링은 서울 VPC 2↔VPC 1의 관리 경로를 대신하지 않는다.
 
 ## 빌드 서버를 따로 둬야 하나?
 
@@ -30,7 +28,7 @@
 | 인프라 검사 | 이 저장소의 [Terraform CI](.github/workflows/terraform-check.yml)가 PR에서 fmt·validate·mock 테스트 실행 | 운영 state에 연결하지 않고 `apply`하지 않는다. |
 | 이미지 게시·운영 배포 | 앱용 ECR 저장소와 이미지 게시 자동화는 없다. GHCR 연동은 후속 작업이다. | 앱 배포 절차는 재배포 시 별도로 정한다. PR 빌드와 운영 배포 권한은 분리한다. |
 
-**전용 러너가 필요한 경우:** 빌드가 사내 패키지 저장소 등 사설 자원에 반드시 접근해야 하거나 고정 송신 IP가 필요하면 VPC 연동 CodeBuild 또는 작업 종료 시 폐기하는 self-hosted runner를 검토한다. 그때도 관리 호스트·오사카 관제 VM과 실행 환경 및 IAM 역할을 분리한다. 현재 서울 VPC 2는 로컬 경로뿐이므로, 여기에 러너 EC2만 추가해도 GitHub·npm·Maven으로 나갈 수 없다. 사설 자원 접근이 필요하지 않다면 관리망에 인터넷 경로를 열기보다 기존 호스팅 러너를 쓰는 편이 단순하다.
+**전용 러너가 필요한 경우:** 빌드가 사내 패키지 저장소 등 사설 자원에 반드시 접근해야 하거나 고정 송신 IP가 필요하면 VPC 연동 CodeBuild 또는 작업 종료 시 폐기하는 self-hosted runner를 검토한다. 그때도 관리 호스트와 실행 환경 및 IAM 역할을 분리한다. 현재 서울 VPC 2는 로컬 경로뿐이므로, 여기에 러너 EC2만 추가해도 GitHub·npm·Maven으로 나갈 수 없다. 사설 자원 접근이 필요하지 않다면 관리망에 인터넷 경로를 열기보다 기존 호스팅 러너를 쓰는 편이 단순하다.
 
 ## 왜 서비스 VPC는 `/22`인가?
 
@@ -44,7 +42,7 @@
 
 | 경로 | 역할 |
 |---|---|
-| [infra/envs/aws-prod/](infra/envs/aws-prod/README.md) | 서울 네트워크·EKS·RDS·서비스 진입점과 오사카 관제망을 하위 디렉터리로 나눈 AWS 운영 루트. 전체 plan에는 롤백된 EKS·RDS·도메인 재생성이 포함될 수 있으므로 검토 없이 apply하지 않는다. |
+| [infra/envs/aws-prod/](infra/envs/aws-prod/README.md) | 서울 네트워크·서비스 진입점과 오사카 관제망을 관리한다. EKS·RDS 담당자에게 VPC·서브넷과 ALB 연결 값을 출력한다. |
 | [infra/envs/azure-dr/](infra/envs/azure-dr/README.md) | Azure 복구 네트워크·VM·MySQL·Key Vault 구성 예정 위치. |
 
 ## 태그와 운영 기준

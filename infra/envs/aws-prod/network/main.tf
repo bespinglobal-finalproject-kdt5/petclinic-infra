@@ -96,13 +96,6 @@ resource "aws_route_table" "service_app" {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.public_1.id
   }
-  dynamic "route" {
-    for_each = var.observe_peer[*]
-    content {
-      cidr_block                = route.value.subnet_cidr
-      vpc_peering_connection_id = route.value.id
-    }
-  }
   tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-app-rtb" })
 }
 
