@@ -20,8 +20,11 @@ ID=$(aws ec2 describe-instances --region ap-northeast-3 --filters Name=tag:Name,
 aws ssm start-session --region ap-northeast-3 --target "$ID"
 ```
 
-운영자 IAM에는 대상 인스턴스/세션 문서에 대한 StartSession 및 자기 세션 권한이 필요하다. EC2 역할은 SSM 에이전트 등록·메시지 채널용일 뿐이다. 서버에서 향후 서울 EKS를 관리하려면 별도 클러스터와 kubectl, AWS CLI, `eks:DescribeCluster`, EKS Access Entry/권한 및 피어링을 통한 API 443 왕복 경로·SG를 준비해야 한다. SSM 접속 자체는 EKS 관리 권한을 부여하지 않는다.
-## 단계적 전환
+운영자 IAM에는 대상 인스턴스/세션 문서에 대한 StartSession 및 자기 세션 권한이 필요하다. EC2 역할은 SSM 에이전트용이며 EKS 편집 권한이 없다. 서울 EKS 재배포 시 `deploy/eks-tunnel.sh`는 승인된 운영자의 AWS 신원으로 서울 private API에 연결한다. 단순 SSM 셸 접속과 EKS 배포/권한 부여는 별개다.
+
+## 완료한 전환과 검증 기록
+
+현 기본값은 `retire_seoul_management_vpc=true`다. 서울 기존 관리망 4개는 제거됐고 `management_vpc_id` 및 `management_subnet_id`는 오사카를 가리킨다. EC2 상태 검사 2/2, SSM 셸과 Ubuntu 24.04, 양방향 피어 경로, 자동 생성 자원 5개의 `Name`(루트 EBS·ENI·기본 RTB·SG·NACL)을 검증했다. 다음은 당시 단계적 전환 절차이며, 완료된 환경에서 다시 수행하지 않는다.
 
 1. 두 리전과 state에서 기존 VPC/서브넷/관제 호스트의 소유권을 대조한다. 중복이 있으면 import부터 검토한다. `osaka-key`(또는 지정한 오사카 키 페어)에 대응하는 개인 키를 확인한다. 서울 계정/리전/AZ 변수는 기존 값을 유지한다. `osaka_admin_ipv4`는 원래 관리 PC의 공인 IPv4를 로컬에서만 제공한다.
 2. `retire_seoul_management_vpc=false`를 유지한다. 아래 범위는 오사카 7개 + SSM IAM 3개 + 피어링 요청/수락 2개 생성, 서울 앱 라우팅 테이블만 변경, 삭제 0개다. 기존 서울 관리망 4개의 주소 이동은 `no-op`이어야 한다. 비대상 EKS/CloudFront/DNS가 섞이는 전체 plan을 그대로 적용하지 않는다.
