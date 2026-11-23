@@ -7,14 +7,6 @@ locals {
   application_tags = { project = "petclinic", environment = "prod", component = "app" }
 }
 
-resource "aws_ecr_repository" "petclinic" {
-  for_each             = local.workloads
-  name                 = "petclinic-prod/${each.key}"
-  image_tag_mutability = "IMMUTABLE"
-  image_scanning_configuration { scan_on_push = true }
-  tags = merge(local.application_tags, { Name = "petclinic-prod-${each.key}-ecr" })
-}
-
 resource "aws_lb_target_group" "app" {
   for_each             = local.workloads
   name                 = "petclinic-prod-${each.key}"
@@ -75,8 +67,4 @@ resource "aws_lb_listener_rule" "app" {
 
 data "aws_cloudfront_origin_request_policy" "api" {
   name = "Managed-AllViewerExceptHostHeader"
-}
-
-output "ecr_repository_urls" {
-  value = { for k, repo in aws_ecr_repository.petclinic : k => repo.repository_url }
 }

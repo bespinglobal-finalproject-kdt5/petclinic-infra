@@ -7,8 +7,9 @@ Run from a trusted Linux operator workstation, **not** from Terraform, a worker 
 - AWS CLI v2, Session Manager plugin, compatible `kubectl`, Bash, jq, curl, OpenSSL, GNU coreutils and `envsubst`. Use the authorized production AWS profile in both terminals. No tracing, CLI history, debug/proxy body logging, session recording of stdin, or audit policies that record Secret bodies.
 - Parent supplies `CLUSTER`, `MANAGER_ID` and a dedicated tunnel kubeconfig. EKS auth and namespace permissions are separate from SSM connectivity. The operator needs `rds:DescribeDBInstances` and `secretsmanager:GetSecretValue` on the master secret (and `kms:Decrypt` if applicable). Neither nodes nor workloads need secret retrieval permission.
 - Trusted admins only may read Secrets, write/admit workloads, edit ConfigMaps or exec/debug pods in `petclinic`. Verify encryption at rest for EKS Secrets and back up `petclinic-db-app` through your approved encrypted secrets backup. Namespace `restricted` Pod Security is not access control. No Kubernetes RBAC grants are installed here.
-- Nodes in the two app AZs must carry the cluster SG, resolve/reach RDS, pull the pinned PostgreSQL client from Docker Hub and pull both app images from ECR. Allow room for two replicas per app plus rolling surge. Only the internal ALB should be able to reach the NodePorts.
-- Images: pass full immutable ECR references (`WEB_IMAGE`, `API_IMAGE`) from the parent's `deploy/publish-release.sh`. The Angular image must serve on 8080 and use same-origin `/petclinic/api`; the REST image must contain the `external-postgres` profile. For a local REST release build with JDK 21: `(cd ../petclinic-eks-source/spring-petclinic-rest && ./mvnw clean package && docker build --platform linux/amd64 -f Dockerfile.runtime -t petclinic-api:release .)`. The parent handles publication.
+- Nodes must reach RDS, the pinned PostgreSQL client image on Docker Hub, and the registry selected for the app images. Only the internal ALB should be able to reach the NodePorts.
+- App registry publication is not configured. Terraform does not create ECR repositories. GHCR package creation, credentials, push and pull verification are deferred. Before deploying, publish both linux/amd64 images in an approved namespace and verify that the nodes can pull them. Never give pods a publish token.
+  Set `APP_IMAGE_NAMESPACE` to the approved `registry.example/org` independently of image inputs. `WEB_IMAGE` and `API_IMAGE` must each be `registry.example/org/package@sha256:<64 lowercase hex digits>`; mutable tags and other namespaces are rejected.
 
 ## 1. Connect and check identity
 
@@ -49,8 +50,8 @@ On failure, inspect `kubectl -n petclinic describe job petclinic-bootstrap` and 
 ## 3. Deploy by digest and verify
 
 ```bash
-# Export WEB_IMAGE and API_IMAGE exactly as supplied in the release handoff.
-: "${WEB_IMAGE:?required}" "${API_IMAGE:?required}"
+# Set the trusted namespace and both verified image digests before rollout.
+: "${APP_IMAGE_NAMESPACE:?required}" "${WEB_IMAGE:?required}" "${API_IMAGE:?required}"
 bash deploy/k8s/deploy.sh
 kubectl -n petclinic get deployment,svc,pods -o wide
 ```
