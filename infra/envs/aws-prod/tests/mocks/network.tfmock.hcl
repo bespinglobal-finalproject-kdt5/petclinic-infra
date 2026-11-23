@@ -22,3 +22,13 @@ mock_resource "aws_nat_gateway" {
 mock_resource "aws_route_table" {
   override_during = plan
 }
+
+mock_resource "aws_vpc_peering_connection" {
+  override_during = plan
+  defaults        = { id = "pcx-00000000000000001" }
+}
+
+mock_resource "aws_vpc_peering_connection_accepter" {
+  override_during = plan
+  defaults        = { id = "pcx-00000000000000001" }
+}

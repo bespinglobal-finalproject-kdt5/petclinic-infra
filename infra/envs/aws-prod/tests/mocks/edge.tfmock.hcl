@@ -1,9 +1,6 @@
 mock_data "aws_route53_zone" {
   defaults = { zone_id = "ZMOCKPUBLIC" }
 }
-mock_data "aws_ec2_managed_prefix_list" {
-  defaults = { id = "pl-0123456789abcdef0" }
-}
 mock_data "aws_cloudfront_cache_policy" {
   defaults = { id = "00000000-0000-4000-8000-000000000001" }
 }
@@ -23,21 +20,13 @@ mock_resource "aws_acm_certificate" {
 mock_resource "aws_route53_record" {
   override_during = plan
 }
-mock_resource "aws_lb" {
-  override_during = plan
+mock_data "aws_lb" {
   defaults = {
-    arn      = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/mock/0000000000000001"
-    dns_name = "internal-alb.example.invalid"
+    dns_name           = "internal-eks.example.invalid"
+    internal           = true
+    load_balancer_type = "application"
+    vpc_id             = "vpc-00000000000000001"
   }
-}
-mock_resource "aws_lb_listener" {
-  override_during = plan
-  defaults = {
-    arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:listener/app/mock/0000000000000001/0000000000000002"
-  }
-}
-mock_resource "aws_security_group" {
-  override_during = plan
 }
 mock_resource "aws_cloudfront_vpc_origin" {
   override_during = plan

@@ -1,11 +1,33 @@
+locals {
+  edge_tags = { project = "petclinic", environment = "prod", component = "network" }
+}
+
+data "aws_cloudfront_origin_request_policy" "api" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
 data "aws_cloudfront_cache_policy" "disabled" {
   name = "Managed-CachingDisabled"
 }
 
-resource "aws_cloudfront_vpc_origin" "alb" {
+data "aws_lb" "eks" {
+  count = var.eks_alb_arn == null ? 0 : 1
+  arn   = var.eks_alb_arn
+
+  lifecycle {
+    postcondition {
+      condition     = self.internal && self.load_balancer_type == "application" && self.vpc_id == var.vpc_id
+      error_message = "The EKS origin must be an internal Application Load Balancer in the Seoul service VPC."
+    }
+  }
+}
+
+resource "aws_cloudfront_vpc_origin" "eks" {
+  count = length(data.aws_lb.eks)
+
   vpc_origin_endpoint_config {
-    name                   = "petclinic-prod-alb"
-    arn                    = aws_lb.origin.arn
+    name                   = "petclinic-prod-eks-alb"
+    arn                    = data.aws_lb.eks[count.index].arn
     http_port              = 80
     https_port             = 443 # Endpoint schema requires this even for http-only.
     origin_protocol_policy = "http-only"
@@ -14,23 +36,35 @@ resource "aws_cloudfront_vpc_origin" "alb" {
       quantity = 1
     }
   }
-  tags = merge(local.edge_tags, { Name = "petclinic-prod-alb-vpc-origin" })
-
-  # The endpoint ARN alone does not imply a working listener or admission rule.
-  depends_on = [aws_lb_listener_rule.health, aws_vpc_security_group_ingress_rule.cloudfront_http]
+  tags = merge(local.edge_tags, { Name = "petclinic-prod-eks-vpc-origin" })
 }
 
 resource "aws_cloudfront_distribution" "edge" {
-  enabled         = true
+  enabled         = var.eks_alb_arn != null
   is_ipv6_enabled = true
   aliases         = [var.domain]
   tags            = merge(local.edge_tags, { Name = "petclinic-prod-edge-distribution" })
 
   origin {
-    domain_name = aws_lb.origin.dns_name
+    # CloudFront requires one origin even while disabled. No DNS record is created for this name.
+    domain_name = var.eks_alb_arn == null ? "origin-pending.${var.domain}" : data.aws_lb.eks[0].dns_name
     origin_id   = "internal-alb"
-    vpc_origin_config {
-      vpc_origin_id = aws_cloudfront_vpc_origin.alb.id
+
+    dynamic "vpc_origin_config" {
+      for_each = aws_cloudfront_vpc_origin.eks
+      content {
+        vpc_origin_id = vpc_origin_config.value.id
+      }
+    }
+
+    dynamic "custom_origin_config" {
+      for_each = var.eks_alb_arn == null ? [1] : []
+      content {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "https-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
     }
   }
 

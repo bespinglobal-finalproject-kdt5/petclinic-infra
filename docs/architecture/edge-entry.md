@@ -1,5 +1,7 @@
 # Petclinic edge entry
 
+Historical design for the former Terraform-managed ALB. The current handoff to the EKS-managed Ingress is described in the [AWS production environment](../../infra/envs/aws-prod/README.md).
+
 [Open the editable diagram](edge-entry.drawio) in diagrams.net. **Status: proposed, not live-verified.** The existing `mission-critical.site` zone, Seoul network and Osaka state backend are inputs to this design. The repository defines the network layout; it does not establish that the proposed edge resources are running.
 
 ## Follow one request
@@ -13,7 +15,7 @@ In the diagram, solid arrows trace the request; dashed arrows show DNS and certi
 
 ## Seoul network inventory
 
-The [Terraform network module](../../infra/envs/aws-prod/network/main.tf) defines the CIDRs and routing. The AZ names below assume environment inputs ordered `ap-northeast-2a`, then `ap-northeast-2c`. This proposal uses the two **private app** subnets even though the [network guide](../../infra/NETWORK.md) also describes a public pair sized for an ALB.
+The [Terraform network module](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf) defines the CIDRs and routing. The AZ names below assume environment inputs ordered `ap-northeast-2a`, then `ap-northeast-2c`. This proposal uses the two **private app** subnets even though the [network guide](../../infra/NETWORK.md) also describes a public pair sized for an ALB.
 
 | VPC (CIDR) | Subnet | AZ | CIDR | Role here |
 |---|---|---|---|---|

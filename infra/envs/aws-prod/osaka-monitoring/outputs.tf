@@ -9,3 +9,7 @@ output "subnet_id" {
 output "subnet_cidr" {
   value = aws_subnet.osaka.cidr_block
 }
+
+output "peering_id" {
+  value = aws_vpc_peering_connection_accepter.osaka.id
+}

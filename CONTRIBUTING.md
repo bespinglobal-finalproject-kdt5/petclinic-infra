@@ -17,7 +17,7 @@ git pull --ff-only origin main
 git switch -c feat/aws-network
 ```
 
-브랜치 이름은 예시다. VPC를 맡았다면 `infra/envs/aws-prod/network/`에 재사용할 `.tf` 코드를 작성하고, `infra/envs/aws-prod/`에서 모듈을 호출한다. 모듈마다 backend를 만들지 않는다. Terraform 태그는 [태그 규칙](infra/TAGS.md)을 따른다.
+브랜치 이름은 예시다. VPC를 맡았다면 `infra/envs/aws-prod/seoul-vpc1-service/`에 재사용할 `.tf` 코드를 작성하고, `infra/envs/aws-prod/`에서 모듈을 호출한다. 모듈마다 backend를 만들지 않는다. Terraform 태그는 [태그 규칙](infra/TAGS.md)을 따른다.
 
 ## 3. AWS에 접속하지 않고 검사 → push → PR
 
@@ -27,7 +27,7 @@ git switch -c feat/aws-network
 terraform fmt -recursive infra
 terraform -chdir=infra/envs/aws-prod init -backend=false -input=false
 terraform -chdir=infra/envs/aws-prod validate
-git add infra/envs/aws-prod/network/ infra/envs/aws-prod/main.tf  # 실제 작업 경로로 변경
+git add infra/envs/aws-prod/seoul-vpc1-service/ infra/envs/aws-prod/main.tf  # 실제 작업 경로로 변경
 git diff --cached --stat
 git commit -m "feat: AWS 네트워크 모듈 추가"
 git push -u origin feat/aws-network

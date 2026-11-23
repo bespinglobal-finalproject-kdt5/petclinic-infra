@@ -2,65 +2,30 @@ mock_provider "aws" {
   source = "./tests/mocks"
 }
 
-run "public_edge" {
+variables {
+  certificate_region = "us-east-1"
+  domain             = "mission-critical.site"
+  public_zone_id     = "ZMOCKPUBLIC"
+  vpc_id             = "vpc-00000000000000001"
+}
+
+run "waiting_for_eks_origin" {
   command = plan
   module { source = "./edge" }
-  variables {
-    certificate_region = "us-east-1"
-    domain             = "mission-critical.site"
-    public_zone_id     = "ZMOCKPUBLIC"
-    vpc_id             = "vpc-00000000000000001"
-    app_subnet_ids     = ["subnet-00000000000000001", "subnet-00000000000000002"]
-  }
-
-  assert {
-    condition = alltrue([for tags in [
-      aws_route53_zone.delegated.tags, aws_acm_certificate.viewer.tags, aws_security_group.origin.tags,
-      aws_vpc_security_group_ingress_rule.cloudfront_http.tags, aws_lb.origin.tags, aws_lb_listener.http.tags,
-      aws_lb_listener_rule.health.tags, aws_cloudfront_vpc_origin.alb.tags, aws_cloudfront_distribution.edge.tags
-    ] : tags.project == "petclinic" && tags.environment == "prod" && tags.component == "network" && startswith(tags.Name, "petclinic-prod-")])
-    error_message = "All taggable edge resources must carry the shared production network tags and a Name."
-  }
 
   assert {
     condition = (
-      aws_lb.origin.internal && aws_lb.origin.load_balancer_type == "application" &&
-      aws_lb.origin.subnets == toset(var.app_subnet_ids) &&
-      one(aws_lb.origin.security_groups) == aws_security_group.origin.id && aws_security_group.origin.vpc_id == var.vpc_id &&
-      aws_vpc_security_group_ingress_rule.cloudfront_http.security_group_id == aws_security_group.origin.id &&
-      aws_vpc_security_group_ingress_rule.cloudfront_http.prefix_list_id == data.aws_ec2_managed_prefix_list.cloudfront.id &&
-      data.aws_ec2_managed_prefix_list.cloudfront.name == "com.amazonaws.global.cloudfront.origin-facing" &&
-      aws_vpc_security_group_ingress_rule.cloudfront_http.ip_protocol == "tcp" &&
-      aws_vpc_security_group_ingress_rule.cloudfront_http.from_port == 80 && aws_vpc_security_group_ingress_rule.cloudfront_http.to_port == 80
+      !aws_cloudfront_distribution.edge.enabled && length(aws_cloudfront_vpc_origin.eks) == 0 &&
+      one(aws_cloudfront_distribution.edge.origin).domain_name == "origin-pending.mission-critical.site" &&
+      length(one(aws_cloudfront_distribution.edge.origin).vpc_origin_config) == 0 &&
+      one(one(aws_cloudfront_distribution.edge.origin).custom_origin_config).origin_protocol_policy == "https-only" &&
+      output.internal_alb_dns_name == null
     )
-    error_message = "The private app-subnet ALB must admit HTTP from the CloudFront origin-facing prefix list."
+    error_message = "Keep the distribution disabled with an unserved origin until the EKS ALB exists."
   }
   assert {
     condition = (
-      aws_lb_listener.http.load_balancer_arn == aws_lb.origin.arn && aws_lb_listener.http.protocol == "HTTP" && aws_lb_listener.http.port == 80 &&
-      aws_lb_listener.http.default_action[0].fixed_response[0].status_code == "404" &&
-      aws_lb_listener_rule.health.listener_arn == aws_lb_listener.http.arn &&
-      one(one(aws_lb_listener_rule.health.condition).path_pattern[0].values) == "/health" &&
-      aws_lb_listener_rule.health.action[0].fixed_response[0].status_code == "200"
-    )
-    error_message = "Only /health should return the fixed success response."
-  }
-  assert {
-    condition = (
-      aws_cloudfront_vpc_origin.alb.vpc_origin_endpoint_config[0].arn == aws_lb.origin.arn &&
-      aws_cloudfront_vpc_origin.alb.vpc_origin_endpoint_config[0].origin_protocol_policy == "http-only" &&
-      aws_cloudfront_vpc_origin.alb.vpc_origin_endpoint_config[0].http_port == aws_lb_listener.http.port &&
-      one(aws_cloudfront_distribution.edge.origin).vpc_origin_config[0].vpc_origin_id == aws_cloudfront_vpc_origin.alb.id &&
-      one(aws_cloudfront_distribution.edge.origin).domain_name == aws_lb.origin.dns_name &&
-      aws_cloudfront_distribution.edge.default_cache_behavior[0].target_origin_id == one(aws_cloudfront_distribution.edge.origin).origin_id &&
-      aws_cloudfront_distribution.edge.default_cache_behavior[0].cache_policy_id == data.aws_cloudfront_cache_policy.disabled.id &&
-      data.aws_cloudfront_cache_policy.disabled.name == "Managed-CachingDisabled"
-    )
-    error_message = "Uncached requests must use the HTTP VPC origin, not a public custom origin."
-  }
-  assert {
-    condition = (
-      aws_cloudfront_distribution.edge.enabled && aws_cloudfront_distribution.edge.is_ipv6_enabled &&
+      aws_cloudfront_distribution.edge.is_ipv6_enabled &&
       one(aws_cloudfront_distribution.edge.aliases) == "mission-critical.site" &&
       aws_cloudfront_distribution.edge.default_cache_behavior[0].viewer_protocol_policy == "redirect-to-https" &&
       aws_cloudfront_distribution.edge.viewer_certificate[0].minimum_protocol_version == "TLSv1.2_2021" &&
@@ -97,13 +62,36 @@ run "public_edge" {
     )
     error_message = "The demo UI and API must not have a viewer gate; writes remain API-only."
   }
+}
+
+run "external_eks_origin" {
+  command = plan
+  module { source = "./edge" }
+  variables {
+    eks_alb_arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/eks/0123456789abcdef"
+  }
   assert {
     condition = (
-      output.alb_security_group_id == aws_security_group.origin.id &&
-      toset(keys(output.app_target_group_arns)) == toset(["web", "api"]) &&
-      aws_lb_target_group.app["web"].port == 30080 && aws_lb_target_group.app["api"].port == 30966 &&
-      alltrue([for group in aws_lb_target_group.app : group.target_type == "instance" && group.vpc_id == var.vpc_id])
+      aws_cloudfront_distribution.edge.enabled && length(aws_cloudfront_vpc_origin.eks) == 1 &&
+      one(aws_cloudfront_vpc_origin.eks[0].vpc_origin_endpoint_config).arn == var.eks_alb_arn &&
+      one(aws_cloudfront_vpc_origin.eks[0].vpc_origin_endpoint_config).origin_protocol_policy == "http-only" &&
+      one(aws_cloudfront_distribution.edge.origin).domain_name == data.aws_lb.eks[0].dns_name &&
+      length(one(aws_cloudfront_distribution.edge.origin).custom_origin_config) == 0 &&
+      one(one(aws_cloudfront_distribution.edge.origin).vpc_origin_config).vpc_origin_id == aws_cloudfront_vpc_origin.eks[0].id
     )
-    error_message = "Publish the ALB security group and both instance target groups on the agreed NodePorts."
+    error_message = "Route CloudFront to the supplied EKS ALB using a private VPC origin."
   }
+}
+
+run "reject_public_eks_origin" {
+  command = plan
+  module { source = "./edge" }
+  variables {
+    eks_alb_arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/public/0123456789abcdef"
+  }
+  override_data {
+    target = data.aws_lb.eks[0]
+    values = { internal = false }
+  }
+  expect_failures = [data.aws_lb.eks[0]]
 }

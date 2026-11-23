@@ -1,27 +1,27 @@
 output "service_vpc_id" {
-  value = module.network.service_vpc_id
+  value = module.seoul_vpc1.service_vpc_id
 }
 
 output "management_vpc_id" {
   description = "Seoul management VPC 2, not the Osaka observability VPC."
-  value       = module.network.management_vpc_id
+  value       = module.seoul_vpc2.management_vpc_id
 }
 
 output "app_subnet_ids" {
-  value = module.network.app_subnet_ids
+  value = module.seoul_vpc1.app_subnet_ids
 }
 
 output "db_subnet_ids" {
-  value = module.network.db_subnet_ids
+  value = module.seoul_vpc1.db_subnet_ids
 }
 
 output "public_subnet_ids" {
-  value = module.network.public_subnet_ids
+  value = module.seoul_vpc1.public_subnet_ids
 }
 
 output "management_subnet_id" {
   description = "Private subnet for future Seoul management access. No host is provisioned here yet."
-  value       = module.network.management_subnet_id
+  value       = module.seoul_vpc2.management_subnet_id
 }
 
 output "public_url" {
@@ -41,20 +41,19 @@ output "internal_alb_dns_name" {
   value       = module.edge.internal_alb_dns_name
 }
 
-output "alb_security_group_id" {
-  description = "ALB security group for the EKS NodePort rules."
-  value       = module.edge.alb_security_group_id
-}
-
-output "app_target_group_arns" {
-  description = "Target group ARNs keyed by web and api for registering EKS workers."
-  value       = module.edge.app_target_group_arns
-}
-
 output "osaka_observe" {
   description = "Retained Osaka VPC and subnet."
   value = {
     vpc_id    = module.osaka_observe.vpc_id
     subnet_id = module.osaka_observe.subnet_id
   }
+}
+
+output "management_public_subnet_id" {
+  value = module.seoul_vpc2.management_public_subnet_id
+}
+
+output "build_instance_id" {
+  description = "Seoul build EC2 target for Systems Manager Session Manager."
+  value       = module.seoul_vpc2.build_instance_id
 }

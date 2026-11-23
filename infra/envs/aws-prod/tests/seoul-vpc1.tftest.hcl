@@ -2,24 +2,20 @@ mock_provider "aws" {
   source = "./tests/mocks"
 }
 
-run "network_topology" {
+run "service_network" {
   command = plan
   module {
-    source = "./network"
+    source = "./seoul-vpc1-service"
   }
   variables {
     availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
     environment        = "prod"
+    osaka_peer         = { id = "pcx-00000000000000001", subnet_cidr = "10.40.0.0/27" }
   }
 
   assert {
-    condition = (
-      aws_vpc.service.cidr_block == "10.10.0.0/22" && aws_vpc.management[0].cidr_block == "10.20.0.0/24" &&
-      aws_vpc.service.enable_dns_support && aws_vpc.service.enable_dns_hostnames &&
-      aws_subnet.management[0].cidr_block == "10.20.0.0/27" && aws_subnet.management[0].availability_zone == var.availability_zones[0] &&
-      aws_subnet.management[0].vpc_id == aws_vpc.management[0].id && !aws_subnet.management[0].map_public_ip_on_launch
-    )
-    error_message = "Unexpected VPC CIDRs or management subnet placement."
+    condition     = aws_vpc.service.cidr_block == "10.10.0.0/22" && aws_vpc.service.enable_dns_support && aws_vpc.service.enable_dns_hostnames
+    error_message = "Unexpected Seoul service VPC CIDR or DNS configuration."
   }
   assert {
     condition = { for k, s in aws_subnet.service : k => [s.cidr_block, s.availability_zone, s.tags.component] } == {
@@ -57,28 +53,25 @@ run "network_topology" {
       aws_internet_gateway.service.vpc_id == aws_vpc.service.id && aws_route_table.service_public.vpc_id == aws_vpc.service.id &&
       one(aws_route_table.service_public.route).cidr_block == "0.0.0.0/0" &&
       one(aws_route_table.service_public.route).gateway_id == aws_internet_gateway.service.id &&
-      aws_route_table.service_app.vpc_id == aws_vpc.service.id && one(aws_route_table.service_app.route).cidr_block == "0.0.0.0/0" &&
-      one(aws_route_table.service_app.route).nat_gateway_id == aws_nat_gateway.public_1.id &&
-      aws_route_table.service_private.vpc_id == aws_vpc.service.id && length(aws_route_table.service_private.route) == 0 &&
-      aws_route_table.management[0].vpc_id == aws_vpc.management[0].id && length(aws_route_table.management[0].route) == 0 &&
-      aws_route_table_association.management[0].route_table_id == aws_route_table.management[0].id &&
-      aws_route_table_association.management[0].subnet_id == aws_subnet.management[0].id
+      aws_route_table.service_app.vpc_id == aws_vpc.service.id && length(aws_route_table.service_app.route) == 2 &&
+      one([for route in aws_route_table.service_app.route : route.nat_gateway_id if route.cidr_block == "0.0.0.0/0"]) == aws_nat_gateway.public_1.id &&
+      one([for route in aws_route_table.service_app.route : route.vpc_peering_connection_id if route.cidr_block == var.osaka_peer.subnet_cidr]) == var.osaka_peer.id &&
+      aws_route_table.service_private.vpc_id == aws_vpc.service.id && length(aws_route_table.service_private.route) == 0
     )
-    error_message = "Public and app defaults must target the IGW and NAT respectively; DB and management tables must remain local-only."
+    error_message = "Public and app defaults must target the IGW and NAT respectively; only the app table may reach Osaka and DB routes must remain local-only."
   }
   assert {
     condition = alltrue([for tags in concat(
       [for s in aws_subnet.service : s.tags],
-      [aws_vpc.service.tags, aws_vpc.management[0].tags, aws_internet_gateway.service.tags, aws_subnet.management[0].tags,
+      [aws_vpc.service.tags, aws_internet_gateway.service.tags,
         aws_eip.app_nat.tags, aws_nat_gateway.public_1.tags, aws_route_table.service_app.tags,
-      aws_route_table.service_public.tags, aws_route_table.service_private.tags, aws_route_table.management[0].tags]
+      aws_route_table.service_public.tags, aws_route_table.service_private.tags]
     ) : tags.project == "petclinic" && tags.environment == "prod" && startswith(tags.Name, "petclinic-prod-") && contains(["app", "database", "network", "management"], tags.component)])
     error_message = "All taggable resources need the common tags and a production Name."
   }
   assert {
     condition = (
-      output.service_vpc_id == aws_vpc.service.id && output.management_vpc_id == aws_vpc.management[0].id &&
-      output.management_subnet_id == aws_subnet.management[0].id &&
+      output.service_vpc_id == aws_vpc.service.id &&
       output.app_subnet_ids == [aws_subnet.service["app_1"].id, aws_subnet.service["app_2"].id] &&
       output.db_subnet_ids == [aws_subnet.service["db_1"].id, aws_subnet.service["db_2"].id] &&
       output.public_subnet_ids == [aws_subnet.service["public_1"].id, aws_subnet.service["public_2"].id]
