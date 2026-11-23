@@ -86,23 +86,3 @@ run "network_topology" {
     error_message = "Output IDs must select the correct resources in operator AZ order."
   }
 }
-
-run "peered_seoul_app_routes" {
-  command = plan
-  module { source = "./network" }
-  variables {
-    availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
-    environment        = "prod"
-    observe_peer       = { id = "pcx-0123456789abcdef0", subnet_cidr = "10.40.0.0/27" }
-  }
-  assert {
-    condition = (
-      output.app_subnet_cidrs == toset(["10.10.0.0/24", "10.10.1.0/24"]) && length(aws_route_table.service_app.route) == 2 &&
-      one([for r in aws_route_table.service_app.route : r.vpc_peering_connection_id if r.cidr_block == var.observe_peer.subnet_cidr]) == var.observe_peer.id &&
-      one([for r in aws_route_table.service_app.route : r.nat_gateway_id if r.cidr_block == "0.0.0.0/0"]) == aws_nat_gateway.public_1.id &&
-      length(aws_route_table.service_private.route) == 0 && length(aws_route_table.management[0].route) == 0 &&
-      one(aws_route_table.service_public.route).gateway_id == aws_internet_gateway.service.id
-    )
-    error_message = "Only app traffic to Osaka may use the peer. Keep the default NAT and isolate other tiers."
-  }
-}

@@ -52,12 +52,9 @@ output "app_target_group_arns" {
 }
 
 output "osaka_observe" {
-  description = "Independent Osaka observability network and host. EC2 public IP may change after stop/start."
+  description = "Retained Osaka VPC and subnet."
   value = {
-    vpc_id      = module.osaka_observe.vpc_id
-    subnet_id   = module.osaka_observe.subnet_id
-    instance_id = module.osaka_observe.instance_id
-    public_ip   = module.osaka_observe.public_ip
-    private_ip  = module.osaka_observe.private_ip
+    vpc_id    = module.osaka_observe.vpc_id
+    subnet_id = module.osaka_observe.subnet_id
   }
 }

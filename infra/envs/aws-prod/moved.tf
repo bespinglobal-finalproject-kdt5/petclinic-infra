@@ -83,13 +83,3 @@ moved {
   from = aws_route53_record.viewer
   to   = module.edge.aws_route53_record.viewer
 }
-
-moved {
-  from = aws_vpc_peering_connection.seoul_osaka
-  to   = module.osaka_observe.aws_vpc_peering_connection.seoul_osaka
-}
-
-moved {
-  from = aws_vpc_peering_connection_accepter.osaka
-  to   = module.osaka_observe.aws_vpc_peering_connection_accepter.osaka
-}

@@ -6,12 +6,10 @@ Terraform 실행 위치는 이 디렉터리다. [main.tf](main.tf)에서 세 모
 |---|---|
 | [network/](network/) | 서울 서비스·관리 VPC, 서브넷, NAT와 라우팅 테이블 |
 | [edge/](edge/) | Route 53·ACM, CloudFront, 내부 ALB와 웹·API 대상 그룹 |
-| [osaka-monitoring/](osaka-monitoring/) | 오사카 관제 VPC·EC2·SSM과 서울 서비스 VPC와의 피어링 |
+| [osaka-monitoring/](osaka-monitoring/) | 오사카 VPC·서브넷과 향후 EC2용 SSM IAM 역할·정책·인스턴스 프로필 |
 | [tests/](tests/) | 환경·모듈별 mock plan 테스트. [mocks/](tests/mocks/)에 AWS 모의 응답을 둔다. |
 
-오사카 VPC·서브넷·라우팅은 [osaka-monitoring/main.tf](osaka-monitoring/main.tf), 서울의 피어링 요청과 오사카의 수락은 [osaka-monitoring/peering.tf](osaka-monitoring/peering.tf)에 있다. 서울 앱 서브넷의 라우팅 테이블은 [network/](network/)에서 수락된 피어링 ID를 받는다.
-
-오사카 모듈의 입력·출력과 provider 버전 제약은 해당 폴더에 있다. 루트의 [variables.tf](variables.tf)와 [outputs.tf](outputs.tf)는 운영자가 쓰는 입력·출력이고, [providers.tf](providers.tf)는 모듈에 전달할 AWS 계정·리전을 설정한다. [backend.tf](backend.tf)는 서울과 오사카를 함께 기록하는 운영 환경의 S3 state를 설정한다. 기존 Route 53 영역을 연결하는 주소는 [imports.tf](imports.tf), 모듈화 전후 state 주소는 [moved.tf](moved.tf)에서 확인한다.
+오사카 [VPC·서브넷](osaka-monitoring/main.tf)과 [SSM IAM 구성](osaka-monitoring/ssm.tf)을 보존한다. `osaka_observe` 출력은 VPC ID와 서브넷 ID를 제공한다. 루트의 [variables.tf](variables.tf)와 [outputs.tf](outputs.tf)는 운영자가 쓰는 입력·출력이고, [providers.tf](providers.tf)는 모듈에 전달할 AWS 계정·리전을 설정한다. [backend.tf](backend.tf)는 서울과 오사카를 함께 기록하는 운영 환경의 S3 state를 설정한다. 기존 Route 53 영역을 연결하는 주소는 [imports.tf](imports.tf), 모듈화 전후 state 주소는 [moved.tf](moved.tf)에서 확인한다.
 
 ## 도메인과 앱 요청 경로
 
@@ -34,7 +32,7 @@ EKS 인수 기준은 제어 영역·관리형 노드 Kubernetes **1.36**, 노드
 
 ## 서울 관리 VPC 2 / 오사카 관제망
 
-`management_vpc_id`와 `management_subnet_id`는 서울의 격리된 관리 네트워크다. `osaka_observe`는 별도 Grafana 관제망이다. [역할·경로·복원 범위](OSAKA-VPC2.md)를 참고한다.
+`management_vpc_id`와 `management_subnet_id`는 서울의 격리된 관리 네트워크다. `osaka_observe`는 향후 관제를 위해 보존한 오사카 네트워크다. [역할·경로·복원 범위](OSAKA-VPC2.md)를 참고한다.
 
 ## 실제 plan 전 확인
 
@@ -42,7 +40,7 @@ EKS 인수 기준은 제어 영역·관리형 노드 Kubernetes **1.36**, 노드
 - 승인된 임시 자격 증명으로 계정을 확인하고 [공유 state 절차](../../STATE.md)에 따라 실제 버킷·리전·잠금 권한을 확인한다. 기존 도쿄 백엔드 override를 제거하고 이 디렉터리에서 `terraform init -reconfigure -input=false`로 오사카에 연결한 뒤 `terraform state list`를 확인한다. 워크로드 변경이 필요할 때만 `terraform plan`을 실행한다. 계정 값, 자격 증명, backend.hcl, tfvars, state, plan은 커밋하지 않는다.
 - 역할에는 state 접근 외에 두 리전과 글로벌 서비스 조회 권한이 필요하다. 대상 계정에서 `mission-critical.site` 퍼블릭 영역이 유일하며 등록기관의 NS 위임이 일치하는지 확인한다. 기존 apex/검증 레코드나 다른 CloudFront 배포의 별칭과 충돌하면 덮어쓰지 말고 소유자와 이전·import를 협의한다.
 - 실제 배포 전에는 서비스 연결 역할과 VPC origin ENI 생성 권한, 서브넷 여유 IP, ALB·VPC origin 할당량, 서울에서의 관리형 접두사 목록 가용성 및 SG 인바운드 할당량(목록 가중치 55)을 확인한다. mock plan은 DNS 위임이나 AWS API 수락 여부를 검증하지 않는다.
-- 비공개 EKS API를 관리하려면 서울 관리 호스트, SSM 통신 경로, IAM 권한 및 API 왕복 라우팅이 필요하다. 네트워크만 복원한 현재 단계에는 호스트·접속 권한·클러스터가 없다. 오사카 관제 VM을 대신 사용하지 않는다.
+- 비공개 EKS API를 관리하려면 서울 관리 호스트, SSM 통신 경로, IAM 권한 및 API 왕복 라우팅이 필요하다. 네트워크만 복원한 현재 단계에는 호스트·접속 권한·클러스터가 없다.
   **주의:** 전체 `terraform apply`는 CloudFront 배포와 도메인 레코드, 앱 대상 그룹도 만들 수 있다. 서울 관리망 4개만 포함하는 복원 plan을 전체 계획과 구분한다.
 - DMS와 타 클라우드 복제는 포함하지 않는다. 서울 앱 서브넷 두 곳은 기존 단일 NAT를 공유한다.
 

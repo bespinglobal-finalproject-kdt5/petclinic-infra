@@ -26,3 +26,7 @@ output "public_subnet_ids" {
 output "management_subnet_id" {
   value = one(aws_subnet.management[*].id)
 }
+
+output "app_subnet_cidrs" {
+  value = toset([for subnet in local.service_subnets : subnet.cidr if subnet.table == "app"])
+}
