@@ -1,12 +1,28 @@
 # PetClinic 인프라
 
-이 저장소는 AWS 운영망과 Azure 재해복구 환경의 인프라·배포 설정을 관리한다. Angular WEB과 Spring REST API 소스는 별도 비공개 `petclinic-dev` 저장소에서 관리한다. 처음 참여한다면 [작업 브랜치·PR 안내](CONTRIBUTING.md), 배포 담당자는 [공유 state 절차](infra/STATE.md)를 확인한다. 병합은 AWS 배포가 아니다.
+이 저장소는 PetClinic의 AWS 네트워크·배포 구성과 향후 Azure DR 구성을 관리한다. Angular WEB과 Spring REST API 소스는 [petclinic-eks-app](https://github.com/bespinglobal-finalproject-kdt5/petclinic-eks-app)에 있다. 인프라 PR 병합은 AWS 배포가 아니다. [팀 작업 절차](CONTRIBUTING.md) · [Terraform state 운영 기준](infra/STATE.md)
 
-## 구성과 배포 범위
+## 현재 배치 — 2026-11-23 KST 확인
 
-- **서비스·관리·관제 네트워크:** 서울 VPC 1(`10.10.0.0/22`)은 서비스망, 서울 VPC 2(`10.20.0.0/24`)는 별도의 관리망이다. VPC 2에는 비공개 서브넷과 로컬 라우팅만 구성한다. 오사카(`10.40.0.0/16`)는 독립 관제망으로 유지하고, 기존 서울 앱망↔오사카 피어링은 변경하지 않는다. [세 네트워크의 역할과 접속 범위](infra/envs/aws-prod/OSAKA-VPC2.md).
-- **도메인 진입점:** Terraform이 프라이빗 앱 서브넷 두 곳에 내부 ALB를 관리한다. VPC 오리진은 이 ALB를 대상으로 하며 `/health`는 고정 200이다. [PR #10](https://github.com/bespinglobal-finalproject-kdt5/petclinic-infra/pull/10) 이후 state 복구 시점에는 CloudFront 배포와 도메인 A·AAAA 별칭은 코드에만 있었으며 태그 작업에서는 생성하지 않는다. EKS나 앱 준비 상태를 검증하는 엔드포인트가 아니다.
-- **오사카:** 운영 [Terraform state](infra/STATE.md)는 비공개 S3 버킷(`ap-northeast-3`)에 저장한다. 구 도쿄 버킷은 삭제했으며 이전 state 버전 이력도 오사카 버킷의 별도 경로에 보관한다. 서울 워크로드와 Azure DR state는 별개다.
+| 위치 | 현재 구성 | 역할 |
+|---|---|---|
+| 서울 서비스 VPC 1 · `10.10.0.0/22` | 기존 서비스망·NAT와 오사카 관제망으로 가는 피어링 유지. Petclinic EKS·RDS는 롤백 상태 | 앱 워크로드용. Terraform에 배포 코드가 있다는 뜻과 지금 서비스가 실행 중이라는 뜻은 다르다. |
+| 서울 관리 VPC 2 · `10.20.0.0/24` | 서울 2a 비공개 서브넷 `10.20.0.0/27` 하나. 전용 라우팅 테이블은 `local` 경로만 사용. 실행·중지된 EC2 없음 | 향후 SSM·`kubectl` 관리용 네트워크만 복원했다. **관리 서버도 빌드 서버도 현재 없다.** |
+| 오사카 관제 VPC · `10.40.0.0/16` | 오사카 3b 서브넷 `10.40.0.0/27` 하나. `osaka-observe` EC2 실행 중, SSM `Online` | Grafana 등 관제용 호스트다. 서울 EKS 관리 서버나 CI 러너가 아니다. |
+
+오사카 VPC·서브넷·EC2의 `Name`은 `osaka-observe`다. 자동 생성된 루트 EBS·기본 ENI·기본 라우팅 테이블·기본 SG·기본 NACL에도 `Name`을 지정했다. [관제망 접속과 역할 구분](infra/envs/aws-prod/OSAKA-VPC2.md). 운영 [Terraform state](infra/STATE.md)는 오사카 비공개 S3 버킷에 있으며, 이는 빌드 산출물 저장소가 아니다.
+
+## 빌드 서버를 따로 둬야 하나?
+
+**현재는 상시 빌드 EC2를 추가하지 않는다.** 관리와 빌드의 권한은 분리하되, 이를 위해 EC2 두 대를 운영할 필요는 없다.
+
+| 작업 | 어디서 하는가 | 경계 |
+|---|---|---|
+| 앱 빌드·테스트 | 앱 저장소의 [GitHub Actions](https://github.com/bespinglobal-finalproject-kdt5/petclinic-eks-app/blob/main/.github/workflows/ubuntu-24.04.yml)가 `ubuntu-24.04` 러너에서 Angular와 Spring을 빌드하고 H2로 연동 검사 | 사설 EKS나 운영 DB 접속 불필요. 현재 이 워크플로는 AWS 인증, 이미지 push, 배포를 하지 않는다. |
+| 인프라 검사 | 이 저장소의 [Terraform CI](.github/workflows/terraform-check.yml)가 PR에서 fmt·validate·mock 테스트 실행 | 운영 state에 연결하지 않고 `apply`하지 않는다. |
+| 이미지 게시·운영 배포 | 재배포 시 [이미지 게시 스크립트](deploy/publish-release.sh)와 [Kubernetes 배포 절차](deploy/k8s/README.md)를 사용 | 이미지 게시를 자동화한다면 승인된 릴리스 작업에만 GitHub OIDC와 대상 ECR push 권한을 준다. 미래의 서울 관리 호스트는 SSM·`kubectl`용으로 두고 PR 빌드는 실행하지 않는다. |
+
+**전용 러너가 필요한 경우:** 빌드가 사내 패키지 저장소 등 사설 자원에 반드시 접근해야 하거나 고정 송신 IP가 필요하면 VPC 연동 CodeBuild 또는 작업 종료 시 폐기하는 self-hosted runner를 검토한다. 그때도 관리 호스트·오사카 관제 VM과 실행 환경 및 IAM 역할을 분리한다. 현재 서울 VPC 2는 로컬 경로뿐이므로, 여기에 러너 EC2만 추가해도 GitHub·npm·Maven으로 나갈 수 없다. 사설 자원 접근이 필요하지 않다면 관리망에 인터넷 경로를 열기보다 기존 호스팅 러너를 쓰는 편이 단순하다.
 
 ## 왜 서비스 VPC는 `/22`인가?
 
@@ -19,7 +35,7 @@
 | `infra/modules/` | 재사용할 Terraform 자원 정의. 현재 공통 네트워크 모듈이 있다. |
 | `infra/envs/aws-prod/` | 서울 서비스·관리망 및 오사카 관제망의 운영 루트. 전체 plan에는 롤백된 EKS·RDS·도메인 재생성이 포함될 수 있으므로 검토 없이 apply하지 않는다. |
 | `infra/envs/azure-dr/` | Azure 복구 네트워크·VM·MySQL·Key Vault 구성 예정 위치. |
-| `deploy/k8s/` | Angular WEB·Spring API의 EKS 배포 명세 예정 위치. |
+| `deploy/k8s/` | Angular WEB·Spring API의 EKS 배포 명세와 DB 초기화 절차. |
 | `deploy/compose/` | Azure 복구 VM의 컨테이너 설정 예정 위치. |
 | `deploy/monitoring/` | Prometheus·Grafana·수집 에이전트 설정 예정 위치. |
 
