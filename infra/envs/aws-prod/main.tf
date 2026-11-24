@@ -12,7 +12,7 @@ module "seoul_vpc1" {
 module "seoul_vpc2" {
   source            = "./seoul-vpc2-management"
   availability_zone = var.availability_zones[0]
-  service_peer_id = aws_vpc_peering_connection.management_service.id
+  service_peer_id   = aws_vpc_peering_connection.management_service.id
 }
 
 module "osaka_observe" {

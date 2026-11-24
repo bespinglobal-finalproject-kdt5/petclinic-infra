@@ -2,7 +2,7 @@ resource "aws_vpc_peering_connection" "management_service" {
   vpc_id      = module.seoul_vpc2.management_vpc_id
   peer_vpc_id = module.seoul_vpc1.service_vpc_id
   auto_accept = true
-  tags = { Name = "petclinic-prod-management-service-peer" }
+  tags        = { Name = "petclinic-prod-management-service-peer" }
 }
 resource "aws_vpc_peering_connection_options" "management_service" {
   vpc_peering_connection_id = aws_vpc_peering_connection.management_service.id

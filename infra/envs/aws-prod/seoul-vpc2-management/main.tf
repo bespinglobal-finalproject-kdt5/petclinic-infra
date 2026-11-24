@@ -39,7 +39,7 @@ resource "aws_route_table" "management" {
     cidr_block                = "10.10.0.0/22"
     vpc_peering_connection_id = var.service_peer_id
   }
-  tags   = merge(local.tags, { Name = "${local.name_prefix}-rtb" })
+  tags = merge(local.tags, { Name = "${local.name_prefix}-rtb" })
 }
 
 resource "aws_route_table_association" "management" {
