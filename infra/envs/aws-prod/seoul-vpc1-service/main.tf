@@ -62,10 +62,6 @@ resource "aws_route_table" "service_app" {
     nat_gateway_id = aws_nat_gateway.public_1.id
   }
   route {
-    cidr_block                = var.osaka_peer.subnet_cidr
-    vpc_peering_connection_id = var.osaka_peer.id
-  }
-  route {
     cidr_block                = "10.20.0.0/24"
     vpc_peering_connection_id = var.management_peer_id
   }

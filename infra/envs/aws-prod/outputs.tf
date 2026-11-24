@@ -3,7 +3,7 @@ output "service_vpc_id" {
 }
 
 output "management_vpc_id" {
-  description = "Seoul management VPC 2, not the Osaka observability VPC."
+  description = "Seoul management VPC 2."
   value       = module.seoul_vpc2.management_vpc_id
 }
 
@@ -39,14 +39,6 @@ output "cloudfront_domain_name" {
 output "internal_alb_dns_name" {
   description = "Private origin, not a public endpoint."
   value       = module.edge.internal_alb_dns_name
-}
-
-output "osaka_observe" {
-  description = "Retained Osaka VPC and subnet."
-  value = {
-    vpc_id    = module.osaka_observe.vpc_id
-    subnet_id = module.osaka_observe.subnet_id
-  }
 }
 
 output "management_public_subnet_id" {

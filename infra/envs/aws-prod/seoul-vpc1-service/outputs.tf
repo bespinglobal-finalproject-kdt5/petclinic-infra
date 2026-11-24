@@ -19,10 +19,6 @@ output "public_subnet_ids" {
   value       = [aws_subnet.service["public_1"].id, aws_subnet.service["public_2"].id]
 }
 
-output "app_subnet_cidrs" {
-  value = toset([for subnet in local.service_subnets : subnet.cidr if subnet.table == "app"])
-}
-
 output "test_db_ec2_instance_id" {
   value = aws_instance.test_db_ec2.id
 }

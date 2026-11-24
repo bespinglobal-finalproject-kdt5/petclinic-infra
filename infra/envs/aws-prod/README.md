@@ -1,17 +1,16 @@
 # AWS 운영 환경
 
-`infra/envs/aws-prod/`는 서울과 오사카 리소스 및 글로벌 서비스를 함께 관리하는 Terraform 루트다. 운영 state는 오사카 S3 버킷 `petclinic-prod-tfstate-osaka`의 `petclinic/aws-prod/terraform.tfstate`에 저장하며 S3 잠금 파일을 사용한다. [루트 모듈 연결](main.tf) · [backend 설정](backend.tf) · [state 접근과 복구](../../STATE.md)
+`infra/envs/aws-prod/`는 서울 리소스 및 글로벌 서비스를 함께 관리하는 Terraform 루트다. 운영 state는 오사카 S3 버킷 `petclinic-prod-tfstate-osaka`의 `petclinic/aws-prod/terraform.tfstate`에 저장하며 S3 잠금 파일을 사용한다. [루트 모듈 연결](main.tf) · [backend 설정](backend.tf) · [state 접근과 복구](../../STATE.md)
 
 ## 모듈 구성
 
 | 루트 모듈 | 소유하는 자원 |
 |---|---|
-| [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 오사카로 가는 앱 서브넷 경로 |
+| [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 서울 관리 VPC로 가는 앱 서브넷 경로 |
 | [seoul_vpc2](seoul-vpc2-management/main.tf) | 서울 관리 VPC와 두 서브넷, 관리 IGW, [빌드·프라이빗 관리 EC2 모듈 연결](seoul-vpc2-management/servers.tf) |
-| [osaka_observe](osaka-monitoring/main.tf) | 오사카 관제 VPC·서브넷, 서울 VPC 1과의 피어링 및 반환 경로, 향후 관제 EC2용 SSM IAM 구성 |
 | [edge](edge/cloudfront.tf) | Route 53, CloudFront용 ACM 인증서, CloudFront 배포 및 EKS 내부 ALB 연결 시 생성하는 VPC Origin |
 
-서울 VPC 1이 요청하고 오사카가 **같은 연결을 수락**한다. 서울의 두 앱 서브넷은 하나의 앱 테이블을 공유하므로 오사카 `10.40.0.0/27`행 경로도 하나다. 오사카 관제 서브넷의 테이블에는 서울 앱 대역 `10.10.0.0/24`·`10.10.1.0/24`행 경로가 각각 있다. 서울 DB·퍼블릭 서브넷과 서울 VPC 2에는 이 피어링 경로가 없다. [피어링 요청·수락과 오사카 경로](osaka-monitoring/peering.tf) · [서브넷 9개의 CIDR·AZ·태그·경로](SUBNET-RULES.md)
+서울 관리 VPC와 서비스 VPC는 피어링으로 연결된다. 앱 서브넷 두 개는 관리 VPC로 가는 경로를 공유한다. [서울 VPC 피어링](eks-management-network.tf) · [서브넷 8개의 CIDR·AZ·태그·경로](SUBNET-RULES.md)
 
 ## 운영 입력과 출력
 
@@ -27,7 +26,6 @@
 | 서비스 VPC 조회 및 EKS·DB 서브넷 전달 | `service_vpc_id`, `app_subnet_ids`, `db_subnet_ids`, `public_subnet_ids` |
 | 관리 VPC 및 두 서브넷 조회 | `management_vpc_id`, `management_subnet_id`(프라이빗), `management_public_subnet_id`(퍼블릭) |
 | SSM 접속 대상 조회 | `build_instance_id`, `management_instance_id` |
-| 오사카 네트워크 조회 | `osaka_observe` 객체의 `vpc_id`, `subnet_id` |
 | 서비스 진입점 조회 | `public_url`, `cloudfront_distribution_id`, `cloudfront_domain_name`, ALB 연결 후 `internal_alb_dns_name` |
 
 `terraform output`은 운영 state에 반영된 값을 읽는다. 저장소 루트에서 `terraform -chdir=infra/envs/aws-prod output -json app_subnet_ids`를 실행하면 EKS 담당자가 사용할 두 앱 서브넷 ID를 AZ 입력 순서대로 얻는다. DB 담당자는 `db_subnet_ids`로 RDS 서브넷 그룹을 구성한다. [입력 검증](variables.tf) · [전체 출력 정의](outputs.tf)
@@ -49,6 +47,8 @@
 ## 검증과 배포
 
 PR을 열면 Terraform 1.12.2로 `fmt`, `init -backend=false`, `validate`, AWS mock 테스트를 실행한다. 실제 운영 plan은 승인된 AWS 프로필로 S3 backend를 초기화한 디렉터리에서 실행한다. 배포 담당자는 계획의 생성·변경·삭제 대상을 확인한 후 저장한 plan을 적용한다. [CI 정의](../../../.github/workflows/terraform-check.yml) · [운영 backend 연결 절차](../../STATE.md)
+
+오사카 관제 VPC를 폐기할 때는 운영 plan에서 `module.osaka_observe`의 네트워크·전용 SSM IAM 리소스 삭제와 서울 앱 라우팅 테이블의 `10.40.0.0/27` 경로 제거를 확인한다. 서울 관리망 피어링 경로 `10.20.0.0/24`와 NAT 기본 경로는 계속 사용한다. 적용 후 `terraform state list module.osaka_observe`가 비면 정리용 `aws.osaka` provider 설정도 제거할 수 있다. 운영 state는 계속 오사카 S3 버킷에 저장한다. [provider 설정](providers.tf) · [운영 backend](backend.tf)
 
 CloudFront 원본을 연결할 때는 서울 서비스 서브넷의 여유 IP, VPC Origin 할당량과 서비스 연결 역할 권한을 확인한다. DNS에는 이미 위임된 운영 영역을 사용한다. [도메인 import](imports.tf) · [ALB 인수 절차](SUBNET-RULES.md)
 

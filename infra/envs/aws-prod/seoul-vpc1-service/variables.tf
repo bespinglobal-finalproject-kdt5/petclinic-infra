@@ -21,14 +21,6 @@ variable "environment" {
   }
 }
 
-variable "osaka_peer" {
-  description = "Accepted Osaka peering connection and monitoring subnet."
-  type = object({
-    id          = string
-    subnet_cidr = string
-  })
-}
-
 variable "aws_account_id" {
   type        = string
   description = "AWS account ID"
