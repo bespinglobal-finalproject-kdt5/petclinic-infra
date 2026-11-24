@@ -1,10 +1,10 @@
 # 앱용 Secret을 사용하고 TLS를 요구하는 PostgreSQL Proxy
 resource "aws_db_proxy" "petclinic" {
-  name                   = "petclinic-was-db-poc-proxy"
-  engine_family          = "POSTGRESQL"
-  require_tls            = true
-  role_arn               = aws_iam_role.rds_proxy.arn
-  vpc_security_group_ids = [aws_security_group.rds_proxy.id]
+  name          = "petclinic-was-db-poc-proxy"
+  engine_family = "POSTGRESQL"
+  require_tls   = true
+  role_arn      = aws_iam_role.rds_proxy.arn
+  # vpc_security_group_ids = [aws_security_group.rds_proxy.id]
 
   # 서로 다른 가용 영역의 DB 서브넷에 Proxy를 배치
   vpc_subnet_ids = [

@@ -1,4 +1,4 @@
-# test EC2가 사용할 IAM 역할을 만든다.
+# 임시 EC2가 사용할 IAM 역할을 만든다.
 resource "aws_iam_role" "test_db_ec2_ssm" {
   name = "test_db_ec2_ssm"
 
@@ -12,13 +12,13 @@ resource "aws_iam_role" "test_db_ec2_ssm" {
   })
 }
 
-# SSM Agent가 Systems Manager에 등록하고 통신할 권한을 붙인다.
+# EC2의 SSM Agent가 Systems Manager에 등록하고 통신하도록 허용한다.
 resource "aws_iam_role_policy_attachment" "test_db_ec2_ssm" {
   role       = aws_iam_role.test_db_ec2_ssm.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# IAM 역할을 EC2에 연결할 수 있도록 인스턴스 프로파일에 담는다.
+# IAM 역할을 임시 EC2에 붙일 수 있도록 인스턴스 프로파일에 담는다.
 resource "aws_iam_instance_profile" "test_db_ec2" {
   name = "petclinic-was-db-poc-ec2"
   role = aws_iam_role.test_db_ec2_ssm.name
