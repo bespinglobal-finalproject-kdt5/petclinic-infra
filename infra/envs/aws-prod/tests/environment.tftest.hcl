@@ -30,11 +30,6 @@ mock_provider "aws" {
   source = "./tests/mocks"
 }
 
-mock_provider "aws" {
-  alias  = "osaka"
-  source = "./tests/mocks"
-}
-
 # Terraform mock providers cannot import an existing zone. Live plans verify its ID.
 override_resource {
   target = module.edge.aws_route53_zone.delegated
@@ -129,17 +124,5 @@ run "public_edge" {
       output.cloudfront_distribution_id == module.edge.cloudfront_distribution_id && output.internal_alb_dns_name == module.edge.internal_alb_dns_name
     )
     error_message = "The root must look up the existing public zone and publish the edge endpoints."
-  }
-}
-
-run "separate_management_and_osaka" {
-  command = plan
-  assert {
-    condition = (
-      output.osaka_observe.vpc_id == module.osaka_observe.vpc_id && output.osaka_observe.subnet_id == module.osaka_observe.subnet_id &&
-      output.management_vpc_id != null && output.management_subnet_id != null &&
-      output.management_vpc_id != output.osaka_observe.vpc_id && output.management_subnet_id != output.osaka_observe.subnet_id
-    )
-    error_message = "Seoul management and Osaka monitoring must have independent VPC and subnet outputs."
   }
 }

@@ -28,7 +28,8 @@ provider "aws" {
   allowed_account_ids = [var.aws_account_id]
 }
 
-# Provider scope is the region boundary: do not change the default Seoul provider.
+# Retain this alias until all resources formerly managed by module.osaka_observe
+# have been destroyed and their provider binding has been cleared from state.
 provider "aws" {
   alias               = "osaka"
   region              = "ap-northeast-3"

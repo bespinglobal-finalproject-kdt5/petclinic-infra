@@ -9,4 +9,4 @@
 | 후속 구현 | 복구 네트워크·VM·MySQL·Key Vault와 별도 Azure Blob state |
 | 환경 태그 | DR 환경의 `environment` 값은 `azure_dr` |
 
-오사카의 `10.40.0.0/16`은 AWS 관제망이다. 서울 VPC 1과 오사카 사이의 피어링은 AWS 운영 루트에서 관리한다. [대역 예약 근거](../../NETWORK.md) · [state 분리 계획](../../STATE.md) · [공통 태그](../../TAGS.md)
+[대역 예약 근거](../../NETWORK.md) · [state 분리 계획](../../STATE.md) · [공통 태그](../../TAGS.md)
