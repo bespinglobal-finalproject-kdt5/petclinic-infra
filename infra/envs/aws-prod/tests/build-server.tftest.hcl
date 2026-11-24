@@ -5,6 +5,11 @@ mock_provider "aws" {
 run "build_host" {
   command = plan
   module { source = "./seoul-vpc2-management/build-server" }
+  override_resource {
+    target          = aws_instance.build
+    override_during = plan
+    values          = { id = "i-00000000000000001" }
+  }
   variables {
     ubuntu_ami_id = "ami-00000000000000001"
     vpc_id        = "vpc-00000000000000001"
@@ -25,10 +30,18 @@ run "build_host" {
 
   assert {
     condition = (
-      aws_security_group.build.vpc_id == var.vpc_id && length(aws_security_group.build.ingress) == 0 &&
+      aws_security_group.build.vpc_id == var.vpc_id && length(aws_security_group.build.ingress) == 1 &&
+      one(aws_security_group.build.ingress).protocol == "tcp" &&
+      one(aws_security_group.build.ingress).from_port == 22 && one(aws_security_group.build.ingress).to_port == 22 &&
+      one(aws_security_group.build.ingress).cidr_blocks == tolist(["0.0.0.0/0"]) &&
       toset([for rule in aws_security_group.build.egress : rule.to_port]) == toset([80, 443]) &&
       alltrue([for rule in aws_security_group.build.egress : rule.from_port == rule.to_port && rule.protocol == "tcp" && contains(rule.cidr_blocks, "0.0.0.0/0")])
     )
-    error_message = "The build security group must allow only outbound HTTP and HTTPS."
+    error_message = "The build security group must allow inbound IPv4 SSH and outbound HTTP and HTTPS."
+  }
+
+  assert {
+    condition     = aws_eip.build.domain == "vpc" && aws_eip.build.instance == aws_instance.build.id
+    error_message = "The Elastic IP must be associated with the build instance."
   }
 }

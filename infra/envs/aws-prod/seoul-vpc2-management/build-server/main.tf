@@ -16,7 +16,13 @@ resource "aws_security_group" "build" {
   name        = "${local.name}-sg"
   description = "Session Manager build host with outbound web access"
   vpc_id      = var.vpc_id
-  ingress     = []
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   dynamic "egress" {
     for_each = [80, 443]
@@ -78,4 +84,9 @@ resource "aws_instance" "build" {
 
   tags       = merge(local.tags, { Name = "${local.name}-server" })
   depends_on = [aws_iam_role_policy_attachment.ssm]
+}
+
+resource "aws_eip" "build" {
+  domain   = "vpc"
+  instance = aws_instance.build.id
 }

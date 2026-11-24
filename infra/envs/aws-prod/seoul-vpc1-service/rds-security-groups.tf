@@ -4,6 +4,9 @@ resource "aws_security_group" "rds" {
   description = "Security group for PetClinic PostgreSQL RDS"
   vpc_id      = aws_vpc.service.id
 
+  # The old group must stay attached until RDS switches to the replacement.
+  lifecycle { create_before_destroy = true }
+
   tags = {
     project     = "petclinic"
     environment = "prod"
@@ -14,7 +17,7 @@ resource "aws_security_group" "rds" {
 
 # EKS 보안 그룹이 확정나면 이 부분 수정
 resource "aws_vpc_security_group_ingress_rule" "rds" {
-  description = "Allow PostgreSQL from the PetClinic EKS cluster security group"
+  description = "Allow PostgreSQL from the PetClinic build server private IP"
 
   security_group_id = aws_security_group.rds.id
   # referenced_security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id

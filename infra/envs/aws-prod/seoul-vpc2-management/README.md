@@ -8,10 +8,11 @@
 | 서브넷 | 퍼블릭 `10.20.0.32/27` | 프라이빗 `10.20.0.0/27` |
 | 인스턴스 | 온디맨드 `m7i.large`, 2 vCPU / 8 GiB | 온디맨드 `t3.small`, 2 vCPU / 2 GiB |
 | 루트 디스크 | 암호화된 gp3 50 GiB | 암호화된 gp3 30 GiB |
-| 송신 | 공인 IPv4와 관리 IGW로 TCP 80·443 허용 | SSM 엔드포인트로 TCP 443, 관리 NAT를 통해 TCP 80·443 허용 |
+| SSH 수신 | EIP에서 IPv4 `0.0.0.0/0`의 TCP 22 허용 | 없음 |
+| 송신 | EIP와 관리 IGW로 TCP 80·443 허용 | SSM 엔드포인트로 TCP 443, 관리 NAT를 통해 TCP 80·443 허용 |
 | 접속 대상 출력 | `build_instance_id` | `management_instance_id` |
 
-두 서버는 동일한 Canonical Ubuntu 24.04 LTS x86_64 AMI 릴리스를 사용한다. 각각 전용 SSM IAM 역할·인스턴스 프로필을 사용하며 IMDSv2를 요구한다. SSH 인바운드 규칙과 추가 패키지 설치용 user data는 없다. EC2를 중지하면 루트 디스크가 보존되고, 인스턴스를 종료하면 루트 디스크도 삭제된다. [빌드 EC2](build-server/main.tf) · [관리 EC2](management-server/main.tf)
+두 서버는 동일한 Canonical Ubuntu 24.04 LTS x86_64 AMI 릴리스를 사용한다. 각각 전용 SSM IAM 역할·인스턴스 프로필을 사용하며 IMDSv2를 요구한다. 빌드 서버의 SSH 인증에는 인스턴스 안에 등록한 사용자 키 등이 필요하다. EC2를 중지하면 루트 디스크가 보존되고, 인스턴스를 종료하면 루트 디스크도 삭제된다. [빌드 EC2](build-server/main.tf) · [관리 EC2](management-server/main.tf)
 
 ## 프라이빗 관리 서버
 
