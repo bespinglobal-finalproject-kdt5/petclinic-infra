@@ -24,6 +24,6 @@ variable "environment" {
 # 부모와 하위 모듈의 variables.tf에 각각 선언
 variable "db_master_password" {
   type      = string
-  sensitive = true
-  default   = "123456789"
+  sensitive = true        # 테라폼 출력에서 값 가림
+  default   = "123456789" # 하드코딩시킴
 }
