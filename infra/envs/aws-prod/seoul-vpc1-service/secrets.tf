@@ -7,10 +7,10 @@ resource "aws_secretsmanager_secret" "petclinic_app" {
 resource "aws_secretsmanager_secret_version" "petclinic_app" {
   secret_id = aws_secretsmanager_secret.petclinic_app.id
 
-  secret_string_wo = jsonencode({
-    username = "petclinic_app"
-    password = var.db_app_password
-  })
+  # secret_string_wo = jsonencode({
+  #   username = "petclinic_app"
+  #   password = var.db_app_password
+  # })
 
-  secret_string_wo_version = 1
+  #secret_string_wo_version = 1
 }

@@ -21,14 +21,9 @@ variable "environment" {
   }
 }
 
-variable "aws_account_id" {
-  type        = string
-  description = "AWS account ID"
-}
-
-# 적용할 때 앱 비밀번호를 입력받는다.
-variable "db_app_password" {
+# 부모와 하위 모듈의 variables.tf에 각각 선언
+variable "db_master_password" {
   type      = string
   sensitive = true
-  ephemeral = true
+  default   = "123456789"
 }

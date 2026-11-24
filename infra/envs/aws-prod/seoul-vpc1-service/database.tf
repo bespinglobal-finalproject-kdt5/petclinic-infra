@@ -4,9 +4,10 @@ resource "aws_db_instance" "petclinic" {
   engine_version = "16"
   instance_class = "db.t4g.small"
 
-  db_name                     = "petclinic"
-  username                    = "petclinic"
-  manage_master_user_password = true #RDS가 관리자 petclinic의 비밀번호를 생성하고 Secrets Manager에 저장·교체
+  db_name             = "petclinic"
+  username            = "petclinic"
+  password_wo         = var.db_master_password
+  password_wo_version = 1
 
   db_subnet_group_name   = aws_db_subnet_group.petclinic.name
   vpc_security_group_ids = [aws_security_group.rds.id]
