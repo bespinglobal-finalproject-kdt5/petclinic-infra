@@ -18,7 +18,3 @@ output "public_subnet_ids" {
   description = "Public subnet IDs in availability_zones order."
   value       = [aws_subnet.service["public_1"].id, aws_subnet.service["public_2"].id]
 }
-
-output "test_db_ec2_instance_id" {
-  value = aws_instance.test_db_ec2.id
-}
