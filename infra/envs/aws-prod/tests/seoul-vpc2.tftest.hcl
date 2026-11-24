@@ -5,7 +5,10 @@ mock_provider "aws" {
 run "management_network" {
   command = plan
   module { source = "./seoul-vpc2-management" }
-  variables { availability_zone = "ap-northeast-2a" }
+  variables {
+    availability_zone = "ap-northeast-2a"
+    service_peer_id   = "pcx-00000000000000002"
+  }
 
   assert {
     condition = (
@@ -21,7 +24,11 @@ run "management_network" {
 
   assert {
     condition = (
-      aws_route_table.management.vpc_id == aws_vpc.management.id && length(aws_route_table.management.route) == 0 &&
+      aws_route_table.management.vpc_id == aws_vpc.management.id && length(aws_route_table.management.route) == 2 &&
+      one([for route in aws_route_table.management.route : route.nat_gateway_id if route.cidr_block == "0.0.0.0/0"]) == aws_nat_gateway.management.id &&
+      one([for route in aws_route_table.management.route : route.vpc_peering_connection_id if route.cidr_block == "10.10.0.0/22"]) == var.service_peer_id &&
+      aws_nat_gateway.management.subnet_id == aws_subnet.management_public.id &&
+      aws_nat_gateway.management.allocation_id == aws_eip.management_nat.id &&
       aws_route_table.management_public.vpc_id == aws_vpc.management.id && aws_internet_gateway.management.vpc_id == aws_vpc.management.id &&
       one(aws_route_table.management_public.route).cidr_block == "0.0.0.0/0" &&
       one(aws_route_table.management_public.route).gateway_id == aws_internet_gateway.management.id &&
@@ -30,7 +37,7 @@ run "management_network" {
       aws_route_table_association.management_public.route_table_id == aws_route_table.management_public.id &&
       aws_route_table_association.management_public.subnet_id == aws_subnet.management_public.id
     )
-    error_message = "Only the public build subnet uses the management IGW."
+    error_message = "Check management egress through the public-subnet NAT, the service peer route, and the build subnet's direct IGW route."
   }
 
   assert {

@@ -2,6 +2,7 @@ module "seoul_vpc1" {
   source             = "./seoul-vpc1-service"
   availability_zones = var.availability_zones
   environment        = "prod"
+  management_peer_id = aws_vpc_peering_connection.management_service.id
   osaka_peer = {
     id          = module.osaka_observe.peering_id
     subnet_cidr = module.osaka_observe.subnet_cidr
@@ -11,6 +12,7 @@ module "seoul_vpc1" {
 module "seoul_vpc2" {
   source            = "./seoul-vpc2-management"
   availability_zone = var.availability_zones[0]
+  service_peer_id   = aws_vpc_peering_connection.management_service.id
 }
 
 module "osaka_observe" {

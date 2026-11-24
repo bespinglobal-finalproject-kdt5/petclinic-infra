@@ -31,8 +31,15 @@ resource "aws_subnet" "management" {
 
 resource "aws_route_table" "management" {
   vpc_id = aws_vpc.management.id
-  route  = []
-  tags   = merge(local.tags, { Name = "${local.name_prefix}-rtb" })
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.management.id
+  }
+  route {
+    cidr_block                = "10.10.0.0/22"
+    vpc_peering_connection_id = var.service_peer_id
+  }
+  tags = merge(local.tags, { Name = "${local.name_prefix}-rtb" })
 }
 
 resource "aws_route_table_association" "management" {
