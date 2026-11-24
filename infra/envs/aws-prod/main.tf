@@ -3,6 +3,8 @@ module "seoul_vpc1" {
   availability_zones = var.availability_zones
   environment        = "prod"
   management_peer_id = aws_vpc_peering_connection.management_service.id
+
+  db_master_password = var.db_master_password
 }
 
 module "seoul_vpc2" {
@@ -19,3 +21,5 @@ module "edge" {
   vpc_id             = module.seoul_vpc1.service_vpc_id
   eks_alb_arn        = var.eks_alb_arn
 }
+
+

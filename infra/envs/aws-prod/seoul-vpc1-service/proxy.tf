@@ -19,11 +19,12 @@ resource "aws_db_proxy" "petclinic" {
     secret_arn  = aws_secretsmanager_secret.petclinic_app.arn
   }
 
-  # Secret 값과 읽기 권한이 준비된 뒤 Proxy를 생성
-  depends_on = [
-    aws_iam_role_policy.rds_proxy_read_app_secret,
-    aws_secretsmanager_secret_version.petclinic_app,
-  ]
+
+  # # Secret 값과 읽기 권한이 준비된 뒤 Proxy를 생성
+  # depends_on = [
+  #   aws_iam_role_policy.rds_proxy_read_app_secret,
+  #   aws_secretsmanager_secret_version.db_master_password,
+  # ]
 }
 
 # AWS가 만든 기본 타깃 그룹에 기존 RDS를 등록

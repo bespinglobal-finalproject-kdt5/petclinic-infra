@@ -36,3 +36,10 @@ variable "eks_alb_arn" {
   type        = string
   default     = null
 }
+
+# 부모와 하위 모듈의 variables.tf에 각각 선언
+variable "db_master_password" {
+  type      = string
+  sensitive = true
+  default   = "123456789"
+}
