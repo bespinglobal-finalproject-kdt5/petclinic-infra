@@ -18,3 +18,8 @@ output "public_subnet_ids" {
   description = "Public subnet IDs in availability_zones order."
   value       = [aws_subnet.service["public_1"].id, aws_subnet.service["public_2"].id]
 }
+
+output "rds_security_group_id" {
+  description = "Security group ID attached to the PetClinic RDS instance."
+  value       = aws_security_group.rds.id
+}
