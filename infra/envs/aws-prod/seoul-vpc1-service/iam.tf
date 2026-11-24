@@ -23,32 +23,3 @@ resource "aws_iam_instance_profile" "test_db_ec2" {
   name = "petclinic-was-db-poc-ec2"
   role = aws_iam_role.test_db_ec2_ssm.name
 }
-
-# RDS Proxy가 사용할 IAM 역할
-resource "aws_iam_role" "rds_proxy" {
-  name = "petclinic-was-db-poc-rds-proxy"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "rds.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
-}
-
-# 위 역할이 petclinic_app용 Secret의 값만 읽도록 허용
-resource "aws_iam_role_policy" "rds_proxy_read_app_secret" {
-  name = "read-petclinic-app-secret"
-  role = aws_iam_role.rds_proxy.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = "secretsmanager:GetSecretValue"
-      Resource = aws_secretsmanager_secret.petclinic_app.arn
-    }]
-  })
-}
