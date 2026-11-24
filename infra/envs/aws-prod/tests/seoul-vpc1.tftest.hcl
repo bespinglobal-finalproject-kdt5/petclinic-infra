@@ -8,10 +8,29 @@ run "service_network" {
     source = "./seoul-vpc1-service"
   }
   variables {
-    availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
-    environment        = "prod"
-    management_peer_id = "pcx-00000000000000002"
-    osaka_peer         = { id = "pcx-00000000000000001", subnet_cidr = "10.40.0.0/27" }
+    availability_zones         = ["ap-northeast-2a", "ap-northeast-2c"]
+    environment                = "prod"
+    db_app_password            = "mock-only-password"
+    eks_node_security_group_id = "sg-00000000000000001"
+    management_peer_id         = "pcx-00000000000000002"
+    osaka_peer                 = { id = "pcx-00000000000000001", subnet_cidr = "10.40.0.0/27" }
+  }
+
+  override_resource {
+    target          = aws_security_group.rds_proxy
+    override_during = plan
+    values          = { id = "sg-00000000000000002" }
+  }
+
+  assert {
+    condition = (
+      aws_vpc_security_group_ingress_rule.proxy_from_eks.security_group_id == aws_security_group.rds_proxy.id &&
+      aws_vpc_security_group_ingress_rule.proxy_from_eks.referenced_security_group_id == var.eks_node_security_group_id &&
+      aws_vpc_security_group_ingress_rule.proxy_from_eks.ip_protocol == "tcp" &&
+      aws_vpc_security_group_ingress_rule.proxy_from_eks.from_port == 5432 &&
+      aws_vpc_security_group_ingress_rule.proxy_from_eks.to_port == 5432
+    )
+    error_message = "EKS nodes must reach the DB proxy on TCP 5432."
   }
 
   assert {
@@ -79,5 +98,20 @@ run "service_network" {
       output.public_subnet_ids == [aws_subnet.service["public_1"].id, aws_subnet.service["public_2"].id]
     )
     error_message = "Output IDs must select the correct resources in operator AZ order."
+  }
+
+  assert {
+    condition = (
+      aws_db_instance.petclinic.engine == "postgres" &&
+      !aws_db_instance.petclinic.publicly_accessible && aws_db_instance.petclinic.manage_master_user_password &&
+      aws_db_instance.petclinic.db_subnet_group_name == aws_db_subnet_group.petclinic.name &&
+      aws_db_subnet_group.petclinic.subnet_ids == toset(output.db_subnet_ids) &&
+      aws_db_proxy.petclinic.vpc_subnet_ids == toset(output.db_subnet_ids) &&
+      aws_db_proxy.petclinic.engine_family == "POSTGRESQL" && aws_db_proxy.petclinic.require_tls &&
+      one(aws_db_proxy.petclinic.auth).auth_scheme == "SECRETS" &&
+      aws_db_proxy_target.petclinic.db_proxy_name == aws_db_proxy.petclinic.name &&
+      aws_db_proxy_target.petclinic.db_instance_identifier == aws_db_instance.petclinic.identifier
+    )
+    error_message = "Keep the PostgreSQL instance private and register it with the TLS proxy in the two DB subnets."
   }
 }

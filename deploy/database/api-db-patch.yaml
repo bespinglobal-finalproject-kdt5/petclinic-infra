@@ -1,0 +1,28 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: api
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: external-postgres
+              valueFrom: null
+            - name: POSTGRES_URL
+              value: null
+              valueFrom:
+                secretKeyRef: { name: petclinic-db-app, key: url }
+            - name: POSTGRES_USER
+              value: null
+              valueFrom:
+                secretKeyRef: { name: petclinic-db-app, key: username }
+            - name: POSTGRES_PASS
+              value: null
+              valueFrom:
+                secretKeyRef: { name: petclinic-db-app, key: password }
+            - name: MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE
+              value: readinessState,db
+              valueFrom: null
+          readinessProbe:
+            httpGet:
+              path: /petclinic/actuator/health/readiness
+              port: 9966

@@ -31,6 +31,14 @@ variable "availability_zones" {
   }
 }
 
+variable "db_app_password" {
+  description = "Password for the petclinic_app database role and the RDS Proxy secret."
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+  nullable    = false
+}
+
 variable "eks_alb_arn" {
   description = "ARN of the EKS-managed internal ALB. CloudFront stays disabled until this is set."
   type        = string

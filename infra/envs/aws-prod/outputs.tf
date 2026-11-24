@@ -62,3 +62,8 @@ output "management_instance_id" {
   description = "Private Seoul management EC2 target for Session Manager."
   value       = module.seoul_vpc2.management_instance_id
 }
+
+output "database_connection" {
+  description = "RDS host for schema setup, TLS proxy host and app secret ARN for REST."
+  value       = module.seoul_vpc1.database_connection
+}

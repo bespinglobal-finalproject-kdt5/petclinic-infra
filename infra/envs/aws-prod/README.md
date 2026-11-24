@@ -48,6 +48,8 @@
 
 ## 검증과 배포
 
+REST의 PostgreSQL 연결은 서울 앱 노드에서 RDS Proxy를 경유한다. 운영 적용 후 `database_connection` 출력으로 DB 역할과 스키마를 준비하고 API Deployment에 연결 정보를 전달한다. [DB 초기화와 EKS 앱 연결 검증](../../../deploy/database/README.md)
+
 PR을 열면 Terraform 1.12.2로 `fmt`, `init -backend=false`, `validate`, AWS mock 테스트를 실행한다. 실제 운영 plan은 승인된 AWS 프로필로 S3 backend를 초기화한 디렉터리에서 실행한다. 배포 담당자는 계획의 생성·변경·삭제 대상을 확인한 후 저장한 plan을 적용한다. [CI 정의](../../../.github/workflows/terraform-check.yml) · [운영 backend 연결 절차](../../STATE.md)
 
 CloudFront 원본을 연결할 때는 서울 서비스 서브넷의 여유 IP, VPC Origin 할당량과 서비스 연결 역할 권한을 확인한다. DNS에는 이미 위임된 운영 영역을 사용한다. [도메인 import](imports.tf) · [ALB 인수 절차](SUBNET-RULES.md)

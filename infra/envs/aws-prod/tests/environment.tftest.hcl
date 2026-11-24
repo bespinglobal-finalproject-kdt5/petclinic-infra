@@ -46,6 +46,7 @@ variables {
   aws_account_id     = "123456789012"
   aws_region         = "ap-northeast-2"
   availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
+  db_app_password    = "mock-only-password"
   # Test fixtures only. Deployment versions are operator inputs.
   node_release_version = "1.36.0-20260101"
   admin_principal_arns = ["arn:aws:iam::123456789012:role/mock-eks-admin"]

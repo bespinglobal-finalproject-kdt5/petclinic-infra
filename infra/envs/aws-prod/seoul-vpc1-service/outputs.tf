@@ -26,3 +26,13 @@ output "app_subnet_cidrs" {
 output "test_db_ec2_instance_id" {
   value = aws_instance.test_db_ec2.id
 }
+
+output "database_connection" {
+  description = "Connection metadata for the database operator and the REST deployment."
+  value = {
+    instance_address      = aws_db_instance.petclinic.address
+    proxy_endpoint        = aws_db_proxy.petclinic.endpoint
+    app_secret_arn        = aws_secretsmanager_secret.petclinic_app.arn
+    bootstrap_instance_id = aws_instance.test_db_ec2.id
+  }
+}

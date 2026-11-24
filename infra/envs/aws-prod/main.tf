@@ -1,8 +1,10 @@
 module "seoul_vpc1" {
-  source             = "./seoul-vpc1-service"
-  availability_zones = var.availability_zones
-  environment        = "prod"
-  management_peer_id = aws_vpc_peering_connection.management_service.id
+  source                     = "./seoul-vpc1-service"
+  availability_zones         = var.availability_zones
+  environment                = "prod"
+  db_app_password            = var.db_app_password
+  eks_node_security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  management_peer_id         = aws_vpc_peering_connection.management_service.id
   osaka_peer = {
     id          = module.osaka_observe.peering_id
     subnet_cidr = module.osaka_observe.subnet_cidr

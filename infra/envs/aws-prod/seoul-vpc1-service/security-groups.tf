@@ -74,6 +74,15 @@ resource "aws_vpc_security_group_ingress_rule" "proxy_from_test_ec2" {
   to_port                      = 5432
 }
 
+resource "aws_vpc_security_group_ingress_rule" "proxy_from_eks" {
+  description                  = "PostgreSQL clients on the EKS app nodes"
+  security_group_id            = aws_security_group.rds_proxy.id
+  referenced_security_group_id = var.eks_node_security_group_id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+}
+
 # Proxy에서 RDS로 나가는 연결을 허용한다.
 resource "aws_vpc_security_group_egress_rule" "proxy_to_rds" {
   security_group_id            = aws_security_group.rds_proxy.id

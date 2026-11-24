@@ -29,14 +29,14 @@ variable "osaka_peer" {
   })
 }
 
-variable "aws_account_id" {
-  type        = string
-  description = "AWS account ID"
-}
-
 # 적용할 때 앱 비밀번호를 입력받는다.
 variable "db_app_password" {
   type      = string
   sensitive = true
   ephemeral = true
+}
+
+variable "eks_node_security_group_id" {
+  type        = string
+  description = "Security group used by the EKS app nodes and their VPC CNI pods."
 }
