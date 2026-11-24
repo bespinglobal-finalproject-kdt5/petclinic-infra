@@ -28,3 +28,15 @@ variable "osaka_peer" {
     subnet_cidr = string
   })
 }
+
+variable "aws_account_id" {
+  type        = string
+  description = "AWS account ID"
+}
+
+# 적용할 때 앱 비밀번호를 입력받는다.
+variable "db_app_password" {
+  type      = string
+  sensitive = true
+  ephemeral = true
+}
