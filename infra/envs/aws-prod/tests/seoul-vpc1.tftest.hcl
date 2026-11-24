@@ -10,6 +10,7 @@ run "service_network" {
   variables {
     availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
     environment        = "prod"
+    management_peer_id = "pcx-00000000000000002"
     osaka_peer         = { id = "pcx-00000000000000001", subnet_cidr = "10.40.0.0/27" }
   }
 
@@ -53,12 +54,13 @@ run "service_network" {
       aws_internet_gateway.service.vpc_id == aws_vpc.service.id && aws_route_table.service_public.vpc_id == aws_vpc.service.id &&
       one(aws_route_table.service_public.route).cidr_block == "0.0.0.0/0" &&
       one(aws_route_table.service_public.route).gateway_id == aws_internet_gateway.service.id &&
-      aws_route_table.service_app.vpc_id == aws_vpc.service.id && length(aws_route_table.service_app.route) == 2 &&
+      aws_route_table.service_app.vpc_id == aws_vpc.service.id && length(aws_route_table.service_app.route) == 3 &&
       one([for route in aws_route_table.service_app.route : route.nat_gateway_id if route.cidr_block == "0.0.0.0/0"]) == aws_nat_gateway.public_1.id &&
       one([for route in aws_route_table.service_app.route : route.vpc_peering_connection_id if route.cidr_block == var.osaka_peer.subnet_cidr]) == var.osaka_peer.id &&
+      one([for route in aws_route_table.service_app.route : route.vpc_peering_connection_id if route.cidr_block == "10.20.0.0/24"]) == var.management_peer_id &&
       aws_route_table.service_private.vpc_id == aws_vpc.service.id && length(aws_route_table.service_private.route) == 0
     )
-    error_message = "Public and app defaults must target the IGW and NAT respectively; only the app table may reach Osaka and DB routes must remain local-only."
+    error_message = "Check the public IGW, app NAT, separate app routes to Osaka and management, and local-only DB table."
   }
   assert {
     condition = alltrue([for tags in concat(
