@@ -126,3 +126,29 @@ run "public_edge" {
     error_message = "The root must look up the existing public zone and publish the edge endpoints."
   }
 }
+
+run "seoul_internal_alb_https" {
+  command = plan
+
+  override_resource {
+    target          = module.edge.aws_acm_certificate.alb
+    override_during = plan
+    values          = { arn = "arn:aws:acm:ap-northeast-2:123456789012:certificate/00000000-0000-4000-8000-000000000003" }
+  }
+
+  assert {
+    condition = (
+      aws_lb.internal.internal && aws_lb.internal.load_balancer_type == "application" &&
+      aws_lb.internal.subnets == toset(module.seoul_vpc1.app_subnet_ids) &&
+      aws_lb_listener.internal_https.port == 443 && aws_lb_listener.internal_https.protocol == "HTTPS" &&
+      aws_lb_listener.internal_https.certificate_arn == "arn:aws:acm:ap-northeast-2:123456789012:certificate/00000000-0000-4000-8000-000000000003" &&
+      one(aws_lb_listener.internal_https.default_action).type == "fixed-response" &&
+      one(one(aws_lb_listener.internal_https.default_action).fixed_response).status_code == "503" &&
+      aws_vpc_security_group_ingress_rule.internal_alb_https.from_port == 443 &&
+      aws_vpc_security_group_ingress_rule.internal_alb_https.to_port == 443 &&
+      aws_vpc_security_group_ingress_rule.internal_alb_https.prefix_list_id == data.aws_ec2_managed_prefix_list.cloudfront_origin.id &&
+      output.internal_alb_dns_name == null
+    )
+    error_message = "The private ALB must serve HTTPS with the Seoul certificate and a fixed 503 before an application or CloudFront origin is connected."
+  }
+}

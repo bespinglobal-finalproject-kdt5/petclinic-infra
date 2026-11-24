@@ -25,3 +25,17 @@ resource "aws_acm_certificate_validation" "viewer" {
   certificate_arn         = aws_acm_certificate.viewer.arn
   validation_record_fqdns = [aws_route53_record.validation.fqdn]
 }
+
+resource "aws_acm_certificate" "alb" {
+  domain_name       = var.domain
+  validation_method = "DNS"
+  tags              = merge(local.edge_tags, { Name = "petclinic-prod-alb-certificate" })
+
+  lifecycle { create_before_destroy = true }
+}
+
+resource "aws_acm_certificate_validation" "alb" {
+  certificate_arn = aws_acm_certificate.alb.arn
+  # ACM uses the same validation CNAME for a domain in this account across regions.
+  validation_record_fqdns = [aws_route53_record.validation.fqdn]
+}

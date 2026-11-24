@@ -14,3 +14,8 @@ output "internal_alb_dns_name" {
   description = "DNS name of the configured EKS-managed ALB."
   value       = one(data.aws_lb.eks[*].dns_name)
 }
+
+output "alb_certificate_arn" {
+  description = "Validated regional certificate for the internal HTTPS listener."
+  value       = aws_acm_certificate_validation.alb.certificate_arn
+}

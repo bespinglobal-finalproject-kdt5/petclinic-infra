@@ -1,6 +1,6 @@
 # AWS 운영 서브넷과 EKS 연결 규칙
 
-**EKS가 사용할 네트워크는 서울 서비스 VPC의 `app_1`과 `app_2`다.** EKS 담당자는 `aws-prod`의 `service_vpc_id`와 `app_subnet_ids`를 받아 클러스터·워커·내부 ALB에 연결한다. 서브넷, 태그, 라우팅 테이블의 소유자는 이 저장소의 네트워크 모듈이다. [운영 루트](main.tf) · [루트 출력](outputs.tf)
+**EKS가 사용할 네트워크는 서울 서비스 VPC의 `app_1`과 `app_2`다.** EKS 담당자는 `aws-prod`의 `service_vpc_id`와 `app_subnet_ids`를 받아 클러스터·워커에 사용한다. 운영 Terraform 루트가 내부 ALB를 같은 앱 서브넷에 배치한다. 서브넷, 태그, 라우팅 테이블의 소유자는 이 저장소의 네트워크 모듈이다. [운영 루트](main.tf) · [루트 출력](outputs.tf)
 
 서울 서비스 VPC와 관리 VPC의 Terraform 구성 기준이다. 서울 AZ와 운영 계정 ID는 루트 입력으로 지정한다. Azure DR용으로 `10.30.0.0/24`를 예약했다. [입력 검증](variables.tf) · [provider 설정](providers.tf) · [공통 네트워크 설계](../../NETWORK.md)
 
@@ -47,7 +47,7 @@ EKS 담당자는 클러스터와 노드 그룹의 `tags`에 `project = "petclini
 - 각 행에서 부모 VPC CIDR의 목적지는 AWS의 `local` 경로다. 서울은 서비스 서브넷별 `aws_route_table_association.service`와 관리 VPC의 `aws_route_table_association.management`·`aws_route_table_association.management_public`으로 테이블을 명시한다. 피어링 경로는 서울 VPC 1의 앱 테이블과 서울 VPC 2의 프라이빗 테이블에 있다. [서울 연결 정의](seoul-vpc1-service/subnets.tf) · [서울 관리 라우팅](seoul-vpc2-management/main.tf)
 - 서울 서비스 VPC의 퍼블릭 서브넷 두 개에는 IGW 경로가 있지만 공인 IPv4 자동 할당은 꺼져 있다. 두 앱 서브넷은 모두 `public_1`에 있는 단일 zonal public NAT와 VPC EIP `petclinic-prod-nat-eip`를 통해 송신한다. 2c의 앱도 2a NAT에 의존한다. [서울 NAT·IGW](seoul-vpc1-service/main.tf)
 - 서울 관리 퍼블릭 서브넷도 공인 IPv4 자동 할당을 끄고, 빌드 EC2에만 공인 IPv4를 할당한다. 프라이빗 서브넷의 기본 경로는 관리 NAT를 사용한다. 관리 서버의 SSM 트래픽은 이 서브넷 안의 두 인터페이스 엔드포인트로 향한다. [관리 서버 연결](seoul-vpc2-management/management-server/ssm-endpoints.tf) [관리 퍼블릭 라우팅](seoul-vpc2-management/main.tf) · [빌드 EC2](seoul-vpc2-management/build-server/main.tf)
-- 서비스 VPC는 `enable_dns_support = true`, `enable_dns_hostnames = true`를 명시한다. 서브넷은 고정 IPv4 CIDR을 사용하고 IPv6 CIDR·IPv6 자동 할당·DNS64·서브넷별 DNS 호스트 이름 옵션은 코드에서 따로 설정하지 않는다. 커스텀 네트워크 ACL·ACL 연결도 정의하지 않는다. EKS의 노드·ALB 보안 그룹과 포트 규칙은 EKS 담당 범위다. [네트워크 정의](seoul-vpc1-service/main.tf) · [EKS 연결 절차](README.md)
+- 서비스 VPC는 `enable_dns_support = true`, `enable_dns_hostnames = true`를 명시한다. 서브넷은 고정 IPv4 CIDR을 사용하고 IPv6 CIDR·IPv6 자동 할당·DNS64·서브넷별 DNS 호스트 이름 옵션은 코드에서 따로 설정하지 않는다. 커스텀 네트워크 ACL·ACL 연결도 정의하지 않는다. 내부 ALB의 보안 그룹과 443 리스너는 운영 Terraform 루트가 관리한다. [네트워크 정의](seoul-vpc1-service/main.tf) · [EKS 연결 절차](README.md)
 - AWS 예약 IPv4 5개를 제외한 서브넷당 할당 가능 주소는 `/24`에서 251개, `/27`에서 27개다. 배포 시 실제 여유량은 `AvailableIpAddressCount`로 확인한다. ALB에 쓰는 **두 앱 서브넷 각각**에 최소 8개의 빈 IPv4 주소가 필요하다. [AWS 서브넷 주소 규칙](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html) · [ALB 서브넷 요건](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html#subnets-load-balancer)
 
 ## EKS 담당자가 코드에서 사용할 값
@@ -58,7 +58,7 @@ EKS 담당자는 클러스터와 노드 그룹의 `tags`에 `project = "petclini
 | `public_subnet_ids`, `db_subnet_ids` | 각각 `[public_1, public_2]`, `[db_1, db_2]`. 퍼블릭 경로와 DB 서브넷 그룹에 쓰는 별도 목록이다. |
 | `management_vpc_id`, `management_subnet_id`, `management_public_subnet_id` | 서울 관리 VPC, 기존 프라이빗 서브넷, 빌드용 퍼블릭 서브넷의 ID다. |
 
-같은 Terraform 루트에서 EKS 모듈을 호출할 때는 `module.seoul_vpc1.service_vpc_id`, `module.seoul_vpc1.app_subnet_ids`를 입력으로 연결한다. 다른 작업 디렉터리에서는 운영 루트의 출력을 전달받는다. 아래 조회 명령은 저장소 루트에서 실행하며, 마지막 줄은 Ingress에 바로 넣을 쉼표 구분 ID를 반환한다. [네트워크 모듈 출력](seoul-vpc1-service/outputs.tf) · [운영 루트 출력](outputs.tf)
+같은 Terraform 루트에서 EKS 모듈을 호출할 때는 `module.seoul_vpc1.service_vpc_id`, `module.seoul_vpc1.app_subnet_ids`를 입력으로 연결한다. 다른 작업 디렉터리에서는 운영 루트의 출력을 전달받는다. 아래 조회 명령은 저장소 루트에서 실행하며, 마지막 줄은 공유할 서브넷 ID를 쉼표로 구분해 출력한다. [네트워크 모듈 출력](seoul-vpc1-service/outputs.tf) · [운영 루트 출력](outputs.tf)
 
 ```sh
 terraform -chdir=infra/envs/aws-prod output -raw service_vpc_id
@@ -66,7 +66,9 @@ terraform -chdir=infra/envs/aws-prod output -json app_subnet_ids
 terraform -chdir=infra/envs/aws-prod output -json app_subnet_ids | jq -r 'join(",")'
 ```
 
-현재 서브넷 코드에는 `kubernetes.io/role/internal-elb`, `kubernetes.io/role/elb`, `kubernetes.io/cluster/<cluster-name>` 태그가 없다. 팀 구성은 AWS Load Balancer Controller가 두 앱 서브넷을 명시적으로 사용하도록 한다. 아래는 EKS Terraform에서 Ingress의 `metadata.annotations`에 전달할 예시다. `var.app_subnet_ids`에는 위 목록을 넣는다. ALB의 공통 태그는 컨트롤러가 생성하는 AWS 자원에 적용된다. [EKS의 ALB 서브넷 선택](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html) · [컨트롤러 어노테이션](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/ingress/annotations/)
+운영 Terraform 루트는 `app_subnet_ids`로 내부 ALB의 두 서브넷을 직접 지정한다. `seoul_internal_alb` 출력에서 기존 ALB 및 리스너 ARN을 조회할 수 있다. 리스너는 서울 ACM 인증서로 HTTPS 443을 받고, 앱 대상 그룹 연결 전에는 고정 응답 503을 반환한다. CloudFront 오리진 연결과 앱 대상 등록은 후속 작업이다. [내부 ALB 정의](internal-alb.tf) · [운영 루트 출력](outputs.tf)
+
+현재 서브넷 코드에는 `kubernetes.io/role/internal-elb`, `kubernetes.io/role/elb`, `kubernetes.io/cluster/<cluster-name>` 태그가 없다. 아래 Ingress 예시는 컨트롤러로 별도 ALB를 생성하는 경우의 참고용이다. 운영 ALB는 위 Terraform 리소스가 관리한다. `var.app_subnet_ids`에는 위 목록을 넣는다. ALB의 공통 태그는 컨트롤러가 생성하는 AWS 자원에 적용된다. [EKS의 ALB 서브넷 선택](https://docs.aws.amazon.com/eks/latest/userguide/alb-ingress.html) · [컨트롤러 어노테이션](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/ingress/annotations/)
 
 ```hcl
 locals {
@@ -77,5 +79,3 @@ locals {
   }
 }
 ```
-
-EKS 담당자는 ALB·리스너·대상 그룹과 보안 그룹을 관리한다. ALB에 HTTP 80 리스너를 만들고, ALB 보안 그룹에는 CloudFront의 `com.amazonaws.global.cloudfront.origin-facing` 접두사 목록에서 오는 TCP 80을 허용한다. 대상이 정상 상태가 되면 **ALB ARN**을 운영 루트의 `eks_alb_arn`에 전달한다. 운영 루트는 서울 서비스 VPC에 속한 내부 Application Load Balancer인지 검사한 뒤 VPC Origin을 생성하고 CloudFront를 활성화한다. [ALB 검증과 VPC Origin](edge/vpc-origin.tf) · [CloudFront 배포](edge/cloudfront.tf) · [담당자별 절차](README.md)
