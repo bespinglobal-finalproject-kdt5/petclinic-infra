@@ -1,0 +1,3 @@
+variable "management_peer_id" {
+  type = string
+}
