@@ -41,14 +41,9 @@ output "internal_alb_dns_name" {
   value       = module.edge.internal_alb_dns_name
 }
 
-output "seoul_internal_alb" {
-  description = "Terraform-managed Seoul ALB and its HTTPS listener."
-  value = {
-    arn             = aws_lb.internal.arn
-    dns_name        = aws_lb.internal.dns_name
-    listener_arn    = aws_lb_listener.internal_https.arn
-    certificate_arn = module.edge.alb_certificate_arn
-  }
+output "seoul_alb_certificate_arn" {
+  description = "Validated Seoul ACM certificate for the EKS-managed ALB HTTPS listener."
+  value       = module.edge.alb_certificate_arn
 }
 
 output "management_public_subnet_id" {

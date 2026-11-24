@@ -19,13 +19,13 @@
 | `aws_account_id` | 승인된 운영 AWS 계정의 12자리 ID |
 | `aws_region` | `ap-northeast-2` |
 | `availability_zones` | 서로 다른 서울 표준 AZ 2개. 운영 순서는 2a, 2c이며 관리 VPC의 두 서브넷은 첫 번째 AZ를 사용한다. |
-| `eks_alb_arn` | CloudFront VPC Origin 활성화 입력. 서울 ALB만 배포하는 단계에서는 기본값 `null`을 사용한다. |
+| `eks_alb_arn` | CloudFront VPC Origin 활성화 입력. EKS 담당자가 생성한 내부 ALB와 정상 앱 타깃을 확인할 때까지 기본값 `null`을 사용한다. |
 
 | 작업 | 루트 출력 |
 |---|---|
 | 서비스 VPC 조회 및 EKS·DB 서브넷 전달 | `service_vpc_id`, `app_subnet_ids`, `db_subnet_ids`, `public_subnet_ids` |
 | 관리 VPC 및 두 서브넷 조회 | `management_vpc_id`, `management_subnet_id`(프라이빗), `management_public_subnet_id`(퍼블릭) |
-| 서울 내부 ALB 인수 | `seoul_internal_alb`의 ARN, DNS 이름, HTTPS 리스너 ARN, 서울 인증서 ARN |
+| EKS 관리 ALB의 HTTPS 443 인증서 | `seoul_alb_certificate_arn` |
 | SSM 접속 대상 조회 | `build_instance_id`, `management_instance_id` |
 | 서비스 진입점 조회 | `public_url`, `cloudfront_distribution_id`, `cloudfront_domain_name`, ALB 연결 후 `internal_alb_dns_name` |
 
@@ -35,9 +35,9 @@
 
 `mission-critical.site`의 기존 퍼블릭 호스팅 영역을 import하고 A·AAAA 별칭을 CloudFront로 연결한다. DNS 검증 CNAME과 `us-east-1`의 ACM 인증서를 관리한다. 기본값 `eks_alb_arn = null`에서는 CloudFront가 비활성이고 VPC Origin이 없다. 배포 구성의 임시 원본 이름은 `origin-pending.mission-critical.site`이며 해당 이름에 DNS 레코드는 생성하지 않는다. [영역 import](imports.tf) · [Route 53](edge/dns.tf) · [ACM과 DNS 검증](edge/acm.tf) · [CloudFront 배포](edge/cloudfront.tf) · [EKS ALB와 VPC Origin](edge/vpc-origin.tf)
 
-운영 Terraform 루트가 서울 서비스 VPC의 2a·2c 프라이빗 앱 서브넷에 내부 ALB를 배치한다. 서울 ACM은 같은 계정·도메인에 이미 등록된 검증 CNAME을 재사용한다. HTTPS 443 리스너는 서울 인증서를 사용하고, ALB 보안 그룹은 CloudFront 오리진 접두사 목록에서 오는 TCP 443을 허용한다. 앱 대상 그룹을 연결하기 전에는 리스너가 고정 응답 HTTP 503을 반환한다. [ALB·리스너·보안 그룹](internal-alb.tf) · [인증서](edge/acm.tf)
+EKS 담당자가 AWS Load Balancer Controller를 통해 두 프라이빗 앱 서브넷에 내부 ALB를 생성하고 앱 타깃을 연결한다. 서울 ACM 인증서와 DNS 검증 CNAME은 이 Terraform 구성이 관리한다. 443 리스너에 사용할 인증서 ARN은 `terraform -chdir=infra/envs/aws-prod output -raw seoul_alb_certificate_arn`으로 조회한다. [인증서](edge/acm.tf) · [운영 출력](outputs.tf)
 
-인수 값은 `terraform -chdir=infra/envs/aws-prod output -json seoul_internal_alb`로 조회한다. CloudFront의 실제 VPC Origin 정책은 현재 `http-only`다. 이 ALB를 오리진으로 활성화하는 후속 작업에서 HTTPS 정책과 인증서 이름 검증 방식을 먼저 맞춘다. [VPC Origin 정책](edge/vpc-origin.tf)
+CloudFront 활성화 전에는 새 ALB의 HTTPS 443 리스너, 앱 대상 그룹의 정상 타깃과 앱 응답을 확인한다. 현재 VPC Origin 정책은 `http-only`다. 443으로 전환할 때는 `https-only` 정책과 인증서가 유효한 오리진 호스트 이름을 구성한 뒤 `eks_alb_arn`을 지정한다. [VPC Origin 정책](edge/vpc-origin.tf)
 
 별도 EKS 구성의 팀 인수 기준은 제어 영역·관리형 노드 Kubernetes 1.36, 노드 이미지 AL2023 x86_64, kubectl 1.36.x다. AMI 릴리스와 VPC CNI 빌드는 EKS 담당자가 서울에서 검증해 고정한다. Helm, Load Balancer Controller, Gateway API와 ESO 버전은 별도 통합 시험 대상이다. [EKS 담당자용 서브넷·ALB 인수 정보](SUBNET-RULES.md)
 
