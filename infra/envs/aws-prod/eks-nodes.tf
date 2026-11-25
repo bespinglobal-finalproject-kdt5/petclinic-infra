@@ -21,7 +21,7 @@ resource "aws_eks_node_group" "app" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "app"
   node_role_arn   = aws_iam_role.node.arn
-  subnet_ids      = module.seoul_vpc1.app_subnet_ids
+  subnet_ids      = sort(tolist(local.private_subnet_ids))
   version         = var.kubernetes_version
   ami_type        = "AL2023_x86_64_STANDARD"
   release_version = var.node_release_version
