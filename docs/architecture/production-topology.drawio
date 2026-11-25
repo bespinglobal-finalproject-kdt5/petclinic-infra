@@ -1,0 +1,482 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" pages="1">
+  <diagram id="prod-live-topology" name="PetClinic 운영 토폴로지">
+    <mxGraphModel dx="2800" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="0" page="1" pageScale="1" pageWidth="2400" pageHeight="1710" background="#F8FAFA" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="paper" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8FAFA;strokeColor=none;locked=1;connectable=0;" value="">
+          <mxGeometry as="geometry" x="0" y="0" width="2400" height="1710" />
+        </mxCell>
+        <mxCell id="title" parent="1" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=50;fontStyle=1;fontColor=#152C40;" value="PetClinic 운영 토폴로지">
+          <mxGeometry as="geometry" x="57" y="53" width="1210" height="74" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=19;fontStyle=1;fontColor=#2A6B8A;" value="PETCLINIC   /   AWS PRODUCTION">
+          <mxGeometry as="geometry" x="60" y="17" width="1040" height="40" />
+        </mxCell>
+        <mxCell id="snapshot" parent="1" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=right;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=25;fontStyle=1;fontColor=#152C40;" value="2026.11.25 KST  ·  운영 확인">
+          <mxGeometry as="geometry" x="1530" y="49" width="812" height="40" />
+        </mxCell>
+        <mxCell id="source" parent="1" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=right;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="AWS · Kubernetes 실측   /   Terraform e6cb3dc">
+          <mxGeometry as="geometry" x="1530" y="95" width="812" height="30" />
+        </mxCell>
+        <mxCell id="top-rule" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#152C40;strokeColor=none;" value="">
+          <mxGeometry as="geometry" x="58" y="145" width="2284" height="2" />
+        </mxCell>
+        <mxCell id="edge-services" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#99A8B0;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="58" y="176" width="1497" height="253" />
+        </mxCell>
+        <mxCell id="edge-title" parent="edge-services" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=26;fontStyle=1;fontColor=#152C40;" value="도메인과 CloudFront">
+          <mxGeometry as="geometry" x="25" y="12" width="880" height="37" />
+        </mxCell>
+        <mxCell id="dns" parent="edge-services" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.route_53;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="209" y="75" width="68" height="68" />
+        </mxCell>
+        <mxCell id="dns-name" parent="dns" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=21;fontStyle=1;fontColor=#152C40;" value="Route 53">
+          <mxGeometry as="geometry" x="-146.0" y="77" width="360" height="31" />
+        </mxCell>
+        <mxCell id="dns-detail" parent="dns" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="mission-critical.site">
+          <mxGeometry as="geometry" x="-146.0" y="110" width="360" height="25" />
+        </mxCell>
+        <mxCell id="cloudfront" parent="edge-services" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudfront;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="690" y="75" width="68" height="68" />
+        </mxCell>
+        <mxCell id="cloudfront-name" parent="cloudfront" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=21;fontStyle=1;fontColor=#152C40;" value="CloudFront · 비활성">
+          <mxGeometry as="geometry" x="-176.0" y="77" width="420" height="31" />
+        </mxCell>
+        <mxCell id="cloudfront-detail" parent="cloudfront" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="비활성 배포 · VPC 오리진 0개">
+          <mxGeometry as="geometry" x="-176.0" y="110" width="420" height="25" />
+        </mxCell>
+        <mxCell id="acm" parent="edge-services" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.certificate_manager_3;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#DD344C;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="1187" y="75" width="68" height="68" />
+        </mxCell>
+        <mxCell id="acm-name" parent="acm" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=21;fontStyle=1;fontColor=#152C40;" value="ACM · 뷰어 인증서">
+          <mxGeometry as="geometry" x="-156.0" y="77" width="380" height="31" />
+        </mxCell>
+        <mxCell id="acm-detail" parent="acm" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="버지니아 북부 · us-east-1">
+          <mxGeometry as="geometry" x="-156.0" y="110" width="380" height="25" />
+        </mxCell>
+        <mxCell id="osaka" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#99A8B0;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="1581" y="176" width="761" height="122" />
+        </mxCell>
+        <mxCell id="osaka-title" parent="osaka" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=26;fontStyle=1;fontColor=#152C40;" value="오사카  ·  ap-northeast-3">
+          <mxGeometry as="geometry" x="26" y="5" width="700" height="37" />
+        </mxCell>
+        <mxCell id="s3" parent="osaka" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#7AA116;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="33" y="55" width="48" height="48" />
+        </mxCell>
+        <mxCell id="s3-name" parent="s3" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="S3 · Terraform 원격 상태">
+          <mxGeometry as="geometry" x="77" y="-6" width="570" height="30" />
+        </mxCell>
+        <mxCell id="s3-detail" parent="s3" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="운영 state와 잠금 파일 저장">
+          <mxGeometry as="geometry" x="77" y="23" width="570" height="27" />
+        </mxCell>
+        <mxCell id="seoul-heading" parent="1" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=30;fontStyle=1;fontColor=#152C40;" value="서울  ·  ap-northeast-2">
+          <mxGeometry as="geometry" x="58" y="713.0" width="670" height="48" />
+        </mxCell>
+        <mxCell id="reading" parent="1" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=right;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=0;fontColor=#4B6270;" value="프라이빗 EKS API · 프라이빗 RDS">
+          <mxGeometry as="geometry" x="1560" y="723.0" width="782" height="37" />
+        </mxCell>
+        <mxCell id="management" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7541A8;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="58" y="789.0" width="610" height="710" />
+        </mxCell>
+        <mxCell id="service" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#7541A8;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="860" y="789.0" width="1482" height="710" />
+        </mxCell>
+        <mxCell id="management-mark" parent="management" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#7541A8;strokeColor=none;" value="">
+          <mxGeometry as="geometry" x="0" y="0" width="75" height="3" />
+        </mxCell>
+        <mxCell id="management-title" parent="management" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=31;fontStyle=1;fontColor=#152C40;" value="관리 VPC">
+          <mxGeometry as="geometry" x="25" y="13" width="561" height="42" />
+        </mxCell>
+        <mxCell id="management-address" parent="management" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=19;fontStyle=0;fontColor=#7541A8;" value="10.20.0.0/24   ·   ap-northeast-2a">
+          <mxGeometry as="geometry" x="26" y="56" width="561" height="29" />
+        </mxCell>
+        <mxCell id="service-mark" parent="service" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#7541A8;strokeColor=none;" value="">
+          <mxGeometry as="geometry" x="0" y="0" width="75" height="3" />
+        </mxCell>
+        <mxCell id="service-title" parent="service" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=31;fontStyle=1;fontColor=#152C40;" value="서비스 VPC">
+          <mxGeometry as="geometry" x="25" y="13" width="1433" height="42" />
+        </mxCell>
+        <mxCell id="service-address" parent="service" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=19;fontStyle=0;fontColor=#7541A8;" value="10.10.0.0/22   ·   ap-northeast-2a / 2c">
+          <mxGeometry as="geometry" x="26" y="56" width="1433" height="29" />
+        </mxCell>
+        <mxCell id="cluster-ops-heading" parent="service" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=1;fontColor=#2A6B8A;" value="EKS 운영 구성">
+          <mxGeometry as="geometry" x="582" y="22" width="854" height="29" />
+        </mxCell>
+        <mxCell id="cluster-ops" parent="service" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="CloudWatch 컨트롤 플레인 로그 · 보존 7일    /    로드 밸런서 컨트롤러 · IRSA">
+          <mxGeometry as="geometry" x="582" y="56" width="865" height="29" />
+        </mxCell>
+        <mxCell id="mg-private" parent="management" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#93B1BE;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="24" y="100" width="562" height="251" />
+        </mxCell>
+        <mxCell id="mg-private-caption" parent="mg-private" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#2A6B8A;" value="관리 프라이빗  ·  10.20.0.0/27">
+          <mxGeometry as="geometry" x="16" y="5" width="535" height="26" />
+        </mxCell>
+        <mxCell id="ssm-endpoints" parent="mg-private" vertex="1" style="shape=mxgraph.aws4.endpoints;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="90" y="72" width="64" height="64" />
+        </mxCell>
+        <mxCell id="ssm-endpoints-name" parent="ssm-endpoints" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=20;fontStyle=1;fontColor=#152C40;" value="SSM 엔드포인트">
+          <mxGeometry as="geometry" x="-87.5" y="75" width="239" height="31" />
+        </mxCell>
+        <mxCell id="ssm-endpoints-detail" parent="ssm-endpoints" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="ssm · ssmmessages">
+          <mxGeometry as="geometry" x="-87.5" y="108" width="239" height="25" />
+        </mxCell>
+        <mxCell id="management-ec2" parent="mg-private" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#ED7100;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="361" y="72" width="64" height="64" />
+        </mxCell>
+        <mxCell id="management-ec2-name" parent="management-ec2" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=20;fontStyle=1;fontColor=#152C40;" value="관리 EC2">
+          <mxGeometry as="geometry" x="-90.5" y="75" width="245" height="31" />
+        </mxCell>
+        <mxCell id="management-ec2-detail" parent="management-ec2" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="10.20.0.18 · kubectl">
+          <mxGeometry as="geometry" x="-90.5" y="108" width="245" height="25" />
+        </mxCell>
+        <mxCell id="mg-public" parent="management" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#91AB89;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="24" y="377" width="562" height="194" />
+        </mxCell>
+        <mxCell id="mg-public-caption" parent="mg-public" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#43783E;" value="관리 퍼블릭  ·  10.20.0.32/27">
+          <mxGeometry as="geometry" x="16" y="5" width="535" height="26" />
+        </mxCell>
+        <mxCell id="build" parent="mg-public" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#ED7100;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="92" y="49" width="60" height="60" />
+        </mxCell>
+        <mxCell id="build-name" parent="build" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=19;fontStyle=1;fontColor=#152C40;" value="빌드 EC2 · m7i.large">
+          <mxGeometry as="geometry" x="-92.5" y="63" width="245" height="31" />
+        </mxCell>
+        <mxCell id="build-detail" parent="build" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="고정 공인 IP · SSH 22">
+          <mxGeometry as="geometry" x="-92.5" y="89" width="245" height="25" />
+        </mxCell>
+        <mxCell id="mgmt-nat" parent="mg-public" vertex="1" style="shape=mxgraph.aws4.nat_gateway;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="363" y="49" width="60" height="60" />
+        </mxCell>
+        <mxCell id="mgmt-nat-name" parent="mgmt-nat" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=19;fontStyle=1;fontColor=#152C40;" value="관리 NAT Gateway">
+          <mxGeometry as="geometry" x="-97.5" y="63" width="255" height="31" />
+        </mxCell>
+        <mxCell id="mgmt-nat-detail" parent="mgmt-nat" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="Elastic IP">
+          <mxGeometry as="geometry" x="-97.5" y="96" width="255" height="25" />
+        </mxCell>
+        <mxCell id="mgmt-igw" parent="management" vertex="1" style="shape=mxgraph.aws4.internet_gateway;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="51" y="612" width="57" height="57" />
+        </mxCell>
+        <mxCell id="mgmt-igw-name" parent="mgmt-igw" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=20;fontStyle=1;fontColor=#152C40;" value="관리 Internet Gateway">
+          <mxGeometry as="geometry" x="82" y="-7" width="440" height="30" />
+        </mxCell>
+        <mxCell id="mgmt-igw-detail" parent="mgmt-igw" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="관리 퍼블릭 서브넷의 기본 경로">
+          <mxGeometry as="geometry" x="82" y="27" width="440" height="27" />
+        </mxCell>
+        <mxCell id="peer" parent="1" vertex="1" style="shape=mxgraph.aws4.peering;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="734" y="966.0" width="54" height="54" />
+        </mxCell>
+        <mxCell id="peer-name" parent="peer" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=20;fontStyle=1;fontColor=#152C40;" value="VPC 피어링">
+          <mxGeometry as="geometry" x="-57.5" y="73" width="169" height="31" />
+        </mxCell>
+        <mxCell id="peer-detail" parent="peer" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="active">
+          <mxGeometry as="geometry" x="-57.5" y="106" width="169" height="25" />
+        </mxCell>
+        <mxCell id="eks" parent="service" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#ED7100;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="93" y="168" width="72" height="72" />
+        </mxCell>
+        <mxCell id="eks-name" parent="eks" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=22;fontStyle=1;fontColor=#152C40;" value="EKS 프라이빗 API">
+          <mxGeometry as="geometry" x="94" y="-6" width="365" height="30" />
+        </mxCell>
+        <mxCell id="eks-detail" parent="eks" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="petclinic-prod-eks · v1.36">
+          <mxGeometry as="geometry" x="94" y="28" width="365" height="27" />
+        </mxCell>
+        <mxCell id="eks-more" parent="eks" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=16;fontStyle=0;fontColor=#4B6270;" value="관리 EC2의 IP에서 TCP 443 허용">
+          <mxGeometry as="geometry" x="94" y="58" width="370" height="27" />
+        </mxCell>
+        <mxCell id="svc-igw" parent="service" vertex="1" style="shape=mxgraph.aws4.internet_gateway;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="580" y="173" width="62" height="62" />
+        </mxCell>
+        <mxCell id="svc-igw-name" parent="svc-igw" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=19;fontStyle=1;fontColor=#152C40;" value="서비스 Internet Gateway">
+          <mxGeometry as="geometry" x="81" y="-10" width="326" height="30" />
+        </mxCell>
+        <mxCell id="svc-igw-detail" parent="svc-igw" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="퍼블릭 서브넷 기본 경로">
+          <mxGeometry as="geometry" x="81" y="24" width="326" height="27" />
+        </mxCell>
+        <mxCell id="db-note-rule" parent="service" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#498577;strokeColor=none;" value="">
+          <mxGeometry as="geometry" x="1000" y="132" width="3" height="127" />
+        </mxCell>
+        <mxCell id="db-note" parent="service" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#256F63;" value="데이터베이스 접근">
+          <mxGeometry as="geometry" x="1022" y="139" width="425" height="35" />
+        </mxCell>
+        <mxCell id="db-note-body" parent="service" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="REST와 관리 EC2의 5432 연결 확인.&lt;br&gt;빌드 EC2는 RDS 수신 규칙만 허용.">
+          <mxGeometry as="geometry" x="1022" y="182" width="426" height="83" />
+        </mxCell>
+        <mxCell id="az-a" parent="service" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#BFCBD1;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;dashed=1;dashPattern=5 4;" value="">
+          <mxGeometry as="geometry" x="21" y="300" width="1440" height="190" />
+        </mxCell>
+        <mxCell id="az-a-label" parent="az-a" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=27;fontStyle=1;fontColor=#152C40;" value="2a">
+          <mxGeometry as="geometry" x="9" y="36" width="68" height="46" />
+        </mxCell>
+        <mxCell id="az-a-tag" parent="az-a" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=16;fontStyle=1;fontColor=#4B6270;" value="AZ">
+          <mxGeometry as="geometry" x="9" y="85" width="68" height="26" />
+        </mxCell>
+        <mxCell id="a-pub" parent="az-a" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#91AB89;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="87" y="12" width="391" height="165" />
+        </mxCell>
+        <mxCell id="a-pub-caption" parent="a-pub" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#43783E;" value="퍼블릭  ·  10.10.2.0/27">
+          <mxGeometry as="geometry" x="16" y="5" width="364" height="26" />
+        </mxCell>
+        <mxCell id="a-app" parent="az-a" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#93B1BE;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="493" y="12" width="427" height="165" />
+        </mxCell>
+        <mxCell id="a-app-caption" parent="a-app" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#2A6B8A;" value="앱 프라이빗  ·  10.10.0.0/24">
+          <mxGeometry as="geometry" x="16" y="5" width="400" height="26" />
+        </mxCell>
+        <mxCell id="a-db" parent="az-a" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#93B1BE;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="937" y="12" width="486" height="165" />
+        </mxCell>
+        <mxCell id="a-db-caption" parent="a-db" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#2A6B8A;" value="DB 프라이빗  ·  10.10.2.64/27">
+          <mxGeometry as="geometry" x="135" y="5" width="335" height="26" />
+        </mxCell>
+        <mxCell id="node-a" parent="a-app" vertex="1" style="shape=mxgraph.aws4.instance2;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#ED7100;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="187" y="44" width="54" height="54" />
+        </mxCell>
+        <mxCell id="node-a-name" parent="node-a" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=1;fontColor=#152C40;" value="EKS 워커 노드">
+          <mxGeometry as="geometry" x="-143.0" y="57" width="340" height="31" />
+        </mxCell>
+        <mxCell id="node-a-detail" parent="node-a" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="t3.medium  ·  REST Pod 1개">
+          <mxGeometry as="geometry" x="-143.0" y="90" width="340" height="25" />
+        </mxCell>
+        <mxCell id="az-c" parent="service" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#BFCBD1;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;dashed=1;dashPattern=5 4;" value="">
+          <mxGeometry as="geometry" x="21" y="498" width="1440" height="190" />
+        </mxCell>
+        <mxCell id="az-c-label" parent="az-c" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=27;fontStyle=1;fontColor=#152C40;" value="2c">
+          <mxGeometry as="geometry" x="9" y="36" width="68" height="46" />
+        </mxCell>
+        <mxCell id="az-c-tag" parent="az-c" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=16;fontStyle=1;fontColor=#4B6270;" value="AZ">
+          <mxGeometry as="geometry" x="9" y="85" width="68" height="26" />
+        </mxCell>
+        <mxCell id="c-pub" parent="az-c" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#91AB89;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="87" y="12" width="391" height="165" />
+        </mxCell>
+        <mxCell id="c-pub-caption" parent="c-pub" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#43783E;" value="퍼블릭  ·  10.10.2.32/27">
+          <mxGeometry as="geometry" x="16" y="5" width="364" height="26" />
+        </mxCell>
+        <mxCell id="c-app" parent="az-c" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#93B1BE;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="493" y="12" width="427" height="165" />
+        </mxCell>
+        <mxCell id="c-app-caption" parent="c-app" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#2A6B8A;" value="앱 프라이빗  ·  10.10.1.0/24">
+          <mxGeometry as="geometry" x="16" y="5" width="400" height="26" />
+        </mxCell>
+        <mxCell id="c-db" parent="az-c" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#93B1BE;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="937" y="12" width="486" height="165" />
+        </mxCell>
+        <mxCell id="c-db-caption" parent="c-db" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=1;fontColor=#2A6B8A;" value="DB 프라이빗  ·  10.10.2.96/27">
+          <mxGeometry as="geometry" x="135" y="5" width="335" height="26" />
+        </mxCell>
+        <mxCell id="node-c" parent="c-app" vertex="1" style="shape=mxgraph.aws4.instance2;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#ED7100;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="187" y="44" width="54" height="54" />
+        </mxCell>
+        <mxCell id="node-c-name" parent="node-c" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=1;fontColor=#152C40;" value="EKS 워커 노드">
+          <mxGeometry as="geometry" x="-143.0" y="57" width="340" height="31" />
+        </mxCell>
+        <mxCell id="node-c-detail" parent="node-c" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="t3.medium  ·  웹 Pod 2개">
+          <mxGeometry as="geometry" x="-143.0" y="90" width="340" height="25" />
+        </mxCell>
+        <mxCell id="svc-nat" parent="a-pub" vertex="1" style="shape=mxgraph.aws4.nat_gateway;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="168" y="44" width="54" height="54" />
+        </mxCell>
+        <mxCell id="svc-nat-name" parent="svc-nat" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=1;fontColor=#152C40;" value="서비스 NAT Gateway">
+          <mxGeometry as="geometry" x="-153.0" y="57" width="360" height="31" />
+        </mxCell>
+        <mxCell id="svc-nat-detail" parent="svc-nat" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="2a·2c 앱 서브넷의 공용 출구">
+          <mxGeometry as="geometry" x="-153.0" y="90" width="360" height="25" />
+        </mxCell>
+        <mxCell id="public-spare" parent="c-pub" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=20;fontStyle=1;fontColor=#152C40;" value="공개 ALB 서브넷">
+          <mxGeometry as="geometry" x="21" y="48" width="349" height="46" />
+        </mxCell>
+        <mxCell id="public-spare-desc" parent="c-pub" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="2a와 함께 사용 · 기본 경로 IGW">
+          <mxGeometry as="geometry" x="21" y="93" width="349" height="39" />
+        </mxCell>
+        <mxCell id="rds" parent="c-db" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#C925D1;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="45" y="44" width="54" height="54" />
+        </mxCell>
+        <mxCell id="rds-name" parent="rds" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=1;fontColor=#152C40;" value="RDS 주 인스턴스">
+          <mxGeometry as="geometry" x="85" y="1" width="345" height="31" />
+        </mxCell>
+        <mxCell id="rds-detail" parent="rds" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="petclinic-db · PostgreSQL 16.13">
+          <mxGeometry as="geometry" x="85" y="40" width="349" height="32" />
+        </mxCell>
+        <mxCell id="dns-alias" parent="1" edge="1" source="dns" target="cloudfront" value="A / AAAA 별칭" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="viewer-cert" parent="1" edge="1" source="acm" target="cloudfront" value="TLS 인증서" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="host-ssm" parent="1" edge="1" source="management-ec2" target="ssm-endpoints" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="host-peer" parent="1" edge="1" source="management-ec2" target="peer" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="peer-api" parent="1" edge="1" source="peer" target="eks" value="TCP 443" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seoul-acm" parent="1" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.certificate_manager_3;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#DD344C;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="840" y="705.0" width="62" height="62" />
+        </mxCell>
+        <mxCell id="seoul-acm-name" parent="seoul-acm" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="서울 ACM 인증서 · 발급 완료">
+          <mxGeometry as="geometry" x="85" y="-2" width="575" height="33" />
+        </mxCell>
+        <mxCell id="seoul-acm-detail" parent="seoul-acm" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="mission-critical.site · ALB HTTPS 리스너 미구성">
+          <mxGeometry as="geometry" x="85" y="33" width="585" height="27" />
+        </mxCell>
+        <mxCell id="rds-standby" parent="a-db" vertex="1" style="shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#C925D1;strokeColor=#ffffff;html=1;" value="">
+          <mxGeometry as="geometry" x="45" y="44" width="54" height="54" />
+        </mxCell>
+        <mxCell id="rds-standby-name" parent="rds-standby" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=18;fontStyle=1;fontColor=#152C40;" value="RDS 대기 인스턴스">
+          <mxGeometry as="geometry" x="85" y="1" width="345" height="31" />
+        </mxCell>
+        <mxCell id="rds-standby-detail" parent="rds-standby" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="Multi-AZ · 동기 복제">
+          <mxGeometry as="geometry" x="85" y="40" width="349" height="32" />
+        </mxCell>
+        <mxCell id="rds-replication" parent="1" edge="1" source="rds" target="rds-standby" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#7541A8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="app-path" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#4A7480;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="58" y="450" width="2284" height="225" />
+        </mxCell>
+        <mxCell id="app-heading" parent="app-path" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=26;fontStyle=1;fontColor=#152C40;" value="사용자 요청 경로">
+          <mxGeometry as="geometry" x="26" y="25" width="375" height="45" />
+        </mxCell>
+        <mxCell id="app-ns" parent="app-path" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=16;fontStyle=0;fontColor=#4B6270;" value="Kubernetes Gateway API">
+          <mxGeometry as="geometry" x="27" y="83" width="377" height="33" />
+        </mxCell>
+        <mxCell id="app-gw" parent="app-path" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=16;fontStyle=0;fontColor=#4B6270;" value="petclinic / petclinic-public">
+          <mxGeometry as="geometry" x="27" y="123" width="340" height="35" />
+        </mxCell>
+        <mxCell id="viewer" parent="app-path" vertex="1" style="shape=mxgraph.aws4.client;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#34495B;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="457" y="72" width="68" height="68" />
+        </mxCell>
+        <mxCell id="viewer-name" parent="viewer" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=21;fontStyle=1;fontColor=#152C40;" value="인터넷 사용자">
+          <mxGeometry as="geometry" x="-115" y="74" width="298" height="32" />
+        </mxCell>
+        <mxCell id="public-alb" parent="app-path" vertex="1" style="shape=mxgraph.aws4.application_load_balancer;sketch=0;outlineConnect=0;aspect=fixed;fillColor=#8C4FFF;strokeColor=none;html=1;" value="">
+          <mxGeometry as="geometry" x="871" y="72" width="68" height="68" />
+        </mxCell>
+        <mxCell id="alb-name" parent="public-alb" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=21;fontStyle=1;fontColor=#152C40;" value="공개 ALB · HTTP 80">
+          <mxGeometry as="geometry" x="-144" y="73" width="356" height="33" />
+        </mxCell>
+        <mxCell id="alb-detail" parent="public-alb" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=center;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="ALB 주소로 접근 · 2a / 2c">
+          <mxGeometry as="geometry" x="-169" y="106" width="406" height="28" />
+        </mxCell>
+        <mxCell id="rest-target" parent="app-path" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#779AA6;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="1298" y="20" width="430" height="78" />
+        </mxCell>
+        <mxCell id="rest-target-name" parent="rest-target" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="Spring REST · 정상 1개">
+          <mxGeometry as="geometry" x="18" y="5" width="400" height="33" />
+        </mxCell>
+        <mxCell id="rest-target-desc" parent="rest-target" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="2a  ·  Service 9966  /  Pod 9966">
+          <mxGeometry as="geometry" x="19" y="41" width="398" height="29" />
+        </mxCell>
+        <mxCell id="web-target" parent="app-path" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#779AA6;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="1298" y="125" width="430" height="78" />
+        </mxCell>
+        <mxCell id="web-target-name" parent="web-target" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="Angular 웹 · 정상 2개">
+          <mxGeometry as="geometry" x="18" y="5" width="400" height="33" />
+        </mxCell>
+        <mxCell id="web-target-desc" parent="web-target" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="2c  ·  Service 80  /  Pod 8080">
+          <mxGeometry as="geometry" x="19" y="41" width="398" height="29" />
+        </mxCell>
+        <mxCell id="db-policy" parent="app-path" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#498577;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="1958" y="20" width="300" height="78" />
+        </mxCell>
+        <mxCell id="db-policy-name" parent="db-policy" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="RDS PostgreSQL">
+          <mxGeometry as="geometry" x="18" y="5" width="270" height="33" />
+        </mxCell>
+        <mxCell id="db-policy-desc" parent="db-policy" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="REST 연결 확인">
+          <mxGeometry as="geometry" x="19" y="41" width="268" height="29" />
+        </mxCell>
+        <mxCell id="viewer-http" parent="app-path" edge="1" source="viewer" target="public-alb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;" value="HTTP 80">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-12" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alb-rest" parent="app-path" edge="1" source="public-alb" target="rest-target" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;" value="/petclinic/api/*">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-12" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="alb-web" parent="app-path" edge="1" source="public-alb" target="web-target" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;" value="/*">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-12" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rest-to-db" parent="app-path" edge="1" source="rest-target" target="db-policy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#256F63;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#256F63;" value="TCP 5432">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-12" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="azure" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#99A8B0;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;dashed=1;dashPattern=7 4;" value="">
+          <mxGeometry as="geometry" x="1581" y="312" width="761" height="117" />
+        </mxCell>
+        <mxCell id="azure-title" parent="azure" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=26;fontStyle=1;fontColor=#152C40;" value="Azure DR · 계획">
+          <mxGeometry as="geometry" x="26" y="10" width="705" height="36" />
+        </mxCell>
+        <mxCell id="azure-detail" parent="azure" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="10.30.0.0/24 주소 예약 · 클라우드 간 DB 복제 미구성">
+          <mxGeometry as="geometry" x="27" y="61" width="707" height="28" />
+        </mxCell>
+        <mxCell id="mgmt-path" parent="1" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#4A7480;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="58" y="1523" width="2284" height="144" />
+        </mxCell>
+        <mxCell id="mgmt-flow-title" parent="mgmt-path" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=26;fontStyle=1;fontColor=#152C40;" value="관리 서버의 DB 접속">
+          <mxGeometry as="geometry" x="25" y="22" width="385" height="39" />
+        </mxCell>
+        <mxCell id="mgmt-flow-detail" parent="mgmt-path" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=16;fontStyle=0;fontColor=#4B6270;" value="PostgreSQL 응답 확인">
+          <mxGeometry as="geometry" x="26" y="78" width="375" height="32" />
+        </mxCell>
+        <mxCell id="from-host" parent="mgmt-path" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#498577;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="440" y="29" width="340" height="84" />
+        </mxCell>
+        <mxCell id="from-host-label" parent="from-host" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="관리 EC2">
+          <mxGeometry as="geometry" x="17" y="6" width="310" height="32" />
+        </mxCell>
+        <mxCell id="from-host-detail" parent="from-host" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="사설 IP 10.20.0.18">
+          <mxGeometry as="geometry" x="18" y="43" width="310" height="26" />
+        </mxCell>
+        <mxCell id="via-peer" parent="mgmt-path" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#498577;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="996" y="29" width="350" height="84" />
+        </mxCell>
+        <mxCell id="via-peer-label" parent="via-peer" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="서울 VPC 피어링">
+          <mxGeometry as="geometry" x="17" y="6" width="320" height="32" />
+        </mxCell>
+        <mxCell id="via-peer-detail" parent="via-peer" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="관리 VPC ↔ 서비스 VPC">
+          <mxGeometry as="geometry" x="18" y="43" width="320" height="26" />
+        </mxCell>
+        <mxCell id="db-return" parent="mgmt-path" vertex="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#498577;container=1;dropTarget=1;collapsible=0;recursiveResize=0;strokeWidth=1.6;" value="">
+          <mxGeometry as="geometry" x="1576" y="29" width="679" height="84" />
+        </mxCell>
+        <mxCell id="db-return-label" parent="db-return" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=23;fontStyle=1;fontColor=#152C40;" value="RDS · 두 DB 서브넷">
+          <mxGeometry as="geometry" x="17" y="6" width="649" height="32" />
+        </mxCell>
+        <mxCell id="db-return-detail" parent="db-return" vertex="1" style="text;html=1;whiteSpace=wrap;overflow=visible;align=left;verticalAlign=middle;spacing=0;strokeColor=none;fillColor=none;fontFamily=Noto Sans CJK KR;fontSize=17;fontStyle=0;fontColor=#4B6270;" value="응답 목적지 10.20.0.18/32 → 같은 피어링">
+          <mxGeometry as="geometry" x="18" y="43" width="649" height="26" />
+        </mxCell>
+        <mxCell id="m-db-peer" parent="mgmt-path" edge="1" source="from-host" target="via-peer" value="TCP 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-peer-db" parent="mgmt-path" edge="1" source="via-peer" target="db-return" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;html=1;strokeWidth=2.5;strokeColor=#3E6273;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=1;endSize=10;labelBackgroundColor=#F8FAFA;fontFamily=Noto Sans CJK KR;fontSize=16;fontColor=#3E6273;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="offset" y="-15" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
