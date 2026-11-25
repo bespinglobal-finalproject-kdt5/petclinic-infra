@@ -51,6 +51,22 @@ resource "aws_vpc_security_group_ingress_rule" "management_api" {
   to_port           = 443
 }
 
+resource "aws_vpc_security_group_ingress_rule" "rds_from_eks" {
+  security_group_id            = module.seoul_vpc1.rds_security_group_id
+  referenced_security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  description                  = "Allow PostgreSQL from the PetClinic EKS cluster security group"
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+
+  tags = {
+    project     = "petclinic"
+    environment = "prod"
+    component   = "database"
+    Name        = "petclinic-prod-rds-from-eks"
+  }
+}
+
 resource "aws_eks_access_entry" "admin" {
   for_each      = local.cluster_admins
   cluster_name  = aws_eks_cluster.this.name

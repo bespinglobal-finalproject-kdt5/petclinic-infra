@@ -85,6 +85,39 @@ run "plan_eks_before_subnet_ids_and_role_arn_are_assigned" {
   }
 }
 
+run "postgres_from_eks_cluster_security_group" {
+  command = plan
+
+  plan_options {
+    target = [aws_vpc_security_group_ingress_rule.rds_from_eks]
+  }
+
+  override_resource {
+    target          = aws_eks_cluster.this
+    override_during = plan
+    values = {
+      vpc_config = { cluster_security_group_id = "sg-00000000000000001" }
+    }
+  }
+
+  override_resource {
+    target          = module.seoul_vpc1.aws_security_group.rds
+    override_during = plan
+    values          = { id = "sg-00000000000000002" }
+  }
+
+  assert {
+    condition = (
+      aws_vpc_security_group_ingress_rule.rds_from_eks.security_group_id == "sg-00000000000000002" &&
+      aws_vpc_security_group_ingress_rule.rds_from_eks.referenced_security_group_id == "sg-00000000000000001" &&
+      aws_vpc_security_group_ingress_rule.rds_from_eks.ip_protocol == "tcp" &&
+      aws_vpc_security_group_ingress_rule.rds_from_eks.from_port == 5432 &&
+      aws_vpc_security_group_ingress_rule.rds_from_eks.to_port == 5432
+    )
+    error_message = "RDS must allow TCP 5432 from the EKS cluster security group."
+  }
+}
+
 run "reject_bad_account" {
   command = plan
   variables { aws_account_id = "12345678901x" }
