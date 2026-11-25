@@ -118,6 +118,27 @@ run "postgres_from_eks_cluster_security_group" {
   }
 }
 
+run "postgres_from_management_server" {
+  command = plan
+
+  override_resource {
+    target          = module.seoul_vpc2.module.management_server.aws_instance.management
+    override_during = plan
+    values          = { private_ip = "10.20.0.19" }
+  }
+
+  assert {
+    condition = (
+      aws_vpc_security_group_ingress_rule.rds_from_management.cidr_ipv4 == "10.20.0.19/32" &&
+      aws_vpc_security_group_egress_rule.management_to_rds.cidr_ipv4 == "10.10.2.64/26" &&
+      alltrue([for rule in [aws_vpc_security_group_ingress_rule.rds_from_management, aws_vpc_security_group_egress_rule.management_to_rds] :
+        rule.ip_protocol == "tcp" && rule.from_port == 5432 && rule.to_port == 5432
+      ])
+    )
+    error_message = "Allow TCP 5432 from the management host to the DB subnet pair."
+  }
+}
+
 run "reject_bad_account" {
   command = plan
   variables { aws_account_id = "12345678901x" }

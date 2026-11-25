@@ -8,9 +8,10 @@ run "service_network" {
     source = "./seoul-vpc1-service"
   }
   variables {
-    availability_zones = ["ap-northeast-2a", "ap-northeast-2c"]
-    environment        = "prod"
-    management_peer_id = "pcx-00000000000000002"
+    availability_zones   = ["ap-northeast-2a", "ap-northeast-2c"]
+    environment          = "prod"
+    management_peer_id   = "pcx-00000000000000002"
+    management_host_cidr = "10.20.0.19/32"
   }
 
   assert {
@@ -56,9 +57,11 @@ run "service_network" {
       aws_route_table.service_app.vpc_id == aws_vpc.service.id && length(aws_route_table.service_app.route) == 2 &&
       one([for route in aws_route_table.service_app.route : route.nat_gateway_id if route.cidr_block == "0.0.0.0/0"]) == aws_nat_gateway.public_1.id &&
       one([for route in aws_route_table.service_app.route : route.vpc_peering_connection_id if route.cidr_block == "10.20.0.0/24"]) == var.management_peer_id &&
-      aws_route_table.service_private.vpc_id == aws_vpc.service.id && length(aws_route_table.service_private.route) == 0
+      aws_route_table.service_private.vpc_id == aws_vpc.service.id &&
+      one(aws_route_table.service_private.route).cidr_block == var.management_host_cidr &&
+      one(aws_route_table.service_private.route).vpc_peering_connection_id == var.management_peer_id
     )
-    error_message = "Check the public IGW, app NAT, Seoul management peer route, and local-only DB table."
+    error_message = "Check the public IGW, app NAT, management peer route, and DB return route to the management host."
   }
   assert {
     condition = alltrue([for tags in concat(

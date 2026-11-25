@@ -70,6 +70,9 @@ resource "aws_route_table" "service_app" {
 
 resource "aws_route_table" "service_private" {
   vpc_id = aws_vpc.service.id
-  route  = []
-  tags   = merge(local.tags, { component = "network", Name = "${local.name_prefix}-db-rtb" })
+  route {
+    cidr_block                = var.management_host_cidr
+    vpc_peering_connection_id = var.management_peer_id
+  }
+  tags = merge(local.tags, { component = "network", Name = "${local.name_prefix}-db-rtb" })
 }
