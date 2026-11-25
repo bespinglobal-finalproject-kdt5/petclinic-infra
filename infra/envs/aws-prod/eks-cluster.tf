@@ -15,7 +15,7 @@ resource "aws_eks_cluster" "this" {
     bootstrap_cluster_creator_admin_permissions = false
   }
   vpc_config {
-    subnet_ids              = module.seoul_vpc1.app_subnet_ids
+    subnet_ids              = sort(tolist(local.private_subnet_ids))
     endpoint_private_access = true
     endpoint_public_access  = false
   }
