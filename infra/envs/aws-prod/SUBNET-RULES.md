@@ -40,7 +40,7 @@ EKS 담당자는 클러스터와 노드 그룹의 `tags`에 `project = "petclini
 |---|---|---|---|
 | 서울 앱 | `petclinic-prod-service-vpc` · `10.10.0.0/22` | `service_app` · `petclinic-prod-app-rtb` | `0.0.0.0/0` → `petclinic-prod-nat-2a`, `10.20.0.0/24` → 서울 관리 VPC 피어링 |
 | 서울 퍼블릭 | `petclinic-prod-service-vpc` · `10.10.0.0/22` | `service_public` · `petclinic-prod-public-rtb` | `0.0.0.0/0` → `petclinic-prod-service-igw` |
-| 서울 DB | `petclinic-prod-service-vpc` · `10.10.0.0/22` | `service_private` · `petclinic-prod-db-rtb` | 로컬만 사용. 코드에서 `route = []` 지정 |
+| 서울 DB | `petclinic-prod-service-vpc` · `10.10.0.0/22` | `service_private` · `petclinic-prod-db-rtb` | 관리 EC2의 사설 IPv4 `/32`로 보내는 응답은 서울 VPC 피어링 경유 |
 | 서울 관리 | `petclinic-prod-management-vpc` · `10.20.0.0/24` | `management` · `petclinic-prod-management-rtb` | `0.0.0.0/0` → 관리 NAT, `10.10.0.0/22` → 서울 서비스 VPC 피어링 |
 | 서울 빌드 | `petclinic-prod-management-vpc` · `10.20.0.0/24` | `management_public` · `petclinic-prod-management-public-rtb` | `0.0.0.0/0` → `petclinic-prod-management-igw` |
 

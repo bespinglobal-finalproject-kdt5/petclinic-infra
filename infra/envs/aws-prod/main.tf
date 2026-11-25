@@ -1,8 +1,9 @@
 module "seoul_vpc1" {
-  source             = "./seoul-vpc1-service"
-  availability_zones = var.availability_zones
-  environment        = "prod"
-  management_peer_id = aws_vpc_peering_connection.management_service.id
+  source               = "./seoul-vpc1-service"
+  availability_zones   = var.availability_zones
+  environment          = "prod"
+  management_peer_id   = aws_vpc_peering_connection.management_service.id
+  management_host_cidr = local.management_host_cidr
 
   db_master_password = var.db_master_password
 }
