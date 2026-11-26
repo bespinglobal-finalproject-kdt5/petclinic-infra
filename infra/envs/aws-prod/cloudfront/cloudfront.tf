@@ -32,6 +32,7 @@ resource "aws_cloudfront_distribution" "edge" {
   }
 
   default_cache_behavior {
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
     target_origin_id       = "internal-alb"
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]

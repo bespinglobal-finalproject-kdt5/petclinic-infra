@@ -1,5 +1,5 @@
 data "aws_cloudfront_origin_request_policy" "api" {
-  name = "Managed-AllViewerExceptHostHeader"
+  name = "Managed-AllViewer"
 }
 
 data "aws_cloudfront_cache_policy" "disabled" {
