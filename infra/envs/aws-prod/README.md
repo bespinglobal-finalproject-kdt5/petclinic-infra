@@ -11,7 +11,7 @@
 | [eks](eks/cluster.tf) | 비공개 EKS 클러스터, 관리형 노드 그룹, EKS 애드온, 관리자 접근 권한, 컨트롤러 IAM 역할 |
 | [edge](cloudfront/cloudfront.tf) | Route 53, CloudFront용 미국 동부 ACM 인증서, ALB용 서울 ACM 인증서, CloudFront 배포 및 선택적 VPC Origin |
 
-EKS 리소스의 기존 루트 주소와 `module.eks` 주소는 [moved 블록](moved.tf)으로 연결한다. CloudFront 모듈의 소스 경로는 `./cloudfront`, state 주소는 `module.edge`다.
+운영 state에서 EKS 리소스는 `module.eks` 아래에 있다. CloudFront 모듈의 소스 경로는 `./cloudfront`, state 주소는 `module.edge`다.
 
 루트는 관리 EC2에서 피어링을 거쳐 EKS API(TCP 443)와 RDS(TCP 5432)로 가는 규칙을 연결한다. 같은 서비스 VPC 안에서 RDS로 접속하는 EKS 워크로드에는 EKS 클러스터 보안 그룹을 출발지로 허용한다. [모듈 간 보안 그룹 규칙](network-connections.tf) · [관리 역할의 EKS 권한](management-access.tf) · [서브넷별 경로](SUBNET-RULES.md)
 
@@ -61,7 +61,7 @@ EKS 모듈은 AL2023 x86_64 관리형 노드 그룹, EKS 애드온 4개, AWS Loa
 
 PR을 열면 Terraform 1.12.2로 `fmt`, `init -backend=false`, `validate`, AWS mock 테스트를 실행한다. 실제 운영 plan은 승인된 AWS 프로필로 S3 backend를 초기화한 디렉터리에서 실행한다. 배포 담당자는 계획의 생성·변경·삭제 대상을 확인한 후 저장한 plan을 적용한다. [CI 정의](../../../.github/workflows/terraform-check.yml) · [운영 backend 연결 절차](../../STATE.md)
 
-EKS 모듈 분리 이전 체크아웃을 갱신했다면 운영 루트에서 `terraform init`을 실행해 새 모듈 경로를 읽는다. 기존 state에서 이 리팩토링만 적용할 때 plan은 주소 이동과 `0 to add, 0 to change, 0 to destroy`를 표시한다. 검토한 plan을 적용하면 오사카 S3의 같은 state에 새 주소가 기록된다. [EKS 주소 대응](moved.tf) · [운영 backend](backend.tf)
+EKS 모듈 분리 이전 체크아웃을 갱신했다면 운영 루트에서 `terraform init`을 실행해 새 모듈 경로를 읽는다. `terraform state list module.eks`로 오사카 운영 state에 기록된 EKS 주소를 확인할 수 있다. [운영 backend](backend.tf) · [이전 버전의 state 복구](../../STATE.md)
 
 CloudFront 원본을 연결할 때는 서울 서비스 서브넷의 여유 IP, VPC Origin 할당량과 서비스 연결 역할 권한을 확인한다. DNS에는 이미 위임된 운영 영역을 사용한다. [도메인 import](imports.tf) · [ALB 인수 절차](SUBNET-RULES.md)
 
