@@ -33,6 +33,8 @@
 
 ## 도메인과 EKS 내부 ALB 연결
 
+두 리전의 ACM 인증서와 공통 DNS 검증 CNAME에는 `prevent_destroy`를 설정했다. 이 리소스의 삭제나 교체가 포함되면 Terraform은 전체 계획을 거부한다. [인증서 삭제 보호](edge/acm.tf)
+
 `mission-critical.site`의 기존 퍼블릭 호스팅 영역을 import하고 A·AAAA 별칭을 CloudFront로 연결한다. DNS 검증 CNAME과 `us-east-1`의 ACM 인증서를 관리한다. 기본값 `eks_alb_arn = null`에서는 CloudFront가 비활성이고 VPC Origin이 없다. 배포 구성의 임시 원본 이름은 `origin-pending.mission-critical.site`이며 해당 이름에 DNS 레코드는 생성하지 않는다. [영역 import](imports.tf) · [Route 53](edge/dns.tf) · [ACM과 DNS 검증](edge/acm.tf) · [CloudFront 배포](edge/cloudfront.tf) · [EKS ALB와 VPC Origin](edge/vpc-origin.tf)
 
 EKS 담당자가 AWS Load Balancer Controller를 통해 두 프라이빗 앱 서브넷에 내부 ALB를 생성하고 앱 타깃을 연결한다. 서울 ACM 인증서와 DNS 검증 CNAME은 이 Terraform 구성이 관리한다. 443 리스너에 사용할 인증서 ARN은 `terraform -chdir=infra/envs/aws-prod output -raw seoul_alb_certificate_arn`으로 조회한다. [인증서](edge/acm.tf) · [운영 출력](outputs.tf)

@@ -5,6 +5,14 @@ resource "aws_security_group" "management" {
   tags        = merge(local.tags, { Name = "${local.name}-server-sg" })
 }
 
+resource "aws_vpc_security_group_ingress_rule" "ssh" {
+  security_group_id = aws_security_group.management.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 22
+  to_port           = 22
+}
+
 resource "aws_security_group" "endpoints" {
   name        = "${local.name}-ssm-endpoints-sg"
   description = "SSM endpoint HTTPS from the management and build hosts"
