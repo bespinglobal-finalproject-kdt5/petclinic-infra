@@ -12,7 +12,7 @@ output "cloudfront_domain_name" {
 
 output "internal_alb_dns_name" {
   description = "DNS name of the configured EKS-managed ALB."
-  value       = one(data.aws_lb.eks[*].dns_name)
+  value       = local.alb_dns_name
 }
 
 output "alb_certificate_arn" {

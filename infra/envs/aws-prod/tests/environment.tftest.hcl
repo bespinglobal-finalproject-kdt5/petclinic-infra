@@ -32,7 +32,7 @@ mock_provider "aws" {
 
 # Terraform mock providers cannot import an existing zone. Live plans verify its ID.
 override_resource {
-  target = module.edge.aws_route53_zone.delegated
+  target = module.cloudfront.aws_route53_zone.delegated
   values = { zone_id = "ZMOCKPUBLIC" }
 }
 
@@ -120,7 +120,7 @@ run "postgres_from_management_server" {
   command = plan
 
   override_resource {
-    target          = module.seoul_vpc2.module.management_server.aws_instance.management
+    target          = module.seoul_vpc2.module.server.aws_instance.management
     override_during = plan
     values          = { private_ip = "10.20.0.19" }
   }
@@ -172,8 +172,8 @@ run "public_edge" {
   assert {
     condition = (
       data.aws_route53_zone.public.name == "mission-critical.site" && !data.aws_route53_zone.public.private_zone &&
-      output.public_url == module.edge.public_url && output.cloudfront_domain_name == module.edge.cloudfront_domain_name &&
-      output.cloudfront_distribution_id == module.edge.cloudfront_distribution_id && output.internal_alb_dns_name == module.edge.internal_alb_dns_name
+      output.public_url == module.cloudfront.public_url && output.cloudfront_domain_name == module.cloudfront.cloudfront_domain_name &&
+      output.cloudfront_distribution_id == module.cloudfront.cloudfront_distribution_id && output.internal_alb_dns_name == module.cloudfront.internal_alb_dns_name
     )
     error_message = "The root must look up the existing public zone and publish the edge endpoints."
   }
@@ -183,7 +183,7 @@ run "seoul_certificate_before_eks_origin" {
   command = plan
 
   override_resource {
-    target          = module.edge.aws_acm_certificate.alb
+    target          = module.cloudfront.aws_acm_certificate.alb
     override_during = plan
     values          = { arn = "arn:aws:acm:ap-northeast-2:123456789012:certificate/00000000-0000-4000-8000-000000000003" }
   }

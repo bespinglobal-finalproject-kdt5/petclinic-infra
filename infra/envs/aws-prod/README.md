@@ -9,13 +9,15 @@
 | [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 피어링 반환 경로, [Multi-AZ RDS PostgreSQL](seoul-vpc1-service/rds-database.tf) |
 | [seoul_vpc2](seoul-vpc2-management/main.tf) | 서울 관리 VPC와 두 서브넷, 관리 IGW·NAT, 빌드·관리 EC2, SSM 엔드포인트. [EC2 모듈 연결](seoul-vpc2-management/servers.tf) |
 | [eks](eks/cluster.tf) | 비공개 EKS 클러스터, 관리형 노드 그룹, EKS 애드온, 관리자 접근 권한, 컨트롤러 IAM 역할 |
-| [edge](cloudfront/cloudfront.tf) | Route 53, CloudFront용 미국 동부 ACM 인증서, ALB용 서울 ACM 인증서, CloudFront 배포 및 선택적 VPC Origin |
+| [cloudfront](cloudfront/cloudfront.tf) | Route 53, CloudFront용 미국 동부 ACM 인증서, ALB용 서울 ACM 인증서, CloudFront 배포 및 선택적 VPC Origin |
 
-운영 state에서 EKS 리소스는 `module.eks` 아래에 있다. CloudFront 모듈의 소스 경로는 `./cloudfront`, state 주소는 `module.edge`다.
+운영 state에서 EKS 리소스는 `module.eks` 아래에 있다. CloudFront 코드는 `cloudfront/`에 있다. 루트의 `moved` 블록은 기존 `module.edge` 주소를 `module.cloudfront`에 연결하며, 운영 state는 이 변경을 적용할 때 갱신된다. [루트 모듈 선언](main.tf)
 
 루트는 관리 EC2에서 피어링을 거쳐 EKS API(TCP 443)와 RDS(TCP 5432)로 가는 규칙을 연결한다. 같은 서비스 VPC 안에서 RDS로 접속하는 EKS 워크로드에는 EKS 클러스터 보안 그룹을 출발지로 허용한다. [모듈 간 보안 그룹 규칙](network-connections.tf) · [관리 역할의 EKS 권한](management-access.tf) · [서브넷별 경로](SUBNET-RULES.md)
 
 ## 운영 입력과 출력
+
+새 체크아웃은 이 디렉터리에서 `cp terraform.tfvars.example terraform.tfvars`로 시작한다. 예시 계정과 관리자 ARN을 운영값으로 바꾸고 노드·애드온 버전을 확인한다. 이미 `terraform.tfvars.json`을 사용한다면 해당 파일에 `admin_principal_arns`를 지정한다. Git에는 예시 파일만 포함한다. [입력 예시](terraform.tfvars.example)
 
 | 입력 | 값 |
 |---|---|
@@ -24,7 +26,7 @@
 | `availability_zones` | 서로 다른 서울 표준 AZ 2개. 운영 순서는 2a, 2c이며 관리 VPC의 두 서브넷은 첫 번째 AZ를 사용한다. |
 | `node_release_version`, `addon_versions` | 필수 입력. 서울에서 사용할 노드 AMI 릴리스와 `vpc-cni`, `coredns`, `kube-proxy`, `metrics-server`의 빌드 버전을 지정한다. |
 | `cluster_name`, `kubernetes_version`, `node_instance_type`, `node_scaling` | 기본값은 `petclinic-prod-eks`, Kubernetes 1.36, `t3.medium`, 최소 2·희망 2·최대 4대다. |
-| `admin_principal_arns` | 클러스터 관리자 ARN 목록. 루트는 관리 EC2 역할도 EKS 접근 항목에 포함한다. |
+| `admin_principal_arns` | 필수 입력. 운영자가 관리할 IAM 사용자·역할 ARN 목록이다. 관리 EC2 역할은 루트가 자동으로 추가한다. |
 | `db_master_password` | RDS 마스터 계정의 비밀번호 입력. DB 모듈의 쓰기 전용 인수로 전달한다. |
 | `eks_alb_arn` | CloudFront VPC Origin 활성화 입력. EKS 담당자가 생성한 내부 ALB와 정상 앱 타깃을 확인할 때까지 기본값 `null`을 사용한다. |
 

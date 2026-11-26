@@ -1,6 +1,6 @@
 # 서울 관리 VPC 2
 
-운영 루트의 `module.seoul_vpc2`는 관리 VPC `10.20.0.0/24`를 만들고 첫 번째 입력 AZ(운영 2a)에 두 서브넷을 둔다. 퍼블릭 서브넷의 빌드 서버에 EIP를 연결하고, EKS와 RDS를 관리하는 서버는 프라이빗 서브넷에 배치한다. [운영 루트](../main.tf) · [VPC와 서브넷](main.tf) · [공통 AMI와 서버 연결](servers.tf)
+운영 루트의 `module.seoul_vpc2`는 관리 VPC `10.20.0.0/24`를 만들고 첫 번째 입력 AZ(운영 2a)에 두 서브넷을 둔다. `server/` 모듈은 빌드 서버와 관리 서버를 각각 퍼블릭·프라이빗 서브넷에 EC2를 배치한다. 빌드 서버에는 EIP를 연결한다. [운영 루트](../main.tf) · [VPC와 서브넷](main.tf) · [공통 AMI와 서버 연결](servers.tf)
 
 | 항목 | 빌드 서버 | 프라이빗 관리 서버 |
 |---|---|---|
@@ -9,14 +9,14 @@
 | 인스턴스 | 온디맨드 `m7i.large`, 2 vCPU / 8 GiB | 온디맨드 `t3.small`, 2 vCPU / 2 GiB |
 | 루트 디스크 | 암호화된 gp3 50 GiB | 암호화된 gp3 30 GiB |
 | SSH 수신 | EIP에서 IPv4 `0.0.0.0/0`의 TCP 22 허용 | 사설 IP로 라우팅 가능한 IPv4 출발지에서 TCP 22 허용(`0.0.0.0/0`) |
-| 송신 | 인터넷으로 TCP 22·80·443 허용 | SSM 엔드포인트 443, 인터넷 80·443, 피어링으로 EKS API 443·RDS 5432 허용 |
+| 송신 | IPv4 `0.0.0.0/0`으로 TCP 22·80·443·5432 허용 | SSM 엔드포인트 443, 인터넷 80·443, 피어링으로 EKS API 443·RDS 5432 허용 |
 | 접속 대상 출력 | `build_instance_id` | `management_instance_id` |
 
-두 서버는 동일한 Canonical Ubuntu 24.04 LTS x86_64 AMI 릴리스를 사용한다. 각각 전용 SSM IAM 역할·인스턴스 프로필을 사용하며 IMDSv2를 요구한다. 빌드 서버의 SSH 인증에는 인스턴스 안에 등록한 사용자 키 등이 필요하다. EC2를 중지하면 루트 디스크가 보존되고, 인스턴스를 종료하면 루트 디스크도 삭제된다. [빌드 EC2](build-server/main.tf) · [관리 EC2](management-server/main.tf)
+두 서버는 동일한 Canonical Ubuntu 24.04 LTS x86_64 AMI 릴리스를 사용한다. 각각 전용 SSM IAM 역할·인스턴스 프로필을 사용하며 IMDSv2를 요구한다. 빌드 서버의 SSH 인증에는 인스턴스 안에 등록한 사용자 키 등이 필요하다. EC2를 중지하면 루트 디스크가 보존되고, 인스턴스를 종료하면 루트 디스크도 삭제된다. [빌드 EC2](server/build.tf) · [관리 EC2](server/management.tf)
 
 ## 프라이빗 관리 서버
 
-프라이빗 서브넷은 관리 NAT를 기본 경로로 사용한다. 이 서브넷에는 `ssm`과 `ssmmessages` 인터페이스 엔드포인트가 있고, VPC의 DNS 호스트 이름 기능과 두 엔드포인트의 프라이빗 DNS가 활성화돼 있다. 관리 EC2의 SSM Agent는 엔드포인트의 사설 IP로 HTTPS 연결을 시작한다. 프라이빗 DNS가 VPC 전체에 적용되므로 엔드포인트 보안 그룹은 기존 빌드 서버 보안 그룹에서도 TCP 443을 허용한다. [엔드포인트 및 보안 그룹](management-server/ssm-endpoints.tf)
+프라이빗 서브넷은 관리 NAT를 기본 경로로 사용한다. 이 서브넷에는 `ssm`과 `ssmmessages` 인터페이스 엔드포인트가 있고, VPC의 DNS 호스트 이름 기능과 두 엔드포인트의 프라이빗 DNS가 활성화돼 있다. 관리 EC2의 SSM Agent는 엔드포인트의 사설 IP로 HTTPS 연결을 시작한다. 프라이빗 DNS가 VPC 전체에 적용되므로 엔드포인트 보안 그룹은 기존 빌드 서버 보안 그룹에서도 TCP 443을 허용한다. [엔드포인트 및 보안 그룹](server/ssm-endpoints.tf)
 
 ### 서비스 VPC로 가는 경로
 

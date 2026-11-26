@@ -25,25 +25,25 @@ output "management_subnet_id" {
 }
 
 output "public_url" {
-  value = module.edge.public_url
+  value = module.cloudfront.public_url
 }
 
 output "cloudfront_distribution_id" {
-  value = module.edge.cloudfront_distribution_id
+  value = module.cloudfront.cloudfront_distribution_id
 }
 
 output "cloudfront_domain_name" {
-  value = module.edge.cloudfront_domain_name
+  value = module.cloudfront.cloudfront_domain_name
 }
 
 output "internal_alb_dns_name" {
   description = "Private ALB selected as the CloudFront origin when eks_alb_arn is set."
-  value       = module.edge.internal_alb_dns_name
+  value       = module.cloudfront.internal_alb_dns_name
 }
 
 output "seoul_alb_certificate_arn" {
   description = "Validated Seoul ACM certificate for the EKS-managed ALB HTTPS listener."
-  value       = module.edge.alb_certificate_arn
+  value       = module.cloudfront.alb_certificate_arn
 }
 
 output "management_public_subnet_id" {

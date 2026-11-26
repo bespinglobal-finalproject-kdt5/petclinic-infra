@@ -1,8 +1,8 @@
 resource "aws_security_group" "management" {
-  name        = "${local.name}-server-sg"
+  name        = "${local.management_name}-server-sg"
   description = "Private management host using Session Manager"
   vpc_id      = var.vpc_id
-  tags        = merge(local.tags, { Name = "${local.name}-server-sg" })
+  tags        = merge(local.tags, { Name = "${local.management_name}-server-sg" })
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ssh" {
@@ -14,7 +14,7 @@ resource "aws_vpc_security_group_ingress_rule" "ssh" {
 }
 
 resource "aws_security_group" "endpoints" {
-  name        = "${local.name}-ssm-endpoints-sg"
+  name        = "${local.management_name}-ssm-endpoints-sg"
   description = "SSM endpoint HTTPS from the management and build hosts"
   vpc_id      = var.vpc_id
   egress      = []
@@ -23,10 +23,10 @@ resource "aws_security_group" "endpoints" {
     protocol        = "tcp"
     from_port       = 443
     to_port         = 443
-    security_groups = [aws_security_group.management.id, var.build_security_group_id]
+    security_groups = [aws_security_group.management.id, aws_security_group.build.id]
   }
 
-  tags = merge(local.tags, { Name = "${local.name}-ssm-endpoints-sg" })
+  tags = merge(local.tags, { Name = "${local.management_name}-ssm-endpoints-sg" })
 }
 
 resource "aws_vpc_security_group_egress_rule" "ssm_https" {
@@ -35,7 +35,7 @@ resource "aws_vpc_security_group_egress_rule" "ssm_https" {
   ip_protocol                  = "tcp"
   from_port                    = 443
   to_port                      = 443
-  tags                         = merge(local.tags, { Name = "${local.name}-to-ssm" })
+  tags                         = merge(local.tags, { Name = "${local.management_name}-to-ssm" })
 }
 
 resource "aws_vpc_endpoint" "ssm" {
@@ -44,7 +44,7 @@ resource "aws_vpc_endpoint" "ssm" {
   service_name        = "com.amazonaws.ap-northeast-2.${each.key}"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  subnet_ids          = [var.subnet_id]
+  subnet_ids          = [var.management_subnet_id]
   security_group_ids  = [aws_security_group.endpoints.id]
-  tags                = merge(local.tags, { Name = "${local.name}-${each.key}-vpce" })
+  tags                = merge(local.tags, { Name = "${local.management_name}-${each.key}-vpce" })
 }

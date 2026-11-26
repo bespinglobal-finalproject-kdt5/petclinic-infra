@@ -11,14 +11,14 @@ data "aws_cloudfront_cache_policy" "disabled" {
 }
 
 resource "aws_cloudfront_distribution" "edge" {
-  enabled         = var.eks_alb_arn != null
+  enabled         = local.use_vpc_origin
   is_ipv6_enabled = true
   aliases         = [var.domain]
   tags            = merge(local.edge_tags, { Name = "petclinic-prod-edge-distribution" })
 
   origin {
     # CloudFront requires one origin even while disabled. No DNS record is created for this name.
-    domain_name = var.eks_alb_arn == null ? "origin-pending.${var.domain}" : data.aws_lb.eks[0].dns_name
+    domain_name = local.use_vpc_origin ? local.alb_dns_name : "origin-pending.${var.domain}"
     origin_id   = "internal-alb"
 
     dynamic "vpc_origin_config" {
@@ -29,7 +29,7 @@ resource "aws_cloudfront_distribution" "edge" {
     }
 
     dynamic "custom_origin_config" {
-      for_each = var.eks_alb_arn == null ? [1] : []
+      for_each = local.use_vpc_origin ? [] : [1]
       content {
         http_port              = 80
         https_port             = 443

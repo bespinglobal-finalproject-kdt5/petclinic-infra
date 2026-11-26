@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars when setting up a new checkout.
+# Replace the sample account and role with the intended AWS account and administrator.
+aws_account_id       = "123456789012"
+aws_region           = "ap-northeast-2"
+availability_zones   = ["ap-northeast-2a", "ap-northeast-2c"]
+admin_principal_arns = ["arn:aws:iam::123456789012:role/example-eks-admin"]
+
+# Example Seoul builds for Kubernetes 1.36. Review with the EKS operator before use.
+node_release_version = "1.36.5-20261119"
+addon_versions = {
+  vpc-cni        = "v1.23.3-eksbuild.2"
+  coredns        = "v1.14.7-eksbuild.35"
+  kube-proxy     = "v1.36.0-eksbuild.65"
+  metrics-server = "v0.9.1-eksbuild.2"
+}
+
+# Supply the internal ALB ARN after the application targets are healthy.
+eks_alb_arn = null

@@ -29,7 +29,13 @@ module "eks" {
   addon_versions       = var.addon_versions
 }
 
-module "edge" {
+# Preserve the existing distribution, certificates, and DNS records on upgrade.
+moved {
+  from = module.edge
+  to   = module.cloudfront
+}
+
+module "cloudfront" {
   source             = "./cloudfront"
   certificate_region = local.cloudfront_certificate_region
   domain             = local.domain

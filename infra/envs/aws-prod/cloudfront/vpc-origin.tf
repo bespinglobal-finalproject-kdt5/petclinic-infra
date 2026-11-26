@@ -1,5 +1,10 @@
+locals {
+  use_vpc_origin = var.eks_alb_arn != null
+  alb_dns_name   = one(data.aws_lb.eks[*].dns_name)
+}
+
 data "aws_lb" "eks" {
-  count = var.eks_alb_arn == null ? 0 : 1
+  count = local.use_vpc_origin ? 1 : 0
   arn   = var.eks_alb_arn
 
   lifecycle {
@@ -15,7 +20,7 @@ resource "aws_cloudfront_vpc_origin" "eks" {
 
   vpc_origin_endpoint_config {
     name                   = "petclinic-prod-eks-alb"
-    arn                    = data.aws_lb.eks[count.index].arn
+    arn                    = var.eks_alb_arn
     http_port              = 80
     https_port             = 443 # Endpoint schema requires this even for http-only.
     origin_protocol_policy = "http-only"
