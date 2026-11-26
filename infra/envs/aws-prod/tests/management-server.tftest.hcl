@@ -41,6 +41,16 @@ run "private_session_manager_host" {
 
   assert {
     condition = (
+      aws_vpc_security_group_ingress_rule.ssh.security_group_id == aws_security_group.management.id &&
+      aws_vpc_security_group_ingress_rule.ssh.cidr_ipv4 == "0.0.0.0/0" &&
+      aws_vpc_security_group_ingress_rule.ssh.ip_protocol == "tcp" &&
+      aws_vpc_security_group_ingress_rule.ssh.from_port == 22 && aws_vpc_security_group_ingress_rule.ssh.to_port == 22
+    )
+    error_message = "The private management host security group must allow inbound IPv4 SSH on TCP 22."
+  }
+
+  assert {
+    condition = (
       toset(keys(aws_vpc_endpoint.ssm)) == toset(["ssm", "ssmmessages"]) &&
       alltrue([for name, ep in aws_vpc_endpoint.ssm :
         ep.service_name == "com.amazonaws.ap-northeast-2.${name}" && ep.vpc_id == var.vpc_id &&

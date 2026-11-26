@@ -25,7 +25,7 @@ resource "aws_security_group" "build" {
   }
 
   dynamic "egress" {
-    for_each = [80, 443]
+    for_each = [22, 80, 443]
     content {
       protocol    = "tcp"
       from_port   = egress.value

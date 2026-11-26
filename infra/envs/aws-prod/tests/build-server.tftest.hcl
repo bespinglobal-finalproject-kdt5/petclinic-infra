@@ -34,10 +34,10 @@ run "build_host" {
       one(aws_security_group.build.ingress).protocol == "tcp" &&
       one(aws_security_group.build.ingress).from_port == 22 && one(aws_security_group.build.ingress).to_port == 22 &&
       one(aws_security_group.build.ingress).cidr_blocks == tolist(["0.0.0.0/0"]) &&
-      toset([for rule in aws_security_group.build.egress : rule.to_port]) == toset([80, 443]) &&
+      toset([for rule in aws_security_group.build.egress : rule.to_port]) == toset([22, 80, 443]) &&
       alltrue([for rule in aws_security_group.build.egress : rule.from_port == rule.to_port && rule.protocol == "tcp" && contains(rule.cidr_blocks, "0.0.0.0/0")])
     )
-    error_message = "The build security group must allow inbound IPv4 SSH and outbound HTTP and HTTPS."
+    error_message = "The build security group must allow inbound IPv4 SSH and outbound SSH, HTTP and HTTPS."
   }
 
   assert {

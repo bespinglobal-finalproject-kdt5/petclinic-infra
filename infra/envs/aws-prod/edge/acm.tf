@@ -4,7 +4,10 @@ resource "aws_acm_certificate" "viewer" {
   validation_method = "DNS"
   tags              = merge(local.edge_tags, { Name = "petclinic-prod-viewer-certificate" })
 
-  lifecycle { create_before_destroy = true }
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = true
+  }
 }
 
 # One apex name, no SANs: exactly one validation option, no computed for_each keys.
@@ -18,6 +21,8 @@ resource "aws_route53_record" "validation" {
   type    = local.validation.resource_record_type
   records = [local.validation.resource_record_value]
   ttl     = 60
+
+  lifecycle { prevent_destroy = true }
 }
 
 resource "aws_acm_certificate_validation" "viewer" {
@@ -31,7 +36,10 @@ resource "aws_acm_certificate" "alb" {
   validation_method = "DNS"
   tags              = merge(local.edge_tags, { Name = "petclinic-prod-alb-certificate" })
 
-  lifecycle { create_before_destroy = true }
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = true
+  }
 }
 
 resource "aws_acm_certificate_validation" "alb" {
