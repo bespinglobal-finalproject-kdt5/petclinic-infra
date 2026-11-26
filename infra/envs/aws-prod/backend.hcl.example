@@ -1,4 +1,3 @@
-# Optional for older checkouts; these settings match the canonical backend.tf.
-# This is the backend region (Osaka), not the workload region (Seoul).
-bucket = "petclinic-prod-tfstate-osaka"
-region = "ap-northeast-3"
+# Optional override matching the production S3 backend.
+bucket = "petclinic-prod-tfstate-seoul"
+region = "ap-northeast-2"

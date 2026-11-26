@@ -17,11 +17,11 @@ PetClinic은 AWS 서울 리전의 EKS에서 Angular 웹과 Spring REST API를 �
 | RDS · `petclinic-db` | 비공개 PostgreSQL 16.13 Multi-AZ 인스턴스다. 확인 시점의 주 DB는 2c, 대기는 2a다. 자동 백업 보존 기간은 0일이고 논리 복제는 꺼져 있다. |
 | 서울 관리 VPC · `10.20.0.0/24` | 프라이빗 관리 EC2는 피어링으로 EKS API(443)와 RDS(5432)에 접근한다. DB 서브넷 두 개는 관리 EC2 `10.20.0.18/32`로 응답을 돌려보낸다. 퍼블릭 빌드 EC2는 EIP를 사용하며, 두 EC2 모두 SSM에 온라인으로 등록돼 있다. |
 | DNS·인증서 | Route 53 A·AAAA 별칭은 CloudFront를 가리킨다. VPC 오리진은 0개다. 버지니아 북부의 뷰어 인증서는 CloudFront에 연결돼 있고, 서울 인증서는 발급됐지만 ALB에는 HTTP 리스너만 있다. |
-| 오사카·Azure DR | 오사카 S3에 Terraform state와 잠금 파일을 저장한다. Azure DR은 이 저장소에 `10.30.0.0/24` 대역을 예약한 단계이며, 운영 RDS에서 Azure로 가는 복제 경로는 구성되지 않았다. |
+| 운영 state·Azure DR | 11월 25일 관측 당시 state는 오사카 S3에 있었다. 11월 26일 운영 backend를 서울 S3로 이전했다. Azure DR은 이 저장소에 `10.30.0.0/24` 대역을 예약한 단계이며, 운영 RDS에서 Azure로 가는 복제 경로는 구성되지 않았다. |
 
 ## Terraform 코드 위치
 
-서울의 두 VPC, EKS, CloudFront는 하나의 운영 루트에서 연결한다. 모듈을 수정할 때도 `terraform plan`은 `infra/envs/aws-prod/`에서 실행한다. [모듈 연결](infra/envs/aws-prod/main.tf) · [오사카 S3 backend](infra/envs/aws-prod/backend.tf)
+서울의 두 VPC, EKS, CloudFront는 하나의 운영 루트에서 연결한다. 모듈을 수정할 때도 `terraform plan`은 `infra/envs/aws-prod/`에서 실행한다. [모듈 연결](infra/envs/aws-prod/main.tf) · [서울 S3 backend](infra/envs/aws-prod/backend.tf)
 
 | 변경할 대상 | 코드 위치 |
 |---|---|

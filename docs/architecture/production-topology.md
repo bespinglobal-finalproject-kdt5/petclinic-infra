@@ -21,4 +21,4 @@
 
 ## 운영 상태 저장과 DR
 
-오사카의 버전 관리가 켜진 S3 버킷에 Terraform 운영 state를 보관하고 S3 잠금 파일을 사용한다. Azure DR의 `10.30.0.0/24`는 예약 대역이다. 현 운영 RDS의 자동 백업 보존 기간은 0일이며 `rds.logical_replication=0`이다. DB 서브넷의 경로는 서비스 VPC 내부와 서울 관리 EC2 한 대를 대상으로 한다. [S3 backend](../../infra/envs/aws-prod/backend.tf) · [Azure DR 구현 범위](../../infra/envs/azure-dr/README.md)
+11월 25일 도면에 표시된 Terraform state 버킷은 오사카에 있었다. 11월 26일 운영 backend를 버전 관리와 S3 잠금 파일을 사용하는 서울 버킷으로 이전했다. Azure DR의 `10.30.0.0/24`는 예약 대역이다. 현 운영 RDS의 자동 백업 보존 기간은 0일이며 `rds.logical_replication=0`이다. DB 서브넷의 경로는 서비스 VPC 내부와 서울 관리 EC2 한 대를 대상으로 한다. [S3 backend](../../infra/envs/aws-prod/backend.tf) · [Azure DR 구현 범위](../../infra/envs/azure-dr/README.md)

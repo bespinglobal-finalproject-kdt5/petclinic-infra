@@ -27,7 +27,7 @@ The Seoul service VPC module defines the [subnet CIDRs](../../infra/envs/aws-pro
 | Service | `db_2` | 2c | `10.10.2.96/27` | Local routing only |
 | Management (`10.20.0.0/24`) | `management` | 2a | `10.20.0.0/27` | Local routing only; not an ingress hop |
 
-**Outbound only:** both app subnets send their default route to the NAT gateway in `public_1`; its public subnet routes to the service VPC internet gateway. Neither gateway forwards browser requests to the ALB. **Separate state backend:** Amazon S3 in Osaka (`ap-northeast-3`) stores the active [Terraform state](../../infra/STATE.md); it is not a distribution origin.
+**Outbound only:** both app subnets send their default route to the NAT gateway in `public_1`; its public subnet routes to the service VPC internet gateway. Neither gateway forwards browser requests to the ALB. **Separate state backend:** Amazon S3 in Seoul (`ap-northeast-2`) stores the active [Terraform state](../../infra/STATE.md); it is not a distribution origin.
 
 ## Evidence needed before marking the edge verified
 

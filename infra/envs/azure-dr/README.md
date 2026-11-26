@@ -7,7 +7,7 @@
 | 네트워크 | Azure DR용으로 `10.30.0.0/24` 예약 |
 | 서브넷 후보 | 복구용 앱 VM `10.30.0.0/27`, 복구 DB `10.30.0.32/27`. 기존 대역표의 MySQL 표기는 설계 당시의 후보다. |
 | 앱과 데이터 | 서울에서 실행되는 Angular·Spring REST 앱의 복구 대상은 Azure VM이다. 원본 DB는 RDS PostgreSQL 16이며, Azure 복구 DB와 데이터 복제·원복은 이 저장소에서 아직 구성하지 않았다. |
-| 자격 증명과 state | Azure Key Vault와 별도 Azure Blob backend를 계획하고 있다. 현재 AWS 운영 state는 오사카 S3에 있다. |
+| 자격 증명과 state | Azure Key Vault와 별도 Azure Blob backend를 계획하고 있다. 현재 AWS 운영 state는 서울 S3에 있다. |
 | 환경 태그 | DR 환경의 `environment` 값은 `azure_dr` |
 
 GitHub Actions는 `.tf` 파일이 있는 환경을 초기화하고 검증한다. 현재 PR에서 실행하는 mock 테스트는 AWS 운영 루트를 대상으로 한다. [CI 정의](../../../.github/workflows/terraform-check.yml) · [서울 RDS 정의](../aws-prod/seoul-vpc1-service/rds-database.tf) · [대역 예약 근거](../../NETWORK.md) · [state 분리 계획](../../STATE.md) · [공통 태그](../../TAGS.md)
