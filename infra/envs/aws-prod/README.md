@@ -1,6 +1,6 @@
 # AWS 운영 환경
 
-`infra/envs/aws-prod/`는 서울 리소스 및 글로벌 서비스를 함께 관리하는 Terraform 루트다. 운영 state는 오사카 S3 버킷 `petclinic-prod-tfstate-osaka`의 `petclinic/aws-prod/terraform.tfstate`에 저장하며 S3 잠금 파일을 사용한다. [루트 모듈 연결](main.tf) · [backend 설정](backend.tf) · [state 접근과 복구](../../STATE.md)
+`infra/envs/aws-prod/`는 서울 리소스 및 글로벌 서비스를 함께 관리하는 Terraform 루트다. 운영 state는 서울 S3 버킷 `petclinic-prod-tfstate-seoul`의 `petclinic/aws-prod/terraform.tfstate`에 저장하며 S3 잠금 파일을 사용한다. [루트 모듈 연결](main.tf) · [backend 설정](backend.tf) · [state 접근과 복구](../../STATE.md)
 
 ## 모듈 구성
 
@@ -61,7 +61,7 @@ EKS 모듈은 AL2023 x86_64 관리형 노드 그룹, EKS 애드온 4개, AWS Loa
 
 PR을 열면 Terraform 1.12.2로 `fmt`, `init -backend=false`, `validate`, AWS mock 테스트를 실행한다. 실제 운영 plan은 승인된 AWS 프로필로 S3 backend를 초기화한 디렉터리에서 실행한다. 배포 담당자는 계획의 생성·변경·삭제 대상을 확인한 후 저장한 plan을 적용한다. [CI 정의](../../../.github/workflows/terraform-check.yml) · [운영 backend 연결 절차](../../STATE.md)
 
-EKS 모듈 분리 이전 체크아웃을 갱신했다면 운영 루트에서 `terraform init`을 실행해 새 모듈 경로를 읽는다. `terraform state list module.eks`로 오사카 운영 state에 기록된 EKS 주소를 확인할 수 있다. [운영 backend](backend.tf) · [이전 버전의 state 복구](../../STATE.md)
+EKS 모듈 분리 이전 체크아웃을 갱신했다면 운영 루트에서 `terraform init`을 실행해 새 모듈 경로를 읽는다. `terraform state list module.eks`로 서울 운영 state에 기록된 EKS 주소를 확인할 수 있다. [운영 backend](backend.tf) · [이전 버전의 state 복구](../../STATE.md)
 
 CloudFront 원본을 연결할 때는 서울 서비스 서브넷의 여유 IP, VPC Origin 할당량과 서비스 연결 역할 권한을 확인한다. DNS에는 이미 위임된 운영 영역을 사용한다. [도메인 import](imports.tf) · [ALB 인수 절차](SUBNET-RULES.md)
 
