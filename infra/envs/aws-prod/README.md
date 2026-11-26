@@ -17,7 +17,7 @@
 
 ## 운영 입력과 출력
 
-새 체크아웃은 이 디렉터리에서 `cp terraform.tfvars.example terraform.tfvars`로 시작한다. 예시 계정과 관리자 ARN을 운영값으로 바꾸고 노드·애드온 버전을 확인한다. 이미 `terraform.tfvars.json`을 사용한다면 해당 파일에 `admin_principal_arns`를 지정한다. Git에는 예시 파일만 포함한다. [입력 예시](terraform.tfvars.example)
+새 체크아웃은 이 디렉터리에서 `cp terraform.tfvars.example terraform.tfvars`로 시작한다. 계정 ID를 운영값으로 바꾸고 노드·애드온 버전을 확인한다. 승인된 EKS 관리자 ARN 목록은 로컬 `terraform.tfvars` 또는 기존 `terraform.tfvars.json`에 `admin_principal_arns`로 지정한다. Git에는 예시 파일만 포함한다. [입력 예시](terraform.tfvars.example)
 
 | 입력 | 값 |
 |---|---|
