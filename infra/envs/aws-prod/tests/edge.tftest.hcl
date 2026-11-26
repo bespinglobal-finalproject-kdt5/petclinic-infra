@@ -11,7 +11,7 @@ variables {
 
 run "waiting_for_eks_origin" {
   command = plan
-  module { source = "./edge" }
+  module { source = "./cloudfront" }
 
   assert {
     condition = (
@@ -66,7 +66,7 @@ run "waiting_for_eks_origin" {
 
 run "external_eks_origin" {
   command = plan
-  module { source = "./edge" }
+  module { source = "./cloudfront" }
   variables {
     eks_alb_arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/eks/0123456789abcdef"
   }
@@ -85,7 +85,7 @@ run "external_eks_origin" {
 
 run "reject_public_eks_origin" {
   command = plan
-  module { source = "./edge" }
+  module { source = "./cloudfront" }
   variables {
     eks_alb_arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/public/0123456789abcdef"
   }

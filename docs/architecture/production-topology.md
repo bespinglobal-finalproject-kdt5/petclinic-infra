@@ -4,9 +4,9 @@
 
 ## 사용자 요청과 데이터
 
-1. 인터넷 공개 ALB의 유일한 리스너는 HTTP 80이다. Kubernetes Gateway `petclinic-public`과 같은 이름의 HTTPRoute가 요청을 분기한다. Route 53 도메인은 별도의 비활성 CloudFront 배포를 가리키며, 서울 ACM 인증서는 발급 상태이고 ALB에 연결된 HTTPS 리스너는 없다. [엣지 설정](../../infra/envs/aws-prod/edge/)
+1. 인터넷 공개 ALB의 유일한 리스너는 HTTP 80이다. Kubernetes Gateway `petclinic-public`과 같은 이름의 HTTPRoute가 요청을 분기한다. Route 53 도메인은 별도의 비활성 CloudFront 배포를 가리키며, 서울 ACM 인증서는 발급 상태이고 ALB에 연결된 HTTPS 리스너는 없다. [엣지 설정](../../infra/envs/aws-prod/cloudfront/)
 2. `/petclinic/api`와 `/petclinic/api/*`는 `rest` Service(9966)가 가리키는 2a REST Pod 한 개로, 나머지 `/*`는 `web` Service(80)가 가리키는 2c 웹 Pod 두 개로 전달된다. ALB는 IP 유형 대상 그룹을 사용한다. 실제 대상 포트는 각각 9966과 8080이며 세 대상 모두 정상이다. [앱 소스](https://github.com/bespinglobal-finalproject-kdt5/petclinic-eks-app)
-3. REST Pod의 JDBC 로그에서 운영 RDS 호스트를 확인했고, 같은 Pod에서 해당 호스트가 해석된 IP의 5432 포트로 열린 TCP 연결도 확인했다. RDS는 두 DB 전용 서브넷의 Multi-AZ 인스턴스다. 주 DB와 대기 DB는 서울 리전 안에서 동기 복제한다. [EKS → RDS 보안 그룹](../../infra/envs/aws-prod/eks-cluster.tf) · [RDS 구성](../../infra/envs/aws-prod/seoul-vpc1-service/rds-database.tf)
+3. REST Pod의 JDBC 로그에서 운영 RDS 호스트를 확인했고, 같은 Pod에서 해당 호스트가 해석된 IP의 5432 포트로 열린 TCP 연결도 확인했다. RDS는 두 DB 전용 서브넷의 Multi-AZ 인스턴스다. 주 DB와 대기 DB는 서울 리전 안에서 동기 복제한다. [EKS → RDS 보안 그룹](../../infra/envs/aws-prod/network-connections.tf) · [RDS 구성](../../infra/envs/aws-prod/seoul-vpc1-service/rds-database.tf)
 
 ## 운영·관리 경로
 
@@ -17,7 +17,7 @@
 | 빌드 EC2 → RDS | RDS에는 빌드 사설 IP `10.20.0.58/32` 수신 규칙이 있다. 빌드 서버 송신은 TCP 80·443이고 빌드 서브넷에는 서비스망 피어링 경로가 없다. |
 | 운영 접속과 송신 | 관리 서브넷은 SSM·SSM Messages 인터페이스 엔드포인트와 관리 NAT를 사용한다. 관리 VPC의 빌드 EC2는 퍼블릭 서브넷에서 EIP를 사용한다. 서비스 쪽 프라이빗 앱 서브넷 두 개는 2a의 서비스 NAT를 공유한다. |
 
-[서울 피어링 및 관리 보안 규칙](../../infra/envs/aws-prod/eks-management-network.tf) · [DB 반환 경로](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf) · [빌드 서버](../../infra/envs/aws-prod/seoul-vpc2-management/build-server/)
+[서울 피어링 및 관리 보안 규칙](../../infra/envs/aws-prod/network-connections.tf) · [DB 반환 경로](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf) · [빌드 서버](../../infra/envs/aws-prod/seoul-vpc2-management/build-server/)
 
 ## 운영 상태 저장과 DR
 
