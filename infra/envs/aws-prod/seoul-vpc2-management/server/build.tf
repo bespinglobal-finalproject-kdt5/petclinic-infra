@@ -1,19 +1,5 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 6.0, < 7.0"
-    }
-  }
-}
-
-locals {
-  name = "petclinic-prod-build"
-  tags = { project = "petclinic", environment = "prod", component = "management" }
-}
-
 resource "aws_security_group" "build" {
-  name        = "${local.name}-sg"
+  name        = "${local.build_name}-sg"
   description = "Session Manager build host with outbound web access"
   vpc_id      = var.vpc_id
 
@@ -25,7 +11,7 @@ resource "aws_security_group" "build" {
   }
 
   dynamic "egress" {
-    for_each = [22, 80, 443]
+    for_each = [22, 80, 443, 5432]
     content {
       protocol    = "tcp"
       from_port   = egress.value
@@ -34,11 +20,11 @@ resource "aws_security_group" "build" {
     }
   }
 
-  tags = merge(local.tags, { Name = "${local.name}-sg" })
+  tags = merge(local.tags, { Name = "${local.build_name}-sg" })
 }
 
 resource "aws_iam_role" "build" {
-  name = "${local.name}-ssm"
+  name = "${local.build_name}-ssm"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -47,10 +33,10 @@ resource "aws_iam_role" "build" {
       Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
-  tags = merge(local.tags, { Name = "${local.name}-ssm" })
+  tags = merge(local.tags, { Name = "${local.build_name}-ssm" })
 }
 
-resource "aws_iam_role_policy_attachment" "ssm" {
+resource "aws_iam_role_policy_attachment" "build_ssm" {
   role       = aws_iam_role.build.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
@@ -58,13 +44,13 @@ resource "aws_iam_role_policy_attachment" "ssm" {
 resource "aws_iam_instance_profile" "build" {
   name = aws_iam_role.build.name
   role = aws_iam_role.build.name
-  tags = merge(local.tags, { Name = "${local.name}-ssm" })
+  tags = merge(local.tags, { Name = "${local.build_name}-ssm" })
 }
 
 resource "aws_instance" "build" {
   ami                         = var.ubuntu_ami_id
   instance_type               = "m7i.large"
-  subnet_id                   = var.subnet_id
+  subnet_id                   = var.build_subnet_id
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.build.id]
   iam_instance_profile        = aws_iam_instance_profile.build.name
@@ -74,7 +60,7 @@ resource "aws_instance" "build" {
     volume_size           = 50
     encrypted             = true
     delete_on_termination = true
-    tags                  = merge(local.tags, { Name = "${local.name}-root" })
+    tags                  = merge(local.tags, { Name = "${local.build_name}-root" })
   }
 
   metadata_options {
@@ -82,8 +68,8 @@ resource "aws_instance" "build" {
     http_tokens   = "required"
   }
 
-  tags       = merge(local.tags, { Name = "${local.name}-server" })
-  depends_on = [aws_iam_role_policy_attachment.ssm]
+  tags       = merge(local.tags, { Name = "${local.build_name}-server" })
+  depends_on = [aws_iam_role_policy_attachment.build_ssm]
 }
 
 resource "aws_eip" "build" {

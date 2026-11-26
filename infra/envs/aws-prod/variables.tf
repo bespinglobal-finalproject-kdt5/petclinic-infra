@@ -59,8 +59,9 @@ variable "kubernetes_version" {
 }
 
 variable "admin_principal_arns" {
-  type    = set(string)
-  default = ["arn:aws:iam::723926525504:user/KSM_final"]
+  description = "IAM principal ARNs for additional EKS administrators. The management EC2 role is added by the root."
+  type        = set(string)
+  nullable    = false
 }
 
 variable "node_instance_type" {

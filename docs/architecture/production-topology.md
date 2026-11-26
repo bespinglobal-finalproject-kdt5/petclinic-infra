@@ -14,10 +14,10 @@
 |---|---|
 | 관리 EC2 → EKS | 프라이빗 관리 서브넷의 `10.10.0.0/22` 경로와 서비스 앱 서브넷의 `10.20.0.0/24` 경로가 서울 VPC 피어링을 사용한다. EKS 프라이빗 API는 관리 서버에서 오는 TCP 443을 허용한다. |
 | 관리 EC2 → RDS | 관리 서버는 두 DB 서브넷을 포함하는 `10.10.2.64/26`으로 TCP 5432를 송신한다. RDS는 관리 서버 `10.20.0.18/32`에서 수신하고, 두 DB 서브넷의 공통 라우팅 테이블은 같은 `/32`로 응답을 피어링에 보낸다. 관리 EC2에서 PostgreSQL SSL 협상 응답을 확인했다. |
-| 빌드 EC2 → RDS | RDS에는 빌드 사설 IP `10.20.0.58/32` 수신 규칙이 있다. 빌드 서버 송신은 TCP 80·443이고 빌드 서브넷에는 서비스망 피어링 경로가 없다. |
+| 빌드 EC2 → RDS | RDS에는 빌드 사설 IP `10.20.0.58/32` 수신 규칙이 있다. 11월 26일 확인한 빌드 서버 보안 그룹은 IPv4 `0.0.0.0/0`으로 TCP 22·80·443·5432 송신을 허용한다. 빌드 서브넷에는 서비스 VPC로 가는 피어링 경로가 없다. |
 | 운영 접속과 송신 | 관리 서브넷은 SSM·SSM Messages 인터페이스 엔드포인트와 관리 NAT를 사용한다. 관리 VPC의 빌드 EC2는 퍼블릭 서브넷에서 EIP를 사용한다. 서비스 쪽 프라이빗 앱 서브넷 두 개는 2a의 서비스 NAT를 공유한다. |
 
-[서울 피어링 및 관리 보안 규칙](../../infra/envs/aws-prod/network-connections.tf) · [DB 반환 경로](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf) · [빌드 서버](../../infra/envs/aws-prod/seoul-vpc2-management/build-server/)
+[서울 피어링 및 관리 보안 규칙](../../infra/envs/aws-prod/network-connections.tf) · [DB 반환 경로](../../infra/envs/aws-prod/seoul-vpc1-service/main.tf) · [빌드 서버](../../infra/envs/aws-prod/seoul-vpc2-management/server/build.tf)
 
 ## 운영 상태 저장과 DR
 
