@@ -59,3 +59,18 @@ output "management_instance_id" {
   description = "Private Seoul management EC2 target for Session Manager."
   value       = module.seoul_vpc2.management_instance_id
 }
+
+output "eks_manual_values" {
+  value = {
+    cluster_name             = module.eks.cluster_name
+    service_vpc              = module.seoul_vpc1.service_vpc_id
+    app_subnets              = module.seoul_vpc1.app_subnet_ids
+    public_subnets           = module.seoul_vpc1.public_subnet_ids
+    management_nat_public_ip = module.seoul_vpc2.management_nat_public_ip
+    management_instance      = module.seoul_vpc2.management_instance_id
+    management_ip            = module.seoul_vpc2.management_private_ip
+    management_role          = module.seoul_vpc2.management_role_arn
+    lbc_role                 = module.eks.lbc_role_arn
+    ca_role                  = module.eks.ca_role_arn
+  }
+}

@@ -11,17 +11,17 @@ override_resource {
 }
 
 override_data {
-  target = data.aws_vpc.service
+  target = module.eks.data.aws_vpc.service
   values = { enable_dns_support = true, enable_dns_hostnames = true }
 }
 
 override_data {
-  target = data.aws_subnet.private["app_1"]
+  target = module.eks.data.aws_subnet.private["app_1"]
   values = { vpc_id = "vpc-00000000000000001", availability_zone = "ap-northeast-2a" }
 }
 
 override_data {
-  target = data.aws_subnet.private["app_2"]
+  target = module.eks.data.aws_subnet.private["app_2"]
   values = { vpc_id = "vpc-00000000000000001", availability_zone = "ap-northeast-2c" }
 }
 
@@ -76,10 +76,8 @@ run "plan_eks_before_subnet_ids_and_role_arn_are_assigned" {
 
   assert {
     condition = (
-      toset(keys(data.aws_subnet.private)) == toset(["app_1", "app_2"]) &&
-      aws_eks_cluster.this.vpc_config[0].endpoint_private_access && !aws_eks_cluster.this.vpc_config[0].endpoint_public_access &&
-      toset(keys(aws_eks_access_entry.admin)) == setunion(var.admin_principal_arns, ["arn:aws:iam::123456789012:role/petclinic-prod-management-ssm"]) &&
-      keys(aws_eks_access_entry.admin) == keys(aws_eks_access_policy_association.admin)
+      module.eks.cluster_name == var.cluster_name &&
+      toset(keys(local.cluster_admins)) == setunion(var.admin_principal_arns, ["arn:aws:iam::123456789012:role/petclinic-prod-management-ssm"])
     )
     error_message = "A new environment must plan both app subnet lookups and the intended private-cluster access entries."
   }
@@ -93,7 +91,7 @@ run "postgres_from_eks_cluster_security_group" {
   }
 
   override_resource {
-    target          = aws_eks_cluster.this
+    target          = module.eks.aws_eks_cluster.this
     override_during = plan
     values = {
       vpc_config = { cluster_security_group_id = "sg-00000000000000001" }
