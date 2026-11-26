@@ -9,6 +9,7 @@ variables {
   rds_security_group_id        = "sg-00000000000000002"
   eks_security_group_id        = "sg-00000000000000001"
   management_host_cidr         = "10.20.0.19/32"
+  azure_dr_nat_public_ip       = "192.0.2.17"
 }
 
 run "seoul_peering_and_management_api" {
@@ -59,5 +60,21 @@ run "postgres_from_eks_and_management" {
       ] : rule.ip_protocol == "tcp" && rule.from_port == 5432 && rule.to_port == 5432])
     )
     error_message = "Allow PostgreSQL from the EKS cluster security group and from the management host to both DB subnets."
+  }
+}
+
+run "postgres_from_azure_dr_nat" {
+  command = plan
+  module { source = "./connectivity" }
+
+  assert {
+    condition = (
+      aws_vpc_security_group_ingress_rule.rds_from_azure_dr_nat.security_group_id == var.rds_security_group_id &&
+      aws_vpc_security_group_ingress_rule.rds_from_azure_dr_nat.cidr_ipv4 == "${var.azure_dr_nat_public_ip}/32" &&
+      aws_vpc_security_group_ingress_rule.rds_from_azure_dr_nat.ip_protocol == "tcp" &&
+      aws_vpc_security_group_ingress_rule.rds_from_azure_dr_nat.from_port == 5432 &&
+      aws_vpc_security_group_ingress_rule.rds_from_azure_dr_nat.to_port == 5432
+    )
+    error_message = "RDS must allow only TCP 5432 in this rule, from the single Azure DR NAT address."
   }
 }
