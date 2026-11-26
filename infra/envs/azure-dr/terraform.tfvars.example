@@ -1,0 +1,8 @@
+azure_subscription_id    = "구독-id"
+resource_group_name      = "FINAL"
+zone                     = "1"
+my_ip                    = "x.x.x.x"
+vm_admin_username        = "azureuser"
+vm_ssh_public_key        = "ssh-ed25519 AAAA 여기에-공개키"
+db_administrator_login   = "petclinic"
+db_administrator_password = "대소문자-숫자-기호-포함"
