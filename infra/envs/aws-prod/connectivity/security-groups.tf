@@ -54,3 +54,18 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_eks" {
     Name        = "petclinic-prod-rds-from-eks"
   }
 }
+
+resource "aws_vpc_security_group_ingress_rule" "rds_from_azure_dr_nat" {
+  security_group_id = var.rds_security_group_id
+  cidr_ipv4         = "${var.azure_dr_nat_public_ip}/32"
+  ip_protocol       = "tcp"
+  from_port         = 5432
+  to_port           = 5432
+
+  tags = {
+    project     = "petclinic"
+    environment = "prod"
+    component   = "database"
+    Name        = "petclinic-prod-rds-from-azure-dr-nat"
+  }
+}

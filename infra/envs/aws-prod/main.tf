@@ -50,4 +50,6 @@ module "connectivity" {
   rds_security_group_id        = module.seoul_vpc1.rds_security_group_id
   eks_security_group_id        = module.eks.cluster_security_group_id
   management_host_cidr         = local.management_host_cidr
+  # azure-dr output public_ip: 고정 NAT 송신 IP.
+  azure_dr_nat_public_ip = "4.230.9.84"
 }
