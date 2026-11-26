@@ -1,13 +1,30 @@
 # Terraform 실행과 state 관리
 
-GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검증 및 AWS mock plan 테스트를 실행한다. 실계정 대상 plan이나 apply는 실행하지 않는다. CI는 backend를 연결하지 않으며 AWS 자격 증명이 필요 없다. 병합만으로 배포되지 않는다. 실제 `plan`과 `apply`는 배포 권한을 부여받은 담당자가 최신 `main`으로 수동 실행한다.
+GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검증 및 AWS·Azure mock plan 테스트를 실행한다. CI는 클라우드 자격 증명 없이 동작한다. 실제 `plan`과 `apply`는 배포 권한을 부여받은 담당자가 해당 환경에서 실행한다.
 
 | 작업 폴더 | 공유 state |
 |---|---|
 | `envs/aws-prod/` | 서울 `ap-northeast-2` · `s3://petclinic-prod-tfstate-seoul/petclinic/aws-prod/terraform.tfstate` (S3 버전 관리·네이티브 잠금) |
-| `envs/azure-dr/` | 별도 비공개 Azure Blob (향후 구성). AWS 자격 증명이나 state에 의존하지 않는다. |
+| `envs/azure-dr/` | Korea Central · 스토리지 계정 `stpetclinicdrtfstate` · 컨테이너 `tfstate` · Blob `petclinic/azure-dr/terraform.tfstate` (버전 관리·Blob lease 잠금) |
 
 개인·브랜치·모듈별 운영 state는 만들지 않는다. State는 DB 백업이 아니며 비밀 값이 들어갈 수 있다. state, 백업, plan은 Git·PR에 올리지 않는다. `.terraform.lock.hcl`은 provider 버전 기록이므로 커밋한다.
+
+## Azure DR backend와 팀 접근
+
+두 실행 루트는 서로의 state를 참조하지 않는다. Azure 스토리지 계정과 컨테이너는 `FINAL`에 Azure DR 워크로드와 별도로 준비하므로 워크로드의 `terraform destroy` 범위에서 제외된다. `FINAL` 리소스 그룹 자체를 삭제하면 저장소도 함께 삭제된다.
+
+- Azure 운영자는 각자 Entra ID로 로그인한다. 관리자는 팀 보안 그룹의 개체 ID를 확인한 뒤 `stpetclinicdrtfstate/blobServices/default/containers/tfstate` 범위에 **Storage Blob Data Contributor**를 부여한다. 이 역할은 state의 읽기·쓰기·삭제와 잠금을 허용한다. 멤버는 그룹에서 관리한다.
+- 저장소는 HTTPS·TLS 1.2 이상을 사용하고 익명 Blob 접근과 공유 키 인증을 차단한다. Blob 버전 관리와 Blob·컨테이너 14일 일시 삭제 복구를 사용한다.
+- Azure를 처음 배포하는 체크아웃은 `terraform -chdir=infra/envs/azure-dr init`으로 연결한다. 기존 로컬 **Azure** state에 배포한 자원이 있다면 동시 작업을 멈추고 원본 백업과 대상 Blob을 확인한 뒤 해당 체크아웃에서 `init -migrate-state`를 실행한다. 대상에 이미 다른 state가 있으면 덮어쓰기 전에 두 state의 관리 리소스를 대조한다.
+
+팀 그룹에 역할을 부여할 관리자는 `FINAL` 구독을 선택한 뒤 `TEAM_GROUP_ID`에 확인한 Entra 보안 그룹의 개체 ID를 설정하고 아래 명령을 실행한다.
+
+```bash
+state_account_id=$(az storage account show -g FINAL -n stpetclinicdrtfstate --query id -o tsv)
+az role assignment create --assignee-object-id "${TEAM_GROUP_ID:?Set the Entra security group object ID}" \
+  --assignee-principal-type Group --role "Storage Blob Data Contributor" \
+  --scope "${state_account_id}/blobServices/default/containers/tfstate"
+```
 
 ## AWS 관리자: 배포 전 한 번 준비
 
