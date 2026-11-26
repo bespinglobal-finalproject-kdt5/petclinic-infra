@@ -19,8 +19,10 @@ jobs:
         run: |
           for dir in infra/envs/*; do
             compgen -G "$dir/*.tf" > /dev/null || continue
-            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" init -backend=false -input=false -lockfile=readonly
             terraform -chdir="$dir" validate
           done
       - name: Run AWS production mock plan tests (no AWS credentials)
         run: terraform -chdir=infra/envs/aws-prod test -no-color
+      - name: Run Azure DR mock plan tests (no Azure credentials)
+        run: terraform -chdir=infra/envs/azure-dr test -no-color

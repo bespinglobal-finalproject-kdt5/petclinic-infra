@@ -1,6 +1,5 @@
 # 토폴로지 그림의 Azure 칸만 만든다. AWS RDS 는 이 폴더에 없다.
 # Korea Central. 그림 라벨 "Azure · Korea Central (서울)".
-# Azure Blob backend 는 아직 없다. 로컬 plan 만 하고 Git 에 state 를 올리지 않는다.
 
 terraform {
   required_version = ">= 1.10, < 2.0"

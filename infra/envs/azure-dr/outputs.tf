@@ -1,4 +1,4 @@
-# RDS 보안 그룹에 /32 로 넣을 Azure 출구. 서버 FQDN 과 다르다.
+# Azure에서 인터넷으로 송신할 때 사용하는 NAT 공인 IP.
 output "public_ip" {
   value = azurerm_public_ip.public_ip.ip_address
 }
