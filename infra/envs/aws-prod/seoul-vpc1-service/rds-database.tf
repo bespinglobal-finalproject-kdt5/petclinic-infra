@@ -15,7 +15,7 @@ resource "aws_db_instance" "petclinic" {
   port                   = 5432
   db_subnet_group_name   = aws_db_subnet_group.petclinic.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false # 공개 접근을 끈다.
+  publicly_accessible    = true
   multi_az               = true
 
   # gp3 스토리지와 저장 암호화
