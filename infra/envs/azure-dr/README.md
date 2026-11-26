@@ -8,7 +8,7 @@
 |---|---|
 | VNet | `Services-VNet` `10.30.0.0/25` (본선 예약 `10.30.0.0/24`의 앞절반) |
 | 프라이빗 | `Pet-DR-private-1` `10.30.0.0/27`, Ubuntu 24.04 VM, SSH 22는 `my_ip`만 |
-| DB | `Pet-DR-db-1` `10.30.0.32/27` 위임, PostgreSQL 16 Flexible Server, 공인 접속 꺼짐 |
+| DB | `Pet-DR-db-1` `10.30.0.32/27` 위임, PostgreSQL 16 Flexible Server, `Standard_B2ats_v2`(2 vCore, 1 GiB), 공인 접속 꺼짐 |
 | NAT | VM·DB 서브넷이 인터넷으로 송신할 때 `Public-IP`를 쓴다. 서울 사설 RDS로의 접근에는 두 클라우드 사이의 라우팅이 별도로 필요하다. |
 | 접속 | 노트북 → VM 공인 IP SSH → VM에서 사설 FQDN으로 `psql` |
 | 자격 증명과 state | Azure CLI로 로그인한 운영자가 Entra ID로 전용 Blob 컨테이너에 접근한다. DB 관리자 비밀번호가 포함되는 state는 팀 배포 권한으로 보호한다. |

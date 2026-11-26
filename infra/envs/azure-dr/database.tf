@@ -7,10 +7,9 @@ resource "azurerm_private_dns_zone" "pg" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "pg" {
-  name                  = "Services-VNet"
-  resource_group_name   = data.azurerm_resource_group.this.name
-  private_dns_zone_name = azurerm_private_dns_zone.pg.name
-  virtual_network_id    = azurerm_virtual_network.services_vnet.id
+  name                = "Services-VNet"
+  private_dns_zone_id = azurerm_private_dns_zone.pg.id
+  virtual_network_id  = azurerm_virtual_network.services_vnet.id
 }
 
 resource "azurerm_postgresql_flexible_server" "flexible_server" {
@@ -22,7 +21,7 @@ resource "azurerm_postgresql_flexible_server" "flexible_server" {
   administrator_login    = var.db_administrator_login
   administrator_password = var.db_administrator_password
 
-  sku_name     = "B_Standard_B1ms"
+  sku_name     = "B_Standard_B2ats_v2"
   version      = "16"
   storage_mb   = 32768
   storage_tier = "P4"

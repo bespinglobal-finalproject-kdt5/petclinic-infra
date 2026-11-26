@@ -69,13 +69,18 @@ run "private_postgresql" {
   command = plan
 
   assert {
+    condition     = azurerm_postgresql_flexible_server.flexible_server.sku_name == "B_Standard_B2ats_v2"
+    error_message = "The Korea Central PoC must use the B2ats v2 PostgreSQL SKU."
+  }
+
+  assert {
     condition = (
       !azurerm_postgresql_flexible_server.flexible_server.public_network_access_enabled &&
       azurerm_postgresql_flexible_server.flexible_server.version == "16" &&
       azurerm_postgresql_flexible_server.flexible_server.delegated_subnet_id == azurerm_subnet.db.id &&
       one(one(azurerm_subnet.db.delegation).service_delegation).name == "Microsoft.DBforPostgreSQL/flexibleServers" &&
       azurerm_postgresql_flexible_server.flexible_server.private_dns_zone_id == azurerm_private_dns_zone.pg.id &&
-      azurerm_private_dns_zone_virtual_network_link.pg.private_dns_zone_name == azurerm_private_dns_zone.pg.name &&
+      azurerm_private_dns_zone_virtual_network_link.pg.private_dns_zone_id == azurerm_private_dns_zone.pg.id &&
       azurerm_private_dns_zone_virtual_network_link.pg.virtual_network_id == azurerm_virtual_network.services_vnet.id
     )
     error_message = "PostgreSQL 16 must use the delegated DB subnet and private DNS linked to the DR VNet, with public access disabled."

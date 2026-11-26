@@ -7,12 +7,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.80"
+      version = "~> 5.15"
     }
   }
 }
 
-# 4.x 는 subscription_id 가 없으면 plan 이 거절된다.
 # 값은 terraform.tfvars 에만 둔다. 이 파일에 구독 ID를 적지 않는다.
 provider "azurerm" {
   features {}
