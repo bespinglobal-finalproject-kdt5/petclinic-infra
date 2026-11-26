@@ -19,7 +19,7 @@ GitHub Actions는 PR에서 형식 검사, backend 없는 초기화, 구성 검�
 
 2026년 11월 26일 운영 state를 오사카에서 서울로 이전했다. 키는 `petclinic/aws-prod/terraform.tfstate`이며 원본의 lineage와 serial을 보존했다. 서울 버킷에는 S3 버전 관리, SSE-S3 암호화, 퍼블릭 액세스 차단과 네이티브 잠금을 사용한다.
 
-오사카 버킷 `petclinic-prod-tfstate-osaka`에는 이전 시점까지의 운영 state 버전과 `archive/tokyo/`의 도쿄 복구 이력을 보관한다. 기존 체크아웃의 동시 배포를 막기 위해 오사카 운영 키의 쓰기·삭제와 잠금 파일 생성을 차단했다. 서울 이전 이후의 state 버전은 서울 버킷에서 확인한다.
+서울에는 전환 시점의 최신 state 한 버전부터 보관한다. 오사카 버킷 `petclinic-prod-tfstate-osaka`과 그 안의 과거 state·도쿄 보관본은 폐기 대상이다. 구 버킷을 가리키는 체크아웃에서는 배포를 중단하고 아래 절차로 서울에 연결한다.
 
 배포 역할에 서울 버킷의 state 및 잠금 권한을 부여한다. 기존에 `-backend-config=backend.hcl`을 사용했다면 로컬 override를 [서울 예시](envs/aws-prod/backend.hcl.example)에 맞춘 뒤 연결한다. 아래 명령은 이미 이전된 state에 연결하는 절차다.
 
@@ -35,7 +35,7 @@ terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 �
 
 대상과 추가·변경·삭제 내역을 확인한 뒤 **해당 계획만** `terraform apply reviewed.tfplan`으로 적용한다. backend 초기화만으로는 VPC가 생기지 않지만 실제 네트워크 계획을 적용하면 자원이 생성된다. 계획에는 확인한 `aws_account_id`, `aws_region`, `availability_zones`를 입력해야 한다. 로컬 `terraform.tfvars`에 넣을 경우 Git에 올리지 않는다. 같은 환경에 한 번에 하나의 apply만 실행한다. 잠금이 있으면 진행 중인 작업부터 확인하며, state의 직접 편집·삭제 및 임의 잠금 해제는 금지한다. 복구 시 작업을 멈추고 복원할 객체 버전을 팀과 확인한다.
 
-복구가 필요하면 모든 writer를 멈추고 서울의 최신 버전을 먼저 보존한다. 이전 시점의 state는 오사카 S3 객체 버전으로, 도쿄 보관본은 오사카의 `archive/tokyo/petclinic/aws-prod/manifest.json`으로 확인하고 팀의 승인된 복구 절차를 따른다. `archive/`를 백엔드로 연결하거나 이전 도쿄 버킷 이름을 다시 사용하지 않는다. 보관본을 운영 state에 임의로 덮어쓰지 않는다.
+복구가 필요하면 모든 writer를 멈추고 서울의 최신 버전을 먼저 보존한다. 서울 운영 키의 버전 ID와 내용을 확인하고 팀의 승인된 복구 절차를 따른다. 도쿄·오사카 시기의 과거 버전은 서울에서 복원할 수 없다. 보관본을 운영 state에 임의로 덮어쓰지 않는다.
 
 서울 VPC·엣지 모듈 분리 이전의 state를 복원할 때는 커밋 `b6637b4`의 주소 대응표로 기존 AWS 리소스 ID와 현재 모듈 주소를 대조한다.
 
