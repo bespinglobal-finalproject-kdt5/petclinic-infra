@@ -4,7 +4,7 @@
 
 ## 모듈 구성
 
-각 모듈은 사용하는 조회를 자체 `data.tf`에 모은다. 루트는 기존 Route 53 공개 호스팅 영역을 조회해 import와 CloudFront에 전달한다. [루트 조회](data.tf) · [CloudFront 정책·ALB·원본 IP 대역 목록](cloudfront/data.tf) · [EKS 네트워크·OIDC](eks/data.tf) · [관리 VPC의 Ubuntu AMI](seoul-vpc2-management/data.tf) · [영역 import](imports.tf) · [루트 출력](outputs.tf)
+각 모듈은 사용하는 조회를 자체 `data.tf`에 모은다. 루트는 기존 Route 53 공개 호스팅 영역을 조회해 CloudFront 모듈로 import한다. 모듈의 A·AAAA 별칭과 ACM 검증 CNAME은 이 영역을 직접 참조한다. [루트 조회](data.tf) · [CloudFront 정책·ALB·원본 IP 대역 목록](cloudfront/data.tf) · [EKS 네트워크·OIDC](eks/data.tf) · [관리 VPC의 Ubuntu AMI](seoul-vpc2-management/data.tf) · [영역 import](imports.tf) · [루트 출력](outputs.tf)
 
 | 하위 모듈 | 관리하는 자원 |
 |---|---|

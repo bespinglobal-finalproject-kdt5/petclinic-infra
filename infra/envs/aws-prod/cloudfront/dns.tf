@@ -10,7 +10,7 @@ resource "aws_route53_zone" "delegated" {
 
 resource "aws_route53_record" "viewer" {
   for_each = toset(["A", "AAAA"])
-  zone_id  = var.public_zone_id
+  zone_id  = aws_route53_zone.delegated.zone_id
   name     = var.domain
   type     = each.value
 

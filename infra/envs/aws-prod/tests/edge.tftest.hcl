@@ -5,13 +5,18 @@ mock_provider "aws" {
 variables {
   certificate_region = "us-east-1"
   domain             = "mission-critical.site"
-  public_zone_id     = "ZMOCKPUBLIC"
   vpc_id             = "vpc-00000000000000001"
 }
 
 run "waiting_for_eks_origin" {
   command = plan
   module { source = "./cloudfront" }
+
+  override_resource {
+    target          = aws_route53_zone.delegated
+    override_during = plan
+    values          = { zone_id = "ZMOCKDELEGATED" }
+  }
 
   assert {
     condition = (
@@ -34,7 +39,7 @@ run "waiting_for_eks_origin" {
       aws_acm_certificate.viewer.region == "us-east-1" && aws_acm_certificate_validation.viewer.region == "us-east-1" &&
       aws_acm_certificate.viewer.domain_name == "mission-critical.site" && aws_acm_certificate.viewer.validation_method == "DNS" &&
       one(aws_acm_certificate_validation.viewer.validation_record_fqdns) == aws_route53_record.validation.fqdn &&
-      aws_route53_record.validation.zone_id == var.public_zone_id && aws_route53_record.validation.type == "CNAME" &&
+      aws_route53_record.validation.zone_id == aws_route53_zone.delegated.zone_id && aws_route53_record.validation.type == "CNAME" &&
       aws_route53_record.validation.name == one(aws_acm_certificate.viewer.domain_validation_options).resource_record_name &&
       one(aws_route53_record.validation.records) == one(aws_acm_certificate.viewer.domain_validation_options).resource_record_value
     )
@@ -45,7 +50,7 @@ run "waiting_for_eks_origin" {
       aws_route53_zone.delegated.name == var.domain &&
       toset(keys(aws_route53_record.viewer)) == toset(["A", "AAAA"]) &&
       alltrue([for t, r in aws_route53_record.viewer : r.type == t && r.name == "mission-critical.site" &&
-        r.zone_id == var.public_zone_id && one(r.alias).name == aws_cloudfront_distribution.edge.domain_name &&
+        r.zone_id == aws_route53_zone.delegated.zone_id && one(r.alias).name == aws_cloudfront_distribution.edge.domain_name &&
         one(r.alias).zone_id == aws_cloudfront_distribution.edge.hosted_zone_id && !one(r.alias).evaluate_target_health
       ])
     )

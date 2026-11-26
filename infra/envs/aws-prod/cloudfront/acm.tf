@@ -16,7 +16,7 @@ locals {
 }
 
 resource "aws_route53_record" "validation" {
-  zone_id = var.public_zone_id
+  zone_id = aws_route53_zone.delegated.zone_id
   name    = local.validation.resource_record_name
   type    = local.validation.resource_record_type
   records = [local.validation.resource_record_value]
