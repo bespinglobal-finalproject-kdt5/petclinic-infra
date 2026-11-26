@@ -7,11 +7,6 @@ variable "certificate_region" {
   type        = string
 }
 
-variable "public_zone_id" {
-  description = "Existing Route 53 public zone for the domain."
-  type        = string
-}
-
 variable "vpc_id" {
   type = string
 }

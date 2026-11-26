@@ -38,7 +38,6 @@ module "cloudfront" {
   source             = "./cloudfront"
   certificate_region = local.cloudfront_certificate_region
   domain             = local.domain
-  public_zone_id     = data.aws_route53_zone.public.zone_id
   vpc_id             = module.seoul_vpc1.service_vpc_id
   eks_alb_arn        = var.eks_alb_arn
 }
