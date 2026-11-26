@@ -36,3 +36,5 @@ terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 �
 복구가 필요하면 모든 writer를 멈추고 오사카의 최신 버전을 먼저 보존한다. manifest로 보관본의 체크섬과 버전을 확인하고 팀의 승인된 복구 절차를 따른다. `archive/`를 백엔드로 연결하거나 이전 도쿄 버킷 이름을 다시 사용하지 않는다. 보관본을 운영 state에 임의로 덮어쓰지 않는다.
 
 서울 VPC·엣지 모듈 분리 이전의 state를 복원할 때는 커밋 `b6637b4`의 주소 대응표로 기존 AWS 리소스 ID와 현재 모듈 주소를 대조한다.
+
+2026년 11월 26일 오사카 운영 state의 EKS 리소스 26개가 기존 AWS 리소스 ID를 유지한 채 `module.eks`로 이동했다(serial 78 → 79). 옛 루트 주소를 담은 백업을 복원할 때는 배포 전에 해당 버전의 EKS 주소 매핑을 사용해 이전 plan을 확인한다. [EKS 주소 매핑 원본](https://github.com/bespinglobal-finalproject-kdt5/petclinic-infra/blob/d077c40e64b6dd3233f578513db6ba5c8a1054e2/infra/envs/aws-prod/moved.tf)
