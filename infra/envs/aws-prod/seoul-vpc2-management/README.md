@@ -22,8 +22,8 @@
 
 | 대상 | 관리 EC2에서 연결하는 방식 |
 |---|---|
-| EKS 비공개 API · TCP 443 | 관리 서브넷은 서비스 VPC `10.10.0.0/22`로, 앱 서브넷은 관리 VPC `10.20.0.0/24`로 가는 트래픽을 같은 피어링으로 보낸다. 클러스터 보안 그룹은 관리 EC2의 사설 IP `/32`를 허용한다. 관리 EC2 역할에는 `eks:DescribeCluster`와 EKS 클러스터 관리자 접근 권한이 있다. [보안 그룹과 피어링](../network-connections.tf) · [관리 IAM 역할 연결](../management-access.tf) · [EKS 접근 항목](../eks/cluster.tf) |
-| RDS PostgreSQL · TCP 5432 | 관리 서버 보안 그룹은 두 DB 서브넷을 포함한 `10.10.2.64/26`으로 송신한다. RDS 보안 그룹은 관리 EC2의 사설 IP `/32`에서 수신하고, DB 서브넷은 같은 `/32`로 가는 응답을 피어링으로 보낸다. [TCP 5432 규칙](../network-connections.tf) · [DB 반환 경로](../seoul-vpc1-service/main.tf) |
+| EKS 비공개 API · TCP 443 | 관리 서브넷은 서비스 VPC `10.10.0.0/22`로, 앱 서브넷은 관리 VPC `10.20.0.0/24`로 가는 트래픽을 같은 피어링으로 보낸다. 클러스터 보안 그룹은 관리 EC2의 사설 IP `/32`를 허용한다. 관리 EC2 역할에는 `eks:DescribeCluster`와 EKS 클러스터 관리자 접근 권한이 있다. [보안 그룹과 피어링](../connectivity/) · [관리 IAM 역할 연결](../management-access.tf) · [EKS 접근 항목](../eks/cluster.tf) |
+| RDS PostgreSQL · TCP 5432 | 관리 서버 보안 그룹은 두 DB 서브넷을 포함한 `10.10.2.64/26`으로 송신한다. RDS 보안 그룹은 관리 EC2의 사설 IP `/32`에서 수신하고, DB 서브넷은 같은 `/32`로 가는 응답을 피어링으로 보낸다. [TCP 5432 규칙](../connectivity/security-groups.tf) · [DB 반환 경로](../seoul-vpc1-service/main.tf) |
 
 ## Session Manager 접속
 

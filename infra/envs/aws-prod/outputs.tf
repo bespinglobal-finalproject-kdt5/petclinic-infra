@@ -37,7 +37,7 @@ output "cloudfront_domain_name" {
 }
 
 output "cloudfront_origin_prefix_list_id" {
-  value = data.aws_ec2_managed_prefix_list.cloudfront_origin.id
+  value = module.cloudfront.cloudfront_origin_prefix_list_id
 }
 
 output "internal_alb_dns_name" {

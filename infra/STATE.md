@@ -40,3 +40,28 @@ terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 �
 서울 VPC·엣지 모듈 분리 이전의 state를 복원할 때는 커밋 `b6637b4`의 주소 대응표로 기존 AWS 리소스 ID와 현재 모듈 주소를 대조한다.
 
 2026년 11월 26일 오사카 운영 state의 EKS 리소스 26개가 기존 AWS 리소스 ID를 유지한 채 `module.eks`로 이동했다(serial 78 → 79). 옛 루트 주소를 담은 백업을 복원할 때는 배포 전에 해당 버전의 EKS 주소 매핑을 사용해 이전 plan을 확인한다. [EKS 주소 매핑 원본](https://github.com/bespinglobal-finalproject-kdt5/petclinic-infra/blob/d077c40e64b6dd3233f578513db6ba5c8a1054e2/infra/envs/aws-prod/moved.tf)
+
+## 서울 모듈 주소 이전
+
+기존 서울 state를 쓰는 경우 배포 담당자가 모듈 분리 브랜치에서 주소를 한 번 이전한다. 같은 state를 사용하는 팀원의 배포를 멈추고 서울 S3 객체의 현재 버전 ID를 기록한다. `infra/envs/aws-prod`에서 `terraform init`과 `terraform state list`를 실행한 뒤, 표의 기존 주소가 남아 있고 새 주소가 비어 있는 항목에만 `terraform state mv -lock-timeout=60s '기존 주소' '새 주소'`를 실행한다. 앞의 두 행은 모듈 전체를 옮긴다.
+
+| 기존 주소 | 새 주소 |
+|---|---|
+| `module.edge` | `module.cloudfront` |
+| `module.seoul_vpc2.module.management_server` | `module.seoul_vpc2.module.server` |
+| `module.seoul_vpc2.module.build_server.aws_security_group.build` | `module.seoul_vpc2.module.server.aws_security_group.build` |
+| `module.seoul_vpc2.module.build_server.aws_iam_role.build` | `module.seoul_vpc2.module.server.aws_iam_role.build` |
+| `module.seoul_vpc2.module.build_server.aws_iam_role_policy_attachment.ssm` | `module.seoul_vpc2.module.server.aws_iam_role_policy_attachment.build_ssm` |
+| `module.seoul_vpc2.module.build_server.aws_iam_instance_profile.build` | `module.seoul_vpc2.module.server.aws_iam_instance_profile.build` |
+| `module.seoul_vpc2.module.build_server.aws_instance.build` | `module.seoul_vpc2.module.server.aws_instance.build` |
+| `module.seoul_vpc2.module.build_server.aws_eip.build` | `module.seoul_vpc2.module.server.aws_eip.build` |
+| `aws_vpc_peering_connection.management_service` | `module.connectivity.aws_vpc_peering_connection.management_service` |
+| `aws_vpc_peering_connection_options.management_service` | `module.connectivity.aws_vpc_peering_connection_options.management_service` |
+| `aws_vpc_security_group_egress_rule.management_to_rds` | `module.connectivity.aws_vpc_security_group_egress_rule.management_to_rds` |
+| `aws_vpc_security_group_ingress_rule.rds_from_management` | `module.connectivity.aws_vpc_security_group_ingress_rule.rds_from_management` |
+| `aws_vpc_security_group_ingress_rule.management_api` | `module.connectivity.aws_vpc_security_group_ingress_rule.management_api` |
+| `aws_vpc_security_group_ingress_rule.rds_from_eks` | `module.connectivity.aws_vpc_security_group_ingress_rule.rds_from_eks` |
+| `aws_vpc_security_group_egress_rule.management_http` | `module.seoul_vpc2.module.server.aws_vpc_security_group_egress_rule.management_http` |
+| `aws_vpc_security_group_egress_rule.management_https` | `module.seoul_vpc2.module.server.aws_vpc_security_group_egress_rule.management_https` |
+
+마지막으로 새 주소에 연결된 AWS ID와 전체 `terraform plan`을 확인한다. 이 리팩토링의 기대 결과는 AWS 리소스 생성·변경·삭제 각 0건이다. 팀은 새 모듈 구성이 병합된 `main`에서 배포를 재개한다.

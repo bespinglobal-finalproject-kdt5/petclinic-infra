@@ -2,14 +2,6 @@ locals {
   edge_tags = { project = "petclinic", environment = "prod", component = "network" }
 }
 
-data "aws_cloudfront_origin_request_policy" "api" {
-  name = "Managed-AllViewerExceptHostHeader"
-}
-
-data "aws_cloudfront_cache_policy" "disabled" {
-  name = "Managed-CachingDisabled"
-}
-
 resource "aws_cloudfront_distribution" "edge" {
   enabled         = local.use_vpc_origin
   is_ipv6_enabled = true
