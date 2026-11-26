@@ -1,3 +1,7 @@
+locals {
+  domain = "mission-critical.site"
+}
+
 module "seoul_vpc1" {
   source               = "./seoul-vpc1-service"
   availability_zones   = var.availability_zones

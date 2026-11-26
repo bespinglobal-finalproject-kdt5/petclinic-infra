@@ -4,6 +4,8 @@
 
 ## 모듈 구성
 
+운영 루트에서 사용하는 Route 53 공개 호스팅 영역과 CloudFront 원본 연결용 IP 대역 목록은 `data.tf`에서 조회한다. 기존 호스팅 영역을 인수하는 선언은 `imports.tf`, 팀에서 조회할 출력은 `outputs.tf`에 둔다. [외부 리소스 조회](data.tf) · [영역 import](imports.tf) · [루트 출력](outputs.tf)
+
 | 하위 모듈 | 관리하는 자원 |
 |---|---|
 | [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 피어링 반환 경로, [Multi-AZ RDS PostgreSQL](seoul-vpc1-service/rds-database.tf) |

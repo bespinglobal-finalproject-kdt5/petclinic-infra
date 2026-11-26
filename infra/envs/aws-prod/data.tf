@@ -1,6 +1,8 @@
+data "aws_route53_zone" "public" {
+  name         = local.domain
+  private_zone = false
+}
+
 data "aws_ec2_managed_prefix_list" "cloudfront_origin" {
   name = "com.amazonaws.global.cloudfront.origin-facing"
-}
-output "cloudfront_origin_prefix_list_id" {
-  value = data.aws_ec2_managed_prefix_list.cloudfront_origin.id
 }

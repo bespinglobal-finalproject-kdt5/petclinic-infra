@@ -36,6 +36,10 @@ output "cloudfront_domain_name" {
   value = module.cloudfront.cloudfront_domain_name
 }
 
+output "cloudfront_origin_prefix_list_id" {
+  value = data.aws_ec2_managed_prefix_list.cloudfront_origin.id
+}
+
 output "internal_alb_dns_name" {
   description = "Private ALB selected as the CloudFront origin when eks_alb_arn is set."
   value       = module.cloudfront.internal_alb_dns_name
