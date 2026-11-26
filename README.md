@@ -29,7 +29,7 @@ PetClinic은 AWS 서울 리전의 EKS에서 Angular 웹과 Spring REST API를 �
 | 관리 VPC, 빌드·관리 EC2와 SSM | [seoul-vpc2-management/](infra/envs/aws-prod/seoul-vpc2-management/) |
 | EKS 클러스터·노드·애드온, 컨트롤러 IAM | [eks/](infra/envs/aws-prod/eks/) |
 | CloudFront 배포·VPC Origin, Route 53·ACM (`module.cloudfront`) | [cloudfront/](infra/envs/aws-prod/cloudfront/) |
-| VPC 피어링, 관리 EC2 → EKS·RDS, EKS → RDS 보안 그룹 규칙 | [network-connections.tf](infra/envs/aws-prod/network-connections.tf) |
+| VPC 피어링, 관리 EC2 → EKS·RDS, EKS → RDS 보안 그룹 규칙 | [connectivity/](infra/envs/aws-prod/connectivity/) |
 
 ## 작업별 문서
 

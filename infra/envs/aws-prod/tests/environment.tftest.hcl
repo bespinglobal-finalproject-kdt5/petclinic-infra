@@ -54,6 +54,18 @@ variables {
 
 run "seoul_management_outputs" {
   command = plan
+
+  override_resource {
+    target          = module.seoul_vpc2.module.server.aws_instance.management
+    override_during = plan
+    values          = { private_ip = "10.20.0.19" }
+  }
+
+  assert {
+    condition     = local.management_host_cidr == "10.20.0.19/32"
+    error_message = "Scope the management network rules and DB return route to the management EC2 address."
+  }
+
   assert {
     condition = (
       output.service_vpc_id == module.seoul_vpc1.service_vpc_id && output.management_vpc_id == module.seoul_vpc2.management_vpc_id &&
@@ -80,60 +92,6 @@ run "plan_eks_before_subnet_ids_and_role_arn_are_assigned" {
       toset(keys(local.cluster_admins)) == setunion(var.admin_principal_arns, ["arn:aws:iam::123456789012:role/petclinic-prod-management-ssm"])
     )
     error_message = "A new environment must plan both app subnet lookups and the intended private-cluster access entries."
-  }
-}
-
-run "postgres_from_eks_cluster_security_group" {
-  command = plan
-
-  plan_options {
-    target = [aws_vpc_security_group_ingress_rule.rds_from_eks]
-  }
-
-  override_resource {
-    target          = module.eks.aws_eks_cluster.this
-    override_during = plan
-    values = {
-      vpc_config = { cluster_security_group_id = "sg-00000000000000001" }
-    }
-  }
-
-  override_resource {
-    target          = module.seoul_vpc1.aws_security_group.rds
-    override_during = plan
-    values          = { id = "sg-00000000000000002" }
-  }
-
-  assert {
-    condition = (
-      aws_vpc_security_group_ingress_rule.rds_from_eks.security_group_id == "sg-00000000000000002" &&
-      aws_vpc_security_group_ingress_rule.rds_from_eks.referenced_security_group_id == "sg-00000000000000001" &&
-      aws_vpc_security_group_ingress_rule.rds_from_eks.ip_protocol == "tcp" &&
-      aws_vpc_security_group_ingress_rule.rds_from_eks.from_port == 5432 &&
-      aws_vpc_security_group_ingress_rule.rds_from_eks.to_port == 5432
-    )
-    error_message = "RDS must allow TCP 5432 from the EKS cluster security group."
-  }
-}
-
-run "postgres_from_management_server" {
-  command = plan
-
-  override_resource {
-    target          = module.seoul_vpc2.module.server.aws_instance.management
-    override_during = plan
-    values          = { private_ip = "10.20.0.19" }
-  }
-
-  assert {
-    condition = (
-      aws_vpc_security_group_ingress_rule.rds_from_management.cidr_ipv4 == "10.20.0.19/32" &&
-      aws_vpc_security_group_egress_rule.management_to_rds.cidr_ipv4 == "10.10.2.64/26" &&
-      alltrue([for rule in [aws_vpc_security_group_ingress_rule.rds_from_management, aws_vpc_security_group_egress_rule.management_to_rds] :
-        rule.ip_protocol == "tcp" && rule.from_port == 5432 && rule.to_port == 5432
-      ])
-    )
-    error_message = "Allow TCP 5432 from the management host to the DB subnet pair."
   }
 }
 
@@ -172,6 +130,7 @@ run "public_edge" {
   assert {
     condition = (
       data.aws_route53_zone.public.name == "mission-critical.site" && !data.aws_route53_zone.public.private_zone &&
+      output.cloudfront_origin_prefix_list_id == module.cloudfront.cloudfront_origin_prefix_list_id &&
       output.public_url == module.cloudfront.public_url && output.cloudfront_domain_name == module.cloudfront.cloudfront_domain_name &&
       output.cloudfront_distribution_id == module.cloudfront.cloudfront_distribution_id && output.internal_alb_dns_name == module.cloudfront.internal_alb_dns_name
     )

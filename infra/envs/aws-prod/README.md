@@ -4,18 +4,19 @@
 
 ## 모듈 구성
 
-운영 루트에서 사용하는 Route 53 공개 호스팅 영역과 CloudFront 원본 연결용 IP 대역 목록은 `data.tf`에서 조회한다. 기존 호스팅 영역을 인수하는 선언은 `imports.tf`, 팀에서 조회할 출력은 `outputs.tf`에 둔다. [외부 리소스 조회](data.tf) · [영역 import](imports.tf) · [루트 출력](outputs.tf)
+각 모듈은 사용하는 조회를 자체 `data.tf`에 모은다. 루트는 기존 Route 53 공개 호스팅 영역을 조회해 import와 CloudFront에 전달한다. [루트 조회](data.tf) · [CloudFront 정책·ALB·원본 IP 대역 목록](cloudfront/data.tf) · [EKS 네트워크·OIDC](eks/data.tf) · [관리 VPC의 Ubuntu AMI](seoul-vpc2-management/data.tf) · [영역 import](imports.tf) · [루트 출력](outputs.tf)
 
 | 하위 모듈 | 관리하는 자원 |
 |---|---|
 | [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 피어링 반환 경로, [Multi-AZ RDS PostgreSQL](seoul-vpc1-service/rds-database.tf) |
 | [seoul_vpc2](seoul-vpc2-management/main.tf) | 서울 관리 VPC와 두 서브넷, 관리 IGW·NAT, 빌드·관리 EC2, SSM 엔드포인트. [EC2 모듈 연결](seoul-vpc2-management/servers.tf) |
+| [connectivity](connectivity/) | 서울 VPC 간 피어링과 양방향 DNS 해석 옵션, 관리 EC2·EKS·RDS 간 보안 그룹 규칙 |
 | [eks](eks/cluster.tf) | 비공개 EKS 클러스터, 관리형 노드 그룹, EKS 애드온, 관리자 접근 권한, 컨트롤러 IAM 역할 |
 | [cloudfront](cloudfront/cloudfront.tf) | Route 53, CloudFront용 미국 동부 ACM 인증서, ALB용 서울 ACM 인증서, CloudFront 배포 및 선택적 VPC Origin |
 
-운영 state에서 EKS 리소스는 `module.eks` 아래에 있다. CloudFront 코드는 `cloudfront/`에 있다. 루트의 `moved` 블록은 기존 `module.edge` 주소를 `module.cloudfront`에 연결하며, 운영 state는 이 변경을 적용할 때 갱신된다. [루트 모듈 선언](main.tf)
+기존 서울 운영 state를 사용하는 배포 담당자는 모듈 분리 전 주소가 남아 있는지 확인한다. 아래 state 관리 문서의 주소표로 이전한 뒤 전체 plan에서 AWS 리소스 생성·변경·삭제가 각각 0건인지 확인한다. [서울 운영 state 주소 이전](../../STATE.md#서울-모듈-주소-이전)
 
-루트는 관리 EC2에서 피어링을 거쳐 EKS API(TCP 443)와 RDS(TCP 5432)로 가는 규칙을 연결한다. 같은 서비스 VPC 안에서 RDS로 접속하는 EKS 워크로드에는 EKS 클러스터 보안 그룹을 출발지로 허용한다. [모듈 간 보안 그룹 규칙](network-connections.tf) · [관리 역할의 EKS 권한](management-access.tf) · [서브넷별 경로](SUBNET-RULES.md)
+`connectivity` 모듈은 관리 EC2에서 피어링을 거쳐 EKS API(TCP 443)와 RDS(TCP 5432)로 가는 규칙을 연결한다. 같은 서비스 VPC 안에서 RDS로 접속하는 EKS 워크로드에는 EKS 클러스터 보안 그룹을 출발지로 허용한다. [모듈 간 보안 그룹 규칙](connectivity/security-groups.tf) · [관리 역할의 EKS 권한](management-access.tf) · [서브넷별 경로](SUBNET-RULES.md)
 
 ## 운영 입력과 출력
 

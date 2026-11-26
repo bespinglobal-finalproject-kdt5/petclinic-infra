@@ -56,6 +56,15 @@ run "private_session_manager_host" {
   }
 
   assert {
+    condition = alltrue([for port, rule in {
+      "80"  = aws_vpc_security_group_egress_rule.management_http
+      "443" = aws_vpc_security_group_egress_rule.management_https
+      } : rule.security_group_id == aws_security_group.management.id && rule.cidr_ipv4 == "0.0.0.0/0" &&
+    rule.ip_protocol == "tcp" && rule.from_port == tonumber(port) && rule.to_port == tonumber(port)])
+    error_message = "The management host needs outbound HTTP and HTTPS."
+  }
+
+  assert {
     condition = (
       toset(keys(aws_vpc_endpoint.ssm)) == toset(["ssm", "ssmmessages"]) &&
       alltrue([for name, ep in aws_vpc_endpoint.ssm :

@@ -19,3 +19,7 @@ output "alb_certificate_arn" {
   description = "Validated regional certificate for the internal HTTPS listener."
   value       = aws_acm_certificate_validation.alb.certificate_arn
 }
+
+output "cloudfront_origin_prefix_list_id" {
+  value = data.aws_ec2_managed_prefix_list.cloudfront_origin.id
+}

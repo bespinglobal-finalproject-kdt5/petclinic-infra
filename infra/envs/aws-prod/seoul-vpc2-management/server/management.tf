@@ -50,3 +50,21 @@ resource "aws_instance" "management" {
     aws_vpc_endpoint.ssm,
   ]
 }
+
+resource "aws_vpc_security_group_egress_rule" "management_https" {
+  security_group_id = aws_security_group.management.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+  description       = "AWS API, EKS private API and HTTPS downloads"
+}
+
+resource "aws_vpc_security_group_egress_rule" "management_http" {
+  security_group_id = aws_security_group.management.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+  description       = "Ubuntu package downloads and public ALB tests"
+}
