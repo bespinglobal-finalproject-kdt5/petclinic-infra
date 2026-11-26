@@ -4,7 +4,7 @@ PetClinic은 AWS 서울 리전의 EKS에서 Angular 웹과 Spring REST API를 �
 
 ## 운영 토폴로지
 
-2026년 11월 25일 KST 기준. AWS 운영 리소스와 실행 중인 Kubernetes 워크로드를 대조했다. **현재 앱 진입점은 서울의 인터넷 공개 ALB(HTTP 80)**다. 서비스 도메인 `mission-critical.site`는 비활성 CloudFront 배포를 가리킨다.
+**2026년 11월 25일 운영 확인 당시 앱 진입점은 서울의 인터넷 공개 ALB(HTTP 80)였다.** 아래 도면과 표에는 그날 확인한 워크로드 수, 연결 경로, DB 상태를 기록했다. 서비스 도메인 `mission-critical.site`는 당시 비활성 CloudFront 배포를 가리켰다.
 
 [![PetClinic 운영 토폴로지. 공개 ALB에서 EKS의 웹·REST로 요청을 전달하고 REST는 RDS에 연결한다. 관리 EC2는 VPC 피어링으로 EKS와 RDS에 접근한다.](docs/architecture/production-topology.drawio.png)](docs/architecture/production-topology.drawio.png)
 
@@ -18,6 +18,18 @@ PetClinic은 AWS 서울 리전의 EKS에서 Angular 웹과 Spring REST API를 �
 | 서울 관리 VPC · `10.20.0.0/24` | 프라이빗 관리 EC2는 피어링으로 EKS API(443)와 RDS(5432)에 접근한다. DB 서브넷 두 개는 관리 EC2 `10.20.0.18/32`로 응답을 돌려보낸다. 퍼블릭 빌드 EC2는 EIP를 사용하며, 두 EC2 모두 SSM에 온라인으로 등록돼 있다. |
 | DNS·인증서 | Route 53 A·AAAA 별칭은 CloudFront를 가리킨다. VPC 오리진은 0개다. 버지니아 북부의 뷰어 인증서는 CloudFront에 연결돼 있고, 서울 인증서는 발급됐지만 ALB에는 HTTP 리스너만 있다. |
 | 오사카·Azure DR | 오사카 S3에 Terraform state와 잠금 파일을 저장한다. Azure DR은 이 저장소에 `10.30.0.0/24` 대역을 예약한 단계이며, 운영 RDS에서 Azure로 가는 복제 경로는 구성되지 않았다. |
+
+## Terraform 코드 위치
+
+서울의 두 VPC, EKS, CloudFront는 하나의 운영 루트에서 연결한다. 모듈을 수정할 때도 `terraform plan`은 `infra/envs/aws-prod/`에서 실행한다. [모듈 연결](infra/envs/aws-prod/main.tf) · [오사카 S3 backend](infra/envs/aws-prod/backend.tf)
+
+| 변경할 대상 | 코드 위치 |
+|---|---|
+| 서비스 VPC·서브넷·NAT, RDS PostgreSQL | [seoul-vpc1-service/](infra/envs/aws-prod/seoul-vpc1-service/) |
+| 관리 VPC, 빌드·관리 EC2와 SSM | [seoul-vpc2-management/](infra/envs/aws-prod/seoul-vpc2-management/) |
+| EKS 클러스터·노드·애드온, 컨트롤러 IAM | [eks/](infra/envs/aws-prod/eks/) |
+| CloudFront 배포·VPC Origin, Route 53·ACM (`module.edge`) | [cloudfront/](infra/envs/aws-prod/cloudfront/) |
+| VPC 피어링, 관리 EC2 → EKS·RDS, EKS → RDS 보안 그룹 규칙 | [network-connections.tf](infra/envs/aws-prod/network-connections.tf) |
 
 ## 작업별 문서
 
