@@ -79,12 +79,16 @@ run "external_eks_origin" {
     condition = (
       aws_cloudfront_distribution.edge.enabled && length(aws_cloudfront_vpc_origin.eks) == 1 &&
       one(aws_cloudfront_vpc_origin.eks[0].vpc_origin_endpoint_config).arn == var.eks_alb_arn &&
-      one(aws_cloudfront_vpc_origin.eks[0].vpc_origin_endpoint_config).origin_protocol_policy == "http-only" &&
+      one(aws_cloudfront_vpc_origin.eks[0].vpc_origin_endpoint_config).origin_protocol_policy == "https-only" &&
+      one(aws_cloudfront_vpc_origin.eks[0].vpc_origin_endpoint_config).https_port == 443 &&
+      data.aws_cloudfront_origin_request_policy.api.name == "Managed-AllViewer" &&
+      aws_cloudfront_distribution.edge.default_cache_behavior[0].origin_request_policy_id == data.aws_cloudfront_origin_request_policy.api.id &&
+      aws_cloudfront_distribution.edge.ordered_cache_behavior[0].origin_request_policy_id == data.aws_cloudfront_origin_request_policy.api.id &&
       one(aws_cloudfront_distribution.edge.origin).domain_name == data.aws_lb.eks[0].dns_name &&
       length(one(aws_cloudfront_distribution.edge.origin).custom_origin_config) == 0 &&
       one(one(aws_cloudfront_distribution.edge.origin).vpc_origin_config).vpc_origin_id == aws_cloudfront_vpc_origin.eks[0].id
     )
-    error_message = "Route CloudFront to the supplied EKS ALB using a private VPC origin."
+    error_message = "Web and API requests must forward the viewer Host and reach the supplied private EKS ALB over HTTPS on port 443."
   }
 }
 

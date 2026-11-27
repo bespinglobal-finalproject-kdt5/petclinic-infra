@@ -10,8 +10,8 @@ resource "aws_cloudfront_vpc_origin" "eks" {
     name                   = "petclinic-prod-eks-alb"
     arn                    = var.eks_alb_arn
     http_port              = 80
-    https_port             = 443 # Endpoint schema requires this even for http-only.
-    origin_protocol_policy = "http-only"
+    https_port             = 443
+    origin_protocol_policy = "https-only"
     origin_ssl_protocols {
       items    = ["TLSv1.2"]
       quantity = 1
