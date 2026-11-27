@@ -33,11 +33,11 @@ resource "aws_cloudfront_distribution" "edge" {
 
   default_cache_behavior {
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
-    target_origin_id       = "internal-alb"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    cache_policy_id        = data.aws_cloudfront_cache_policy.disabled.id
-    viewer_protocol_policy = "redirect-to-https"
+    target_origin_id         = "internal-alb"
+    allowed_methods          = ["GET", "HEAD"]
+    cached_methods           = ["GET", "HEAD"]
+    cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
+    viewer_protocol_policy   = "redirect-to-https"
   }
 
   ordered_cache_behavior {
