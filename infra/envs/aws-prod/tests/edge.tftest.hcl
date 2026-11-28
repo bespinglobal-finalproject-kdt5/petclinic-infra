@@ -69,11 +69,43 @@ run "waiting_for_eks_origin" {
   }
 }
 
+run "prepared_eks_origin" {
+  command = plan
+  module { source = "./cloudfront" }
+
+  variables {
+    eks_alb_arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/eks/0123456789abcdef"
+  }
+
+  assert {
+    condition = (
+      !aws_cloudfront_distribution.edge.enabled &&
+      length(aws_cloudfront_vpc_origin.eks) == 1 &&
+      output.internal_alb_dns_name == data.aws_lb.eks[0].dns_name &&
+      one(aws_cloudfront_distribution.edge.origin).domain_name == "origin-pending.mission-critical.site" &&
+      length(one(aws_cloudfront_distribution.edge.origin).vpc_origin_config) == 0 &&
+      one(one(aws_cloudfront_distribution.edge.origin).custom_origin_config).origin_protocol_policy == "https-only" &&
+      aws_cloudfront_distribution.edge.default_cache_behavior[0].origin_request_policy_id == null &&
+      data.aws_cloudfront_origin_request_policy.except_host.name == "Managed-AllViewerExceptHostHeader" &&
+      aws_cloudfront_distribution.edge.ordered_cache_behavior[0].origin_request_policy_id == data.aws_cloudfront_origin_request_policy.except_host.id
+    )
+    error_message = "An internal ALB alone must leave the distribution on its disabled configuration."
+  }
+}
+
+run "reject_enabled_without_origin" {
+  command = plan
+  module { source = "./cloudfront" }
+  variables { cloudfront_enabled = true }
+  expect_failures = [var.cloudfront_enabled]
+}
+
 run "external_eks_origin" {
   command = plan
   module { source = "./cloudfront" }
   variables {
-    eks_alb_arn = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/eks/0123456789abcdef"
+    cloudfront_enabled = true
+    eks_alb_arn        = "arn:aws:elasticloadbalancing:ap-northeast-2:123456789012:loadbalancer/app/eks/0123456789abcdef"
   }
   assert {
     condition = (

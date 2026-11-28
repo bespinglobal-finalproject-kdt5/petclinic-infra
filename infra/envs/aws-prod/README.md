@@ -8,7 +8,7 @@
 
 | 하위 모듈 | 관리하는 자원 |
 |---|---|
-| [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 피어링 반환 경로, [Multi-AZ RDS PostgreSQL](seoul-vpc1-service/rds-database.tf) |
+| [seoul_vpc1](seoul-vpc1-service/main.tf) | 서울 서비스 VPC, 앱·DB·퍼블릭 서브넷 각 2개, IGW·NAT, 피어링 반환 경로, [Azure DR용 NLB와 보안 규칙](seoul-vpc1-service/azure-dr-nlb.tf), [Multi-AZ RDS PostgreSQL](seoul-vpc1-service/rds-database.tf) |
 | [seoul_vpc2](seoul-vpc2-management/main.tf) | 서울 관리 VPC와 두 서브넷, 관리 IGW·NAT, 빌드·관리 EC2, SSM 엔드포인트. [EC2 모듈 연결](seoul-vpc2-management/servers.tf) |
 | [connectivity](connectivity/) | 서울 VPC 간 피어링과 양방향 DNS 해석 옵션, 관리 EC2·EKS·RDS 간 보안 그룹 규칙 |
 | [eks](eks/cluster.tf) | 비공개 EKS 클러스터, 관리형 노드 그룹, EKS 애드온, 관리자 접근 권한, 컨트롤러 IAM 역할 |
@@ -31,7 +31,8 @@
 | `cluster_name`, `kubernetes_version`, `node_instance_type`, `node_scaling` | 기본값은 `petclinic-prod-eks`, Kubernetes 1.36, `t3.medium`, 최소 2·희망 2·최대 4대다. |
 | `admin_principal_arns` | 필수 입력. 운영자가 관리할 IAM 사용자·역할 ARN 목록이다. 관리 EC2 역할은 루트가 자동으로 추가한다. |
 | `db_master_password` | RDS 마스터 계정의 비밀번호 입력. DB 모듈의 쓰기 전용 인수로 전달한다. |
-| `eks_alb_arn` | CloudFront VPC Origin 활성화 입력. EKS 담당자가 생성한 내부 ALB와 정상 앱 타깃을 확인할 때까지 기본값 `null`을 사용한다. |
+| `eks_alb_arn` | 내부 ALB의 ARN. 지정하면 해당 ALB용 HTTPS VPC Origin을 준비한다. 기본값은 `null`이다. |
+| `cloudfront_enabled` | 기본값은 `false`다. `true`로 설정하면 준비된 VPC Origin을 배포에 연결하고 도메인 트래픽을 받는다. |
 
 | 작업 | 루트 출력 |
 |---|---|
@@ -46,15 +47,17 @@
 
 ## 서비스 진입점과 CloudFront 전환
 
-2026년 11월 25일 확인된 앱 경로는 공개 ALB(HTTP 80) → EKS Gateway의 경로 규칙 → 웹·REST Pod였다. 아래 내부 ALB와 VPC Origin은 향후 CloudFront를 활성화할 때 사용할 경로다. [운영 확인 기록](../../../docs/architecture/production-topology.md)
+11월 28일 기준 공개 ALB의 HTTP 80과 내부 ALB의 HTTPS 443 대상 그룹은 모두 정상이다. Route 53의 `mission-critical.site` A·AAAA 별칭은 CloudFront를 가리킨다. [Route 53](cloudfront/dns.tf)
 
-두 리전의 ACM 인증서와 공통 DNS 검증 CNAME에는 `prevent_destroy`를 설정했다. 이 리소스의 삭제나 교체가 포함되면 Terraform은 전체 계획을 거부한다. [인증서 삭제 보호](cloudfront/acm.tf)
+운영 입력의 `eks_alb_arn`은 기존 내부 ALB를 지정한다. VPC Origin은 `https-only`로 배포돼 있고, `cloudfront_enabled = false`이므로 배포는 비활성 상태다. 이때 원본은 `origin-pending.mission-critical.site`이고 기본 경로에는 원본 요청 정책이 없다. API 경로에는 `Managed-AllViewerExceptHostHeader`를 사용한다. [배포 설정](cloudfront/cloudfront.tf) · [VPC Origin](cloudfront/vpc-origin.tf)
 
-`mission-critical.site`의 기존 퍼블릭 호스팅 영역을 import하고 A·AAAA 별칭을 CloudFront로 연결한다. DNS 검증 CNAME과 `us-east-1`의 ACM 인증서를 관리한다. 기본값 `eks_alb_arn = null`에서는 CloudFront가 비활성이고 VPC Origin이 없다. 배포 구성의 임시 원본 이름은 `origin-pending.mission-critical.site`이며 해당 이름에 DNS 레코드는 생성하지 않는다. [영역 import](imports.tf) · [Route 53](cloudfront/dns.tf) · [ACM과 DNS 검증](cloudfront/acm.tf) · [CloudFront 배포](cloudfront/cloudfront.tf) · [EKS ALB와 VPC Origin](cloudfront/vpc-origin.tf)
+전환할 때는 내부 ALB의 인증서와 서비스 도메인의 Host 헤더로 웹·API 응답을 확인한다. `eks_alb_arn`을 유지하고 `cloudfront_enabled = true`로 plan하면 배포를 활성화하고 두 경로 모두 `Managed-AllViewer`로 뷰어의 Host를 전달한다. 서울 ALB와 미국 동부 뷰어 인증서 및 공통 DNS 검증 CNAME에는 삭제 보호가 설정돼 있다. [인증서](cloudfront/acm.tf)
 
-EKS 담당자가 AWS Load Balancer Controller를 통해 두 프라이빗 앱 서브넷에 내부 ALB를 생성하고 앱 타깃을 연결한다. 서울 ACM 인증서와 DNS 검증 CNAME은 이 Terraform 구성이 관리한다. 443 리스너에 사용할 인증서 ARN은 `terraform -chdir=infra/envs/aws-prod output -raw seoul_alb_certificate_arn`으로 조회한다. [인증서](cloudfront/acm.tf) · [운영 출력](outputs.tf)
+## Azure DR에서 RDS로 가는 경로
 
-CloudFront 활성화 전에는 새 ALB의 HTTPS 443 리스너, 앱 대상 그룹의 정상 타깃과 앱 응답을 확인한다. 현재 VPC Origin 정책은 `http-only`다. 443으로 전환할 때는 `https-only` 정책과 인증서가 유효한 오리진 호스트 이름을 구성한 뒤 `eks_alb_arn`을 지정한다. [VPC Origin 정책](cloudfront/vpc-origin.tf)
+공개 `AWS-Azure` NLB는 서비스 VPC의 두 퍼블릭 서브넷에 걸쳐 있으며 교차 영역 로드 밸런싱을 사용한다. NLB 보안 그룹은 Azure NAT의 고정 IPv4 하나에서 오는 TCP 5432를 허용한다. RDS 보안 그룹은 NLB 보안 그룹에서 오는 같은 포트를 허용한다. 타깃 그룹은 TCP 상태 검사를 사용한다. [NLB와 보안 그룹](seoul-vpc1-service/azure-dr-nlb.tf)
+
+NLB는 RDS 사설 IP를 등록한다. Terraform은 plan 시 주 DB의 AZ, DB 서브넷, 전용 보안 그룹을 기준으로 RDS 네트워크 인터페이스를 조회한다. RDS 장애 조치 후에는 `terraform plan`에서 등록 대상 변경을 확인하고 적용한 뒤 NLB 타깃의 `healthy` 상태와 Azure 쪽 접속을 확인한다. 장애 조치 자체가 Terraform 실행을 시작하지는 않는다.
 
 EKS 모듈은 AL2023 x86_64 관리형 노드 그룹, EKS 애드온 4개, AWS Load Balancer Controller와 Cluster Autoscaler용 IAM 역할을 관리한다. Angular와 Spring REST 소스는 팀의 애플리케이션 저장소에 있다. [노드 그룹](eks/nodes.tf) · [애드온](eks/addons.tf) · [컨트롤러 IAM](eks/controllers.tf) · [애플리케이션 소스](https://github.com/bespinglobal-finalproject-kdt5/petclinic-eks-app)
 

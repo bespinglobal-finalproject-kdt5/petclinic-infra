@@ -82,3 +82,9 @@ terraform plan -out=reviewed.tfplan  # 원하는 워크로드 변경이 있을 �
 | `aws_vpc_security_group_egress_rule.management_https` | `module.seoul_vpc2.module.server.aws_vpc_security_group_egress_rule.management_https` |
 
 마지막으로 새 주소에 연결된 AWS ID와 전체 `terraform plan`을 확인한다. 이 리팩토링의 기대 결과는 AWS 리소스 생성·변경·삭제 각 0건이다. 팀은 새 모듈 구성이 병합된 `main`에서 배포를 재개한다.
+
+## Azure DR용 NLB 편입
+
+서울 운영 루트의 `module.seoul_vpc1`이 기존 `AWS-Azure` NLB, TCP 5432 리스너, IP 대상 그룹, 주 RDS 타깃 등록, NLB 보안 그룹, NLB 수신·송신 규칙 및 RDS의 NLB 수신 규칙을 관리한다. [리소스 주소와 연결](envs/aws-prod/seoul-vpc1-service/azure-dr-nlb.tf)
+
+편입 전 state를 복구한다면 ELBv2의 리스너·대상 그룹 ARN과 현재 정상 타깃, EC2의 보안 그룹·규칙 ID를 다시 조회한다. 타깃 등록의 import ID는 `<대상 그룹 ARN>,<사설 IP>,5432,<AZ>`다. 기존 객체를 가리키는 8개 주소의 import 계획에서 생성·변경·삭제 건수를 확인한다.

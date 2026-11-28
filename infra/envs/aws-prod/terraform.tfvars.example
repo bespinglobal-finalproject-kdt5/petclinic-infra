@@ -15,5 +15,7 @@ addon_versions = {
   metrics-server = "v0.9.1-eksbuild.2"
 }
 
-# Supply the internal ALB ARN after the application targets are healthy.
+# Supply the internal ALB ARN to prepare the HTTPS VPC origin.
 eks_alb_arn = null
+# Enable only when ready to serve the domain through CloudFront.
+cloudfront_enabled = false

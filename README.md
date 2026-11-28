@@ -4,20 +4,19 @@ PetClinic은 AWS 서울 리전의 EKS에서 Angular 웹과 Spring REST API를 �
 
 ## 운영 토폴로지
 
-**2026년 11월 25일 운영 확인 당시 앱 진입점은 서울의 인터넷 공개 ALB(HTTP 80)였다.** 아래 도면과 표에는 그날 확인한 워크로드 수, 연결 경로, DB 상태를 기록했다. 서비스 도메인 `mission-critical.site`는 당시 비활성 CloudFront 배포를 가리켰다.
-
-[![PetClinic 운영 토폴로지. 공개 ALB에서 EKS의 웹·REST로 요청을 전달하고 REST는 RDS에 연결한다. 관리 EC2는 VPC 피어링으로 EKS와 RDS에 접근한다.](docs/architecture/production-topology.drawio.png)](docs/architecture/production-topology.drawio.png)
-
-[편집용 draw.io](docs/architecture/production-topology.drawio) · [경로별 설명과 확인 근거](docs/architecture/production-topology.md)
+2026년 11월 28일 AWS CLI 조회 기준이다. 공개 ALB에서 앱 타깃까지의 상태, RDS 구성, CloudFront 원본 연결 상태를 확인했다.
 
 | 구성 | 운영 상태 |
 |---|---|
-| 사용자 요청 | Kubernetes Gateway가 공개 ALB를 관리한다. `/petclinic/api`와 그 하위 경로는 REST Pod 1개(9966), 나머지 경로는 웹 Pod 2개(8080)로 전달한다. ALB 대상 3개 모두 정상이다. |
-| 서울 서비스 VPC · `10.10.0.0/22` | 2a·2c에 퍼블릭·앱·DB 서브넷을 배치했다. 프라이빗 EKS 1.36 워커는 AZ마다 한 대이며, 앱 서브넷은 2a NAT를 공유한다. REST Pod에서 운영 RDS로 맺어진 TCP 5432 연결을 확인했다. |
-| RDS · `petclinic-db` | 비공개 PostgreSQL 16.13 Multi-AZ 인스턴스다. 확인 시점의 주 DB는 2c, 대기는 2a다. 자동 백업 보존 기간은 0일이고 논리 복제는 꺼져 있다. |
-| 서울 관리 VPC · `10.20.0.0/24` | 프라이빗 관리 EC2는 피어링으로 EKS API(443)와 RDS(5432)에 접근한다. DB 서브넷 두 개는 관리 EC2 `10.20.0.18/32`로 응답을 돌려보낸다. 퍼블릭 빌드 EC2는 EIP를 사용하며, 두 EC2 모두 SSM에 온라인으로 등록돼 있다. |
-| DNS·인증서 | Route 53 A·AAAA 별칭은 CloudFront를 가리킨다. VPC 오리진은 0개다. 버지니아 북부의 뷰어 인증서는 CloudFront에 연결돼 있고, 서울 인증서는 발급됐지만 ALB에는 HTTP 리스너만 있다. |
-| 운영 state·Azure DR | AWS 운영 state는 서울 S3, Azure DR state는 Korea Central의 전용 Blob 컨테이너에 각각 저장한다. Azure PoC 코드는 예약 대역 안의 `10.30.0.0/25`를 사용한다. 운영 RDS에서 Azure로 가는 복제 경로는 별도 구성 대상이다. |
+| 앱 진입점 | 공개 ALB에서 HTTP 80을, 내부 ALB에서 HTTPS 443을 수신한다. 두 ALB 각각 웹·REST 대상 그룹 2개에 정상 IP 타깃이 2개씩 있다. |
+| 서울 서비스 VPC · `10.10.0.0/22` | 2a·2c에 퍼블릭·앱·DB 서브넷을 배치했다. 프라이빗 EKS 1.36의 `t3.medium` 워커는 AZ마다 한 대이며, 앱 서브넷은 2a NAT를 공유한다. |
+| RDS · `petclinic-db` | PostgreSQL 16.13 Multi-AZ로, 주 DB는 2c, 대기는 2a다. 공개 접근 플래그는 켜져 있다. DB 서브넷의 라우팅 테이블에는 VPC 로컬 경로와 관리 EC2로 가는 피어링 경로가 있다. 조회 당시 RDS 자동 백업 보존 기간은 0일이다. |
+| Azure DR의 DB 접근 경로 | Azure NAT의 고정 IPv4에서 공개 `AWS-Azure` NLB의 TCP 5432로 접근한다. NLB는 RDS 주 인스턴스의 사설 IP 하나를 타깃으로 사용한다. 타깃 상태는 `healthy`이며, 이 조회에서 Azure 구독의 복제 상태는 검증하지 않았다. [NLB와 보안 그룹](infra/envs/aws-prod/seoul-vpc1-service/azure-dr-nlb.tf) |
+| 서울 관리 VPC · `10.20.0.0/24` | 빌드 EC2와 관리 EC2가 실행 중이며 둘 다 SSM에 온라인으로 등록돼 있다. 관리 EC2는 피어링으로 EKS API(443)와 RDS(5432)에 접근한다. |
+| DNS·CloudFront | `mission-critical.site`의 A·AAAA 별칭은 비활성 CloudFront 배포를 가리킨다. 내부 ALB용 HTTPS VPC Origin은 배포됐고, 배포의 원본은 아직 `origin-pending.mission-critical.site`다. [CloudFront 전환 절차](infra/envs/aws-prod/README.md#서비스-진입점과-cloudfront-전환) |
+| Terraform state | AWS 운영 state는 서울 S3에, Azure DR state는 Korea Central의 전용 Blob 컨테이너에 저장한다. |
+
+11월 25일에 관측한 워크로드 배치와 요청 경로는 당시 도면에 남아 있다. [이전 운영 배치도](docs/architecture/production-topology.drawio.png) · [당시 관측 기록](docs/architecture/production-topology.md)
 
 ## Terraform 코드 위치
 
