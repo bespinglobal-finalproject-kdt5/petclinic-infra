@@ -1,6 +1,5 @@
 locals {
-  use_vpc_origin = var.eks_alb_arn != null
-  alb_dns_name   = one(data.aws_lb.eks[*].dns_name)
+  alb_dns_name = one(data.aws_lb.eks[*].dns_name)
 }
 
 resource "aws_cloudfront_vpc_origin" "eks" {

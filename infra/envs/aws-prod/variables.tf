@@ -31,8 +31,15 @@ variable "availability_zones" {
   }
 }
 
+variable "cloudfront_enabled" {
+  description = "Serve traffic through the distribution using the configured internal ALB."
+  type        = bool
+  default     = false
+  nullable    = false
+}
+
 variable "eks_alb_arn" {
-  description = "ARN of the EKS-managed internal ALB. CloudFront stays disabled until this is set."
+  description = "ARN of the EKS-managed internal ALB used to provision the CloudFront VPC origin."
   type        = string
   default     = null
 }

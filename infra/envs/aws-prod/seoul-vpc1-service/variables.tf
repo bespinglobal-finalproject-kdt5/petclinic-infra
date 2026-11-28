@@ -27,3 +27,8 @@ variable "db_master_password" {
   sensitive = true        # 테라폼 출력에서 값 가림
   default   = "123456789" # 하드코딩시킴
 }
+
+variable "azure_dr_nat_public_ip" {
+  description = "Static IPv4 address of the Azure DR NAT gateway."
+  type        = string
+}

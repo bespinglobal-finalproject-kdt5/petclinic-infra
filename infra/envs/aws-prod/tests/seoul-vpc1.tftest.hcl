@@ -8,10 +8,11 @@ run "service_network" {
     source = "./seoul-vpc1-service"
   }
   variables {
-    availability_zones   = ["ap-northeast-2a", "ap-northeast-2c"]
-    environment          = "prod"
-    management_peer_id   = "pcx-00000000000000002"
-    management_host_cidr = "10.20.0.19/32"
+    availability_zones     = ["ap-northeast-2a", "ap-northeast-2c"]
+    environment            = "prod"
+    azure_dr_nat_public_ip = "192.0.2.17"
+    management_peer_id     = "pcx-00000000000000002"
+    management_host_cidr   = "10.20.0.19/32"
   }
 
   assert {
@@ -80,5 +81,19 @@ run "service_network" {
       output.public_subnet_ids == [aws_subnet.service["public_1"].id, aws_subnet.service["public_2"].id]
     )
     error_message = "Output IDs must select the correct resources in operator AZ order."
+  }
+
+  assert {
+    condition = (
+      !aws_lb.azure_dr.internal && aws_lb.azure_dr.enable_cross_zone_load_balancing &&
+      aws_lb_listener.azure_dr.port == 5432 && aws_lb_listener.azure_dr.protocol == "TCP" &&
+      aws_lb_target_group.azure_dr.target_type == "ip" && aws_lb_target_group.azure_dr.port == 5432 &&
+      aws_vpc_security_group_ingress_rule.nlb_from_azure.cidr_ipv4 == "${var.azure_dr_nat_public_ip}/32" &&
+      aws_vpc_security_group_ingress_rule.nlb_from_azure.from_port == 5432 &&
+      aws_vpc_security_group_ingress_rule.nlb_from_azure.to_port == 5432 &&
+      aws_vpc_security_group_ingress_rule.rds_from_nlb.from_port == 5432 &&
+      aws_vpc_security_group_ingress_rule.rds_from_nlb.to_port == 5432
+    )
+    error_message = "The Azure DR NLB must forward TCP 5432 from the Azure NAT address to a PostgreSQL IP target across both zones."
   }
 }

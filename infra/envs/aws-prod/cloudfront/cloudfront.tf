@@ -3,25 +3,25 @@ locals {
 }
 
 resource "aws_cloudfront_distribution" "edge" {
-  enabled         = local.use_vpc_origin
+  enabled         = var.cloudfront_enabled
   is_ipv6_enabled = true
   aliases         = [var.domain]
   tags            = merge(local.edge_tags, { Name = "petclinic-prod-edge-distribution" })
 
   origin {
     # CloudFront requires one origin even while disabled. No DNS record is created for this name.
-    domain_name = local.use_vpc_origin ? local.alb_dns_name : "origin-pending.${var.domain}"
+    domain_name = var.cloudfront_enabled ? local.alb_dns_name : "origin-pending.${var.domain}"
     origin_id   = "internal-alb"
 
     dynamic "vpc_origin_config" {
-      for_each = aws_cloudfront_vpc_origin.eks
+      for_each = var.cloudfront_enabled ? aws_cloudfront_vpc_origin.eks : []
       content {
         vpc_origin_id = vpc_origin_config.value.id
       }
     }
 
     dynamic "custom_origin_config" {
-      for_each = local.use_vpc_origin ? [] : [1]
+      for_each = var.cloudfront_enabled ? [] : [1]
       content {
         http_port              = 80
         https_port             = 443
@@ -32,7 +32,7 @@ resource "aws_cloudfront_distribution" "edge" {
   }
 
   default_cache_behavior {
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
+    origin_request_policy_id = var.cloudfront_enabled ? data.aws_cloudfront_origin_request_policy.api.id : null
     target_origin_id         = "internal-alb"
     allowed_methods          = ["GET", "HEAD"]
     cached_methods           = ["GET", "HEAD"]
@@ -46,7 +46,7 @@ resource "aws_cloudfront_distribution" "edge" {
     allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods           = ["GET", "HEAD"]
     cache_policy_id          = data.aws_cloudfront_cache_policy.disabled.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.api.id
+    origin_request_policy_id = var.cloudfront_enabled ? data.aws_cloudfront_origin_request_policy.api.id : data.aws_cloudfront_origin_request_policy.except_host.id
     viewer_protocol_policy   = "https-only"
   }
 

@@ -2,12 +2,16 @@ data "aws_cloudfront_origin_request_policy" "api" {
   name = "Managed-AllViewer"
 }
 
+data "aws_cloudfront_origin_request_policy" "except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
 data "aws_cloudfront_cache_policy" "disabled" {
   name = "Managed-CachingDisabled"
 }
 
 data "aws_lb" "eks" {
-  count = local.use_vpc_origin ? 1 : 0
+  count = var.eks_alb_arn != null ? 1 : 0
   arn   = var.eks_alb_arn
 
   lifecycle {
